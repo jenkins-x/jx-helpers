@@ -1,17 +1,14 @@
 module github.com/jenkins-x/jx-helpers
 
 require (
-	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/google/go-cmp v0.3.1
-	github.com/jenkins-x/jx-kube-client v0.0.3 // indirect
 	github.com/jenkins-x/jx-logging v0.0.8
 	github.com/jenkins-x/jx/v2 v2.1.78
 	github.com/onsi/ginkgo v1.10.1 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
-	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shirou/gopsutil v0.0.0-20190901111213-e4ec7b275ada // indirect
 	github.com/spf13/cobra v1.0.0 // indirect
 	github.com/stretchr/testify v1.6.0
