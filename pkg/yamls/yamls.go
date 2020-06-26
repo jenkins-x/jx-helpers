@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// LoadYAML loads the given YAML file
-func LoadYAML(fileName string, dest interface{}) error {
+// LoadFile loads the given YAML file
+func LoadFile(fileName string, dest interface{}) error {
 	exists, err := util.FileExists(fileName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if file exists  %s", fileName)
@@ -31,8 +31,8 @@ func LoadYAML(fileName string, dest interface{}) error {
 	return nil
 }
 
-// SaveYAML saves the object as the given file name
-func SaveYAML(obj interface{}, fileName string) error {
+// SaveFile saves the object as the given file name
+func SaveFile(obj interface{}, fileName string) error {
 	data, err := yaml.Marshal(obj)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal to YAML")
