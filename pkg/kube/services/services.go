@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx-helpers/pkg/kube"
+	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
@@ -63,7 +63,7 @@ func GetServicesByName(client kubernetes.Interface, ns string, services []string
 		return answer, errors.Wrapf(err, "listing the services in namespace %q", ns)
 	}
 	for _, s := range svcList.Items {
-		i := util.StringArrayIndex(services, s.GetName())
+		i := stringhelpers.StringArrayIndex(services, s.GetName())
 		if i > 0 {
 			copy := s
 			answer = append(answer, &copy)
@@ -470,7 +470,7 @@ func AnnotateServicesWithCertManagerIssuer(c kubernetes.Interface, ns, issuer st
 	for _, s := range svcList {
 		// annotate only the services present in the list, if the list is empty annotate all services
 		if len(services) > 0 {
-			i := util.StringArrayIndex(services, s.GetName())
+			i := stringhelpers.StringArrayIndex(services, s.GetName())
 			if i < 0 {
 				continue
 			}
@@ -508,7 +508,7 @@ func AnnotateServicesWithBasicAuth(client kubernetes.Interface, ns string, servi
 	}
 	for _, service := range svcList {
 		// Check if the service is in the white-list
-		idx := util.StringArrayIndex(services, service.GetName())
+		idx := stringhelpers.StringArrayIndex(services, service.GetName())
 		if idx < 0 {
 			continue
 		}
@@ -543,7 +543,7 @@ func CleanServiceAnnotations(c kubernetes.Interface, ns string, services ...stri
 		// clear the annotations only for the services provided in the list if the list
 		// is not empty, otherwise clear the annotations of all services
 		if len(services) > 0 {
-			i := util.StringArrayIndex(services, s.GetName())
+			i := stringhelpers.StringArrayIndex(services, s.GetName())
 			if i < 0 {
 				continue
 			}

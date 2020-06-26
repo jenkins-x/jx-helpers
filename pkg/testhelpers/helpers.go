@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
@@ -112,7 +112,7 @@ func AssertSecretData(t *testing.T, key string, expected string, secret *corev1.
 
 // AssertFileNotExists asserts that a file does not exist
 func AssertFileNotExists(t *testing.T, path string) {
-	exists, err := util.FileExists(path)
+	exists, err := files.FileExists(path)
 	require.NoError(t, err, "failed to check if file exists %s", path)
 	assert.False(t, exists, "file should not exist %s", path)
 }

@@ -3,7 +3,7 @@ package yamls
 import (
 	"io/ioutil"
 
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"sigs.k8s.io/yaml"
 
 	"github.com/pkg/errors"
@@ -11,7 +11,7 @@ import (
 
 // LoadFile loads the given YAML file
 func LoadFile(fileName string, dest interface{}) error {
-	exists, err := util.FileExists(fileName)
+	exists, err := files.FileExists(fileName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if file exists  %s", fileName)
 	}
@@ -37,7 +37,7 @@ func SaveFile(obj interface{}, fileName string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal to YAML")
 	}
-	err = ioutil.WriteFile(fileName, data, util.DefaultWritePermissions)
+	err = ioutil.WriteFile(fileName, data, files.DefaultFileWritePermissions)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save file %s", fileName)
 	}

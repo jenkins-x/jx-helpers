@@ -3,7 +3,6 @@ package cli
 import (
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 )
 
 type client struct {
@@ -28,7 +27,7 @@ func NewCLIClient(binary string, runner cmdrunner.CommandRunner) gitclient.Inter
 
 // Command invokes the git command
 func (c *client) Command(dir string, args ...string) (string, error) {
-	cmd := &util.Command{
+	cmd := &cmdrunner.Command{
 		Dir:  dir,
 		Name: c.binary,
 		Args: args,

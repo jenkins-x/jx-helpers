@@ -5,15 +5,14 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // FakeRunner for testing command runners
 type FakeRunner struct {
-	Commands        []*util.Command
-	OrderedCommands []*util.Command
+	Commands        []*cmdrunner.Command
+	OrderedCommands []*cmdrunner.Command
 	ResultOutput    string
 	ResultError     error
 }
@@ -26,7 +25,7 @@ type FakeResult struct {
 }
 
 // Run the default implementation
-func (f *FakeRunner) Run(c *util.Command) (string, error) {
+func (f *FakeRunner) Run(c *cmdrunner.Command) (string, error) {
 	f.Commands = append(f.Commands, c)
 	f.OrderedCommands = append(f.OrderedCommands, c)
 	return f.ResultOutput, f.ResultError
