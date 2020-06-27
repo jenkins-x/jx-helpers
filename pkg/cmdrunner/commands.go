@@ -178,6 +178,7 @@ func (c *Command) RunWithoutRetry() (string, error) {
 	return r, e
 }
 
+// String returns the full string with env vars
 func (c *Command) String() string {
 	var builder strings.Builder
 	for k, v := range c.Env {
@@ -186,6 +187,17 @@ func (c *Command) String() string {
 		builder.WriteString(v)
 		builder.WriteString(" ")
 	}
+	builder.WriteString(c.Name)
+	for _, arg := range c.Args {
+		builder.WriteString(" ")
+		builder.WriteString(arg)
+	}
+	return builder.String()
+}
+
+// CLI returns the command line without environment variables
+func (c *Command) CLI() string {
+	var builder strings.Builder
 	builder.WriteString(c.Name)
 	for _, arg := range c.Args {
 		builder.WriteString(" ")
