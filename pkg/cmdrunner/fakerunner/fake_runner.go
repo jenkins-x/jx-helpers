@@ -11,10 +11,20 @@ import (
 
 // FakeRunner for testing command runners
 type FakeRunner struct {
-	Commands        []*cmdrunner.Command
+	// Commands sorted commands
+	Commands []*cmdrunner.Command
+
+	// OrderedCommands recorded commands in order
 	OrderedCommands []*cmdrunner.Command
-	ResultOutput    string
-	ResultError     error
+
+	// CommandRunner if specified this callback returns the results and error
+	CommandRunner cmdrunner.CommandRunner
+
+	// ResultOutput default output if no CommandRunner
+	ResultOutput string
+
+	// ResultError default error output if no CommandRunner
+	ResultError error
 }
 
 // FakeResult the expected results
@@ -28,6 +38,10 @@ type FakeResult struct {
 func (f *FakeRunner) Run(c *cmdrunner.Command) (string, error) {
 	f.Commands = append(f.Commands, c)
 	f.OrderedCommands = append(f.OrderedCommands, c)
+
+	if f.CommandRunner != nil {
+		return f.CommandRunner(c)
+	}
 	return f.ResultOutput, f.ResultError
 }
 
