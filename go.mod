@@ -3,12 +3,6 @@ module github.com/jenkins-x/jx-helpers
 require (
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/fatih/color v1.9.0
-	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
-	github.com/golang/protobuf v1.3.1 // indirect
-	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-cmp v0.3.1
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -18,12 +12,8 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
-	github.com/spf13/pflag v1.0.3 // indirect
+	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.0
-	golang.org/x/net v0.0.0-20190522155817-f3200d17e092 // indirect
-	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be // indirect
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	google.golang.org/appengine v1.1.0 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.3
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/api v0.17.0
