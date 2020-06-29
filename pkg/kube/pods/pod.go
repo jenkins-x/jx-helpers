@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -137,6 +139,19 @@ func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name
 		//FieldSelector: fields.OneTermEqualSelector(api.ObjectNameField, name).String(),
 		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
 	}
+
+	// lets check if its already ready
+	pod, err := client.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		err = nil
+	}
+	if err != nil {
+		return errors.Wrapf(err, "failed to get pod %s in namespace %s", name, namespace)
+	}
+	if pod != nil && IsPodReady(pod) {
+		return nil
+	}
+
 	condition := func(event watch.Event) (bool, error) {
 		pod := event.Object.(*v1.Pod)
 
