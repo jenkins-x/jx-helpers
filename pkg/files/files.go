@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
-
 	"github.com/pkg/errors"
 )
 
@@ -27,13 +25,6 @@ const (
 
 	MaximumNewDirectoryAttempts = 1000
 )
-
-// IOFileHandles is a struct for holding CommonOptions' In, Out, and Err I/O handles, to simplify function calls.
-type IOFileHandles struct {
-	Err io.Writer
-	In  terminal.FileReader
-	Out terminal.FileWriter
-}
 
 // FileExists checks if path exists and is a file
 func FileExists(path string) (bool, error) {
