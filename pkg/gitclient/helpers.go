@@ -138,3 +138,39 @@ func Describe(g Interface, dir string, contains bool, commitish string, abbrev s
 	}
 	return parts[0], "", nil
 }
+
+// HasChanges indicates if there are any changes in the repository from the given directory
+func HasChanges(g Interface, dir string) (bool, error) {
+	text, err := g.Command(dir, "status", "-s")
+	if err != nil {
+		return false, err
+	}
+	text = strings.TrimSpace(text)
+	return len(text) > 0, nil
+}
+
+// HasFileChanged indicates if there are any changes to a file in the repository from the given directory
+func HasFileChanged(g Interface, dir string, fileName string) (bool, error) {
+	text, err := g.Command(dir, "status", "-s", fileName)
+	if err != nil {
+		return false, err
+	}
+	text = strings.TrimSpace(text)
+	return len(text) > 0, nil
+}
+
+// CommiIfChanges does a commit if there are any changes in the repository at the given directory
+func CommitIfChanges(g Interface, dir string, message string) error {
+	changed, err := HasChanges(g, dir)
+	if err != nil {
+		return err
+	}
+	if !changed {
+		return nil
+	}
+	_, err = g.Command(dir, "commit", "-m", message)
+	if err != nil {
+		return errors.Wrap(err, "failed to commit to git")
+	}
+	return nil
+}
