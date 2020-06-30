@@ -2,29 +2,30 @@ module github.com/jenkins-x/jx-helpers
 
 require (
 	github.com/MakeNowJust/heredoc v1.0.0
-	github.com/cenkalti/backoff v2.1.1+incompatible
+	github.com/blang/semver v3.5.1+incompatible
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/fatih/color v1.9.0
-	github.com/ghodss/yaml v1.0.0
+	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/google/go-cmp v0.3.1
+	github.com/google/go-cmp v0.4.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/jenkins-x/jx-logging v0.0.8
-	github.com/onsi/ginkgo v1.10.1 // indirect
-	github.com/onsi/gomega v1.7.0 // indirect
+	github.com/jenkins-x/jx-api v0.0.11
+	github.com/jenkins-x/jx-logging v0.0.10
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.5.2
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
+	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.3
-	github.com/stretchr/testify v1.6.0
+	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.6.1
 	gopkg.in/AlecAivazis/survey.v1 v1.8.3
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	k8s.io/api v0.17.0
-	k8s.io/apimachinery v0.17.0
+	gopkg.in/src-d/go-git.v4 v4.13.1
+	k8s.io/api v0.17.2
+	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a // indirect
 	sigs.k8s.io/yaml v1.2.0
 
 )
