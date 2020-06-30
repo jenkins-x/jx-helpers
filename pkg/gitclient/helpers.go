@@ -2,9 +2,12 @@ package gitclient
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
 )
@@ -173,4 +176,35 @@ func CommitIfChanges(g Interface, dir string, message string) error {
 		return errors.Wrap(err, "failed to commit to git")
 	}
 	return nil
+}
+
+// FindGitConfigDir tries to find the `.git` directory either in the current directory or in parent directories
+func FindGitConfigDir(dir string) (string, string, error) {
+	d := dir
+	var err error
+	if d == "" {
+		d, err = os.Getwd()
+		if err != nil {
+			return "", "", err
+		}
+	}
+	for {
+		gitDir := filepath.Join(d, ".git/config")
+		exists, err := files.FileExists(gitDir)
+		if err != nil {
+			return "", "", err
+		}
+		if exists {
+			return d, gitDir, nil
+		}
+		dirPath := strings.TrimSuffix(d, "/")
+		if dirPath == "" {
+			return "", "", nil
+		}
+		p, _ := filepath.Split(dirPath)
+		if d == "/" || p == d {
+			return "", "", nil
+		}
+		d = p
+	}
 }
