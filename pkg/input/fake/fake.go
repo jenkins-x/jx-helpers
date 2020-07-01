@@ -19,3 +19,27 @@ func (f *FakeInput) PickPassword(message string, help string) (string, error) {
 	}
 	return value, nil
 }
+
+// PickValue picks a value
+func (f *FakeInput) PickValue(message string, help string) (string, error) {
+	if f.Values == nil {
+		f.Values = map[string]string{}
+	}
+	value := f.Values[message]
+	if value == "" {
+		return "", errors.Errorf("missing fake value for message: %s", message)
+	}
+	return value, nil
+}
+
+// PickNameWithDefault picks a value
+func (f *FakeInput) PickNameWithDefault(names []string, message string, help string) (string, error) {
+	if f.Values == nil {
+		f.Values = map[string]string{}
+	}
+	value := f.Values[message]
+	if value == "" {
+		return "", errors.Errorf("missing fake value for message: %s", message)
+	}
+	return value, nil
+}

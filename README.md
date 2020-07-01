@@ -7,3 +7,39 @@
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
 `jx-helpers` is a small library of helper functions for working with the commands, git and kubernetes
+
+
+
+## Refactoring notes
+
+If you are refactoring code from jenkins-x/jx out into a separate library/microservice here's some tips on switching code over to `jx-helpers`
+
+The `util` package has been split up into separate packages:
+
+Files:
+
+* `util.Copy*` => `files.Copy*`
+* `util.Dir*` => `files.Dir*`
+* `util.File*` => `files.File*`
+* `util.IO*` => `files.IO*`
+* `util.Un*` => `files.Un*`
+
+Strings:
+
+* `util.String*` => `stringhelpers.String*`
+* `util.Url*` => `stringhelpers.Url*`
+
+Git:
+
+* `gits.Gitter` => `gitclient.Interface`  then the git commands are simple CLI arguments like:
+
+```go 
+results, err := gitClient.Command(dir, "commit", "-a", "-m", "my message")
+```
+
+
+Cobra:
+
+* `cmd/*` => `cobras/*`
+
+

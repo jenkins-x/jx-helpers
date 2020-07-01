@@ -13,6 +13,7 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/imdario/mergo v0.3.9
 	github.com/jenkins-x/jx-api v0.0.11
+	github.com/jenkins-x/jx-kube-client v0.0.8
 	github.com/jenkins-x/jx-logging v0.0.8
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/pkg/errors v0.9.1

@@ -208,3 +208,43 @@ func FindGitConfigDir(dir string) (string, string, error) {
 		d = p
 	}
 }
+
+// GetCommitPointedToByLatestTag return the SHA of the commit pointed to by the latest git tag as well as the tag name
+// for the git repo in dir
+func GetCommitPointedToByLatestTag(g Interface, dir string) (string, string, error) {
+	tagSHA, tagName, err := NthTag(g, dir, 1)
+	if err != nil {
+		return "", "", errors.Wrapf(err, "getting commit pointed to by latest tag in %s", dir)
+	}
+	if tagSHA == "" {
+		return tagSHA, tagName, nil
+	}
+	commitSHA, err := g.Command(dir, "rev-list", "-n", "1", tagSHA)
+	if err != nil {
+		return "", "", errors.Wrapf(err, "running for git rev-list -n 1 %s", tagSHA)
+	}
+	return commitSHA, tagName, err
+}
+
+// NthTag return the SHA and tag name of nth tag in reverse chronological order from the repository at the given directory.
+// If the nth tag does not exist empty strings without an error are returned.
+func NthTag(g Interface, dir string, n int) (string, string, error) {
+	out, err := g.Command(dir, "for-each-ref", "--sort=-creatordate",
+		"--format=%(objectname)%00%(refname:short)", fmt.Sprintf("--count=%d", n), "refs/tags")
+	if err != nil {
+		return "", "", errors.Wrapf(err, "running git")
+	}
+	tagList := strings.Split(out, "\n")
+
+	if len(tagList) < n {
+		return "", "", nil
+	}
+
+	fields := strings.Split(tagList[n-1], "\x00")
+
+	if len(fields) != 2 {
+		return "", "", errors.Errorf("Unexpected format for returned tag and sha: '%s'", tagList[n-1])
+	}
+
+	return fields[0], fields[1], nil
+}
