@@ -142,7 +142,7 @@ func (t *templater) groupPath(c *cobra.Command) string {
 }
 
 func (t *templater) cmdGroupsString(c *cobra.Command) string {
-	groups := []string{}
+	var groups []string
 	maxLen := 1
 	for _, cmdGroup := range t.cmdGroups(c, c.Commands()) {
 		for _, cmd := range cmdGroup.Commands {
@@ -296,7 +296,7 @@ func visibleFlags(l *flag.FlagSet) *flag.FlagSet {
 }
 
 func filter(cmds []*cobra.Command, names ...string) []*cobra.Command {
-	out := []*cobra.Command{}
+	var out []*cobra.Command
 	for _, c := range cmds {
 		if c.Hidden {
 			continue

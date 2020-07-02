@@ -78,7 +78,7 @@ func (agg aggregate) Error() string {
 
 // Errors is part of the Aggregate interface.
 func (agg aggregate) Errors() []error {
-	return []error(agg)
+	return agg
 }
 
 // Matcher is used to match errors.  Returns true if the error matches.
@@ -119,7 +119,7 @@ func matchesError(err error, fns ...Matcher) bool {
 // remain a nil list is returned. The resulting silec will have all
 // nested slices flattened as a side effect.
 func filterErrors(list []error, fns ...Matcher) []error {
-	result := []error{}
+	var result []error
 	for _, err := range list {
 		r := FilterOut(err, fns...)
 		if r != nil {
@@ -132,7 +132,7 @@ func filterErrors(list []error, fns ...Matcher) []error {
 // Flatten takes an Aggregate, which may hold other Aggregates in arbitrary
 // nesting, and flattens them all into a single Aggregate, recursively.
 func Flatten(agg Aggregate) Aggregate {
-	result := []error{}
+	var result []error
 	if agg == nil {
 		return nil
 	}

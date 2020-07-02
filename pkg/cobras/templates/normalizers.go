@@ -80,7 +80,7 @@ func (s normalizer) trim() normalizer {
 }
 
 func (s normalizer) indent() normalizer {
-	indentedLines := []string{}
+	var indentedLines []string
 	for _, line := range strings.Split(s.string, "\n") {
 		trimmed := strings.TrimSpace(line)
 		indented := Indentation + trimmed

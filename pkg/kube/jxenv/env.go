@@ -51,7 +51,7 @@ func GetDevEnvGitOwner(jxClient versioned.Interface) (string, error) {
 
 // GetEnvironmentNames returns the sorted list of environment names
 func GetEnvironmentNames(jxClient versioned.Interface, ns string) ([]string, error) {
-	envNames := []string{}
+	var envNames []string
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(metav1.ListOptions{})
 	if err != nil {
 		return envNames, err
@@ -73,7 +73,7 @@ func IsPreviewEnvironment(env *v1.Environment) bool {
 
 // GetFilteredEnvironmentNames returns the sorted list of environment names
 func GetFilteredEnvironmentNames(jxClient versioned.Interface, ns string, fn func(environment *v1.Environment) bool) ([]string, error) {
-	envNames := []string{}
+	var envNames []string
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(metav1.ListOptions{})
 	if err != nil {
 		return envNames, err
@@ -94,7 +94,7 @@ func GetFilteredEnvironmentNames(jxClient versioned.Interface, ns string, fn fun
 func GetOrderedEnvironments(jxClient versioned.Interface, ns string) (map[string]*v1.Environment, []string, error) {
 	m := map[string]*v1.Environment{}
 
-	envNames := []string{}
+	var envNames []string
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(metav1.ListOptions{})
 	if err != nil {
 		return m, envNames, err
@@ -102,8 +102,8 @@ func GetOrderedEnvironments(jxClient versioned.Interface, ns string) (map[string
 	SortEnvironments(envs.Items)
 	for _, env := range envs.Items {
 		n := env.Name
-		copy := env
-		m[n] = &copy
+		c := env
+		m[n] = &c
 		if n != "" {
 			envNames = append(envNames, n)
 		}
@@ -115,15 +115,15 @@ func GetOrderedEnvironments(jxClient versioned.Interface, ns string) (map[string
 func GetEnvironments(jxClient versioned.Interface, ns string) (map[string]*v1.Environment, []string, error) {
 	m := map[string]*v1.Environment{}
 
-	envNames := []string{}
+	var envNames []string
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(metav1.ListOptions{})
 	if err != nil {
 		return m, envNames, err
 	}
 	for _, env := range envs.Items {
 		n := env.Name
-		copy := env
-		m[n] = &copy
+		c := env
+		m[n] = &c
 		if n != "" {
 			envNames = append(envNames, n)
 		}
@@ -187,7 +187,7 @@ func GetEditEnvironmentNamespace(jxClient versioned.Interface, ns string) (strin
 			return env.Spec.Namespace, nil
 		}
 	}
-	return "", fmt.Errorf("The user %s does not have an Edit environment in home namespace %s", u.Username, ns)
+	return "", fmt.Errorf("the user %s does not have an Edit environment in home namespace %s", u.Username, ns)
 }
 
 // GetDevNamespace returns the developer environment namespace
@@ -199,7 +199,7 @@ func GetDevNamespace(kubeClient kubernetes.Interface, ns string) (string, string
 		return ns, env, err
 	}
 	if namespace == nil {
-		return ns, env, fmt.Errorf("No namespace found for %s", ns)
+		return ns, env, fmt.Errorf("no namespace found for %s", ns)
 	}
 	if namespace.Labels != nil {
 		answer := namespace.Labels[kube.LabelTeam]
@@ -213,8 +213,8 @@ func GetDevNamespace(kubeClient kubernetes.Interface, ns string) (string, string
 
 // GetTeams returns the Teams the user is a member of
 func GetTeams(kubeClient kubernetes.Interface) ([]*corev1.Namespace, []string, error) {
-	names := []string{}
-	answer := []*corev1.Namespace{}
+	var names []string
+	var answer []*corev1.Namespace
 	namespaceList, err := kubeClient.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {
 		return answer, names, err
@@ -337,7 +337,7 @@ func GetDevEnvironment(jxClient versioned.Interface, ns string) (*v1.Environment
 	if len(envList.Items) == 0 {
 		return nil, nil
 	}
-	return nil, fmt.Errorf("Error fetching dev environment resource definition in namespace %s, No Environment called: %s or with selector: %s found %d entries: %v",
+	return nil, fmt.Errorf("error fetching dev environment resource definition in namespace %s, No Environment called: %s or with selector: %s found %d entries: %v",
 		ns, name, selector, len(envList.Items), envList.Items)
 }
 
@@ -357,7 +357,7 @@ func IsPermanentEnvironment(env *v1.Environment) bool {
 
 // GetPermanentEnvironments returns a list with the current permanent environments
 func GetPermanentEnvironments(jxClient versioned.Interface, ns string) ([]*v1.Environment, error) {
-	result := []*v1.Environment{}
+	var result []*v1.Environment
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(metav1.ListOptions{})
 	if err != nil {
 		return result, errors.Wrapf(err, "listing the environments in namespace %q", ns)

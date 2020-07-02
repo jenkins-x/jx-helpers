@@ -460,7 +460,7 @@ func RecreateDirs(dirs ...string) error {
 
 // FilterFileExists filters out files which do not exist
 func FilterFileExists(paths []string) []string {
-	answer := []string{}
+	var answer []string
 	for _, path := range paths {
 		exists, err := FileExists(path)
 		if exists && err == nil {

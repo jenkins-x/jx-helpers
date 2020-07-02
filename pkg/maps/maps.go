@@ -23,7 +23,7 @@ func StringMapHasValue(m map[string]string, value string) bool {
 
 // MapKeys returns the keys of a given map
 func MapKeys(m map[string]string) []string {
-	keys := []string{}
+	var keys []string
 	for key := range m {
 		keys = append(keys, key)
 	}
@@ -178,7 +178,7 @@ func KeyValuesToMap(values []string) map[string]string {
 
 // MapToKeyValues converts the the map into a sorted array of key/value pairs
 func MapToKeyValues(values map[string]string) []string {
-	answer := []string{}
+	var answer []string
 	for k, v := range values {
 		answer = append(answer, fmt.Sprintf("%s=%s", k, v))
 	}

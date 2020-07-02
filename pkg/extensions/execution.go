@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	jenkinsv1client "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/typed/jenkins.io/v1"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/ghodss/yaml"
@@ -40,7 +41,7 @@ func ToExecutable(e *jenkinsv1.ExtensionSpec, paramValues []jenkinsv1.ExtensionP
 
 	extension, err := exts.Get(e.FullyQualifiedKebabName(), metav1.GetOptions{})
 	if err != nil {
-		return jenkinsv1.ExtensionExecution{}, "", fmt.Errorf("Unable to find extension definition %s. %v", e.FullyQualifiedKebabName(), err)
+		return jenkinsv1.ExtensionExecution{}, "", errors.Wrapf(err, "unable to find extension definition %s", e.FullyQualifiedKebabName())
 	}
 	// Create an owner ref yaml snippet for this extension
 	ownerRef, err := yaml.Marshal(ExtensionOwnerRef(extension))

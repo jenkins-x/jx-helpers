@@ -86,7 +86,7 @@ var colorMap = map[string]color.Attribute{
 
 // GetColor returns the color for the list of colour names and option name
 func GetColor(optionName string, colorNames []string) (*color.Color, error) {
-	attributes := []color.Attribute{}
+	var attributes []color.Attribute
 	for _, colorName := range colorNames {
 		a := colorMap[colorName]
 		if a == color.Attribute(0) {
@@ -99,7 +99,7 @@ func GetColor(optionName string, colorNames []string) (*color.Color, error) {
 
 // ColorNameValues returns all the color names sorted
 func ColorNameValues() []string {
-	answer := []string{}
+	var answer []string
 	for k := range colorMap {
 		answer = append(answer, k)
 	}

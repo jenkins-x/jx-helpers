@@ -46,7 +46,7 @@ func (v *VersionResolver) ResolveGitVersion(gitURL string) (string, error) {
 
 // VerifyPackages verifies that the package keys and current version numbers are at the required minimum versions
 func (v *VersionResolver) VerifyPackages(packages map[string]string) error {
-	errs := []error{}
+	var errs []error
 	keys := stringhelpers.SortedMapKeys(packages)
 	for _, p := range keys {
 		version := packages[p]

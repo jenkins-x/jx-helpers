@@ -223,7 +223,7 @@ func (c *Command) run() (string, error) {
 		for k, v := range c.Env {
 			m[k] = v
 		}
-		envVars := []string{}
+		var envVars []string
 		for k, v := range m {
 			envVars = append(envVars, k+"="+v)
 		}

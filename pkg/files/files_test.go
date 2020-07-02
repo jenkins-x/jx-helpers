@@ -19,7 +19,7 @@ import (
 func TestGlobFiles(t *testing.T) {
 	t.Parallel()
 
-	files := []string{}
+	var files []string
 	fn := func(name string) error {
 		if stringhelpers.StringArrayIndex(files, name) < 0 {
 			files = append(files, name)

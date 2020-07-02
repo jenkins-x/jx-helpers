@@ -49,8 +49,8 @@ func GetServices(client kubernetes.Interface, ns string) (map[string]*v1.Service
 	}
 	for _, r := range list.Items {
 		name := r.Name
-		copy := r
-		answer[name] = &copy
+		c := r
+		answer[name] = &c
 	}
 	return answer, nil
 }
@@ -65,15 +65,15 @@ func GetServicesByName(client kubernetes.Interface, ns string, services []string
 	for _, s := range svcList.Items {
 		i := stringhelpers.StringArrayIndex(services, s.GetName())
 		if i > 0 {
-			copy := s
-			answer = append(answer, &copy)
+			c := s
+			answer = append(answer, &c)
 		}
 	}
 	return answer, nil
 }
 
 func GetServiceNames(client kubernetes.Interface, ns string, filter string) ([]string, error) {
-	names := []string{}
+	var names []string
 	list, err := client.CoreV1().Services(ns).List(meta_v1.ListOptions{})
 	if err != nil {
 		return names, fmt.Errorf("failed to load Services %s", err)
@@ -258,10 +258,12 @@ func GetServiceURL(svc *v1.Service) string {
 	}
 	if url == "" {
 		scheme := "http"
-		for _, port := range svc.Spec.Ports {
-			if port.Port == 443 {
-				scheme = "https"
-				break
+		if svc.Spec.Ports != nil {
+			for _, port := range svc.Spec.Ports {
+				if port.Port == 443 {
+					scheme = "https"
+					break
+				}
 			}
 		}
 
@@ -295,7 +297,7 @@ func GetServiceURLFromName(c kubernetes.Interface, name, ns string) (string, err
 
 func FindServiceURLs(client kubernetes.Interface, namespace string) ([]ServiceURL, error) {
 	options := meta_v1.ListOptions{}
-	urls := []ServiceURL{}
+	var urls []ServiceURL
 	svcs, err := client.CoreV1().Services(namespace).List(options)
 	if err != nil {
 		return urls, err

@@ -93,7 +93,7 @@ func (c *client) PickNameWithDefault(names []string, message string, defaultValu
 
 // SelectNamesWithFilter selects from a list of names with a given filter. Optionally selecting them all
 func (c *client) SelectNamesWithFilter(names []string, message string, selectAll bool, filter string, help string) ([]string, error) {
-	filtered := []string{}
+	var filtered []string
 	for _, name := range names {
 		if filter == "" || strings.Index(name, filter) >= 0 {
 			filtered = append(filtered, name)
@@ -107,7 +107,7 @@ func (c *client) SelectNamesWithFilter(names []string, message string, selectAll
 
 // SelectNames select which names from the list should be chosen
 func (c *client) SelectNames(names []string, message string, selectAll bool, help string) ([]string, error) {
-	answer := []string{}
+	var answer []string
 	if len(names) == 0 {
 		return answer, fmt.Errorf("No names to choose from")
 	}

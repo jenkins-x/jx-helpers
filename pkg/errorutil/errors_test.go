@@ -78,7 +78,7 @@ func TestAggregateWithNil(t *testing.T) {
 }
 
 func TestSingularAggregate(t *testing.T) {
-	var slice []error = []error{fmt.Errorf("err")}
+	var slice = []error{fmt.Errorf("err")}
 	var agg Aggregate
 	var err error
 
@@ -106,7 +106,7 @@ func TestSingularAggregate(t *testing.T) {
 }
 
 func TestPluralAggregate(t *testing.T) {
-	var slice []error = []error{fmt.Errorf("abc"), fmt.Errorf("123")}
+	var slice = []error{fmt.Errorf("abc"), fmt.Errorf("123")}
 	var agg Aggregate
 	var err error
 

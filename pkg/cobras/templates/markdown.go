@@ -89,7 +89,7 @@ func (r *ASCIIRenderer) Paragraph(out *bytes.Buffer, text func() bool) {
 // BlockCode renders a chunk of text that represents source code.
 func (r *ASCIIRenderer) BlockCode(out *bytes.Buffer, text []byte, lang string) {
 	out.WriteString(linebreak)
-	lines := []string{}
+	var lines []string
 	for _, line := range strings.Split(string(text), linebreak) {
 		indented := r.Indentation + line
 		lines = append(lines, indented)

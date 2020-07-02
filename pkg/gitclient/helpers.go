@@ -32,7 +32,7 @@ func RefIsBranch(gitter Interface, dir string, ref string) (bool, error) {
 
 // RemoteBranches returns the remote branches
 func RemoteBranches(gitter Interface, dir string) ([]string, error) {
-	answer := []string{}
+	var answer []string
 	text, err := gitter.Command(dir, "branch", "-r")
 	if err != nil {
 		return answer, err
@@ -52,20 +52,19 @@ func RemoteBranches(gitter Interface, dir string) ([]string, error) {
 
 // ShallowCloneBranch clones a single branch of the given git URL into the given directory
 func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) error {
-	verbose := true
 	remoteName := "origin"
 	_, err := g.Command(dir, "init")
 	if err != nil {
 		return errors.Wrapf(err, "failed to init a new git repository in directory %s", dir)
 	}
-	if verbose {
+	if true {
 		log.Logger().Infof("ran git init in %s", dir)
 	}
 	err = AddRemote(g, dir, "origin", gitURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to add remote %s with url %s in directory %s", remoteName, gitURL, dir)
 	}
-	if verbose {
+	if true {
 		log.Logger().Infof("ran git add remote %s %s in %s", remoteName, gitURL, dir)
 	}
 
@@ -85,7 +84,7 @@ func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) e
 				return errors.Wrapf(err, "failed to create branch %s in directory %s", branch, dir)
 			}
 
-			if verbose {
+			if true {
 				log.Logger().Infof("ran git branch %s in directory %s", branch, dir)
 			}
 		}

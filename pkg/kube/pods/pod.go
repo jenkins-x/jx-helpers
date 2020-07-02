@@ -192,7 +192,7 @@ func WaitForPodNameToBeComplete(client kubernetes.Interface, namespace string, n
 }
 
 func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]string, error) {
-	names := []string{}
+	var names []string
 	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
 	if err != nil {
 		return names, fmt.Errorf("Failed to load Pods %s", err)
@@ -208,7 +208,7 @@ func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]strin
 }
 
 func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, map[string]*v1.Pod, error) {
-	names := []string{}
+	var names []string
 	m := map[string]*v1.Pod{}
 	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
 	if err != nil {
@@ -227,7 +227,7 @@ func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, m
 }
 
 func GetPodsWithLabels(client kubernetes.Interface, ns string, selector string) ([]string, map[string]*v1.Pod, error) {
-	names := []string{}
+	var names []string
 	m := map[string]*v1.Pod{}
 	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{
 		LabelSelector: selector,

@@ -33,7 +33,7 @@ func Test_UnTargzAll_NestedNoDir(t *testing.T) {
 		{"dir2/dir4/file5.txt", "file5\n"},
 		{"file1.txt", "file1\n"},
 	}
-	found := []file{}
+	var found []file
 
 	require.NoError(t, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !assert.NoError(t, err) {

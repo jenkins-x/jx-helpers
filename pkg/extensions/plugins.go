@@ -60,7 +60,7 @@ func (v *CommandOverrideVerifier) Verify(path string) []error {
 		cmdPath = cmdPath[1:]
 	}
 
-	errors := []error{}
+	var errors []error
 
 	if isExec, err := isExecutable(path); err == nil && !isExec {
 		errors = append(errors, fmt.Errorf("warning: %s identified as a jx plugin, but it is not executable", path))
@@ -189,9 +189,9 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 		defer out.Close()
 		requestU := u
 		if pluginURL.User != nil {
-			copy := *pluginURL
-			copy.User = nil
-			requestU = copy.String()
+			c := *pluginURL
+			c.User = nil
+			requestU = c.String()
 		}
 		req, err := http.NewRequest("GET", requestU, nil)
 		req.Header.Add("Accept", "application/octet-stream")
