@@ -46,8 +46,8 @@ func UnTargz(tarball, target string, onlyFiles []string) error {
 			continue
 		}
 
-		path := filepath.Join(target, path.Base(header.Name))
-		err = UnTarFile(header, path, tarReader)
+		p := filepath.Join(target, path.Base(header.Name))
+		err = UnTarFile(header, p, tarReader)
 		if err != nil {
 			return err
 		}
@@ -80,8 +80,8 @@ func UnTargzAll(tarball, target string) error {
 			return err
 		}
 
-		path := filepath.Join(target, header.Name)
-		err = UnTarFile(header, path, tarReader)
+		p := filepath.Join(target, header.Name)
+		err = UnTarFile(header, p, tarReader)
 		if err != nil {
 			return err
 		}

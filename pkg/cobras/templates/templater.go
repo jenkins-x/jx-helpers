@@ -100,8 +100,8 @@ func (templater *templater) templateFuncs(exposedFlags ...string) template.FuncM
 			exposed := flag.NewFlagSet("exposed", flag.ContinueOnError)
 			if len(exposedFlags) > 0 {
 				for _, name := range exposedFlags {
-					if flag := c.Flags().Lookup(name); flag != nil {
-						exposed.AddFlag(flag)
+					if f := c.Flags().Lookup(name); f != nil {
+						exposed.AddFlag(f)
 					}
 				}
 			}
@@ -262,8 +262,8 @@ func flagsUsages(f *flag.FlagSet) string {
 }
 
 func rpad(s string, padding int) string {
-	template := fmt.Sprintf("%%-%ds", padding)
-	return fmt.Sprintf(template, s)
+	t := fmt.Sprintf("%%-%ds", padding)
+	return fmt.Sprintf(t, s)
 }
 
 func appendIfNotPresent(s, stringToAppend string) string {

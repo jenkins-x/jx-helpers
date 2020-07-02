@@ -283,13 +283,13 @@ func ResolveDockerImage(versionsDir, image string) (string, error) {
 
 // UpdateStableVersionFiles applies an update to the stable version files matched by globPattern, updating to version
 func UpdateStableVersionFiles(globPattern string, version string, excludeFiles ...string) ([]string, error) {
-	files, err := filepath.Glob(globPattern)
+	matchingFiles, err := filepath.Glob(globPattern)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create glob from pattern %s", globPattern)
 	}
 	answer := make([]string, 0)
 
-	for _, path := range files {
+	for _, path := range matchingFiles {
 		_, name := filepath.Split(path)
 		if stringhelpers.StringArrayIndex(excludeFiles, name) >= 0 {
 			continue

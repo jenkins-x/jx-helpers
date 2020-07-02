@@ -69,7 +69,7 @@ func FileIsEmpty(path string) (bool, error) {
 	if err != nil {
 		return true, errors.Wrapf(err, "getting details of file '%s'", path)
 	}
-	return (fi.Size() == 0), nil
+	return fi.Size() == 0, nil
 }
 
 func IsEmpty(name string) (bool, error) {
