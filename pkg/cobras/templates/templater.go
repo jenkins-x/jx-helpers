@@ -39,10 +39,12 @@ func UseOptionsTemplates(cmd *cobra.Command) {
 }
 
 type templater struct {
-	UsageTemplate string
-	HelpTemplate  string
-	RootCmd       *cobra.Command
-	Filtered      []string
+	UsageTemplate          string
+	HelpTemplate           string
+	GetPluginCommandGroups func() (PluginCommandGroups, bool)
+	RootCmd                *cobra.Command
+	CommandGroups
+	Filtered []string
 }
 
 func (templater *templater) ExposeFlags(cmd *cobra.Command, flags ...string) FlagExposer {
