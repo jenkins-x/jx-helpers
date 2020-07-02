@@ -21,6 +21,9 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/jenkins-x/jx-helpers/pkg/table"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -60,7 +63,7 @@ func (templater *templater) HelpFunc() func(*cobra.Command, []string) {
 		out := newResponsiveWriter(c.OutOrStdout())
 		err := t.Execute(out, c)
 		if err != nil {
-			c.Println(err)
+			log.Logger().Errorf("failed to generate help template: %s", err.Error())
 		}
 	}
 }
@@ -87,6 +90,8 @@ func (templater *templater) templateFuncs(exposedFlags ...string) template.FuncM
 		"flagsNotIntersected": flagsNotIntersected,
 		"visibleFlags":        visibleFlags,
 		"flagsUsages":         flagsUsages,
+		"cmdGroups":           templater.cmdGroups,
+		"cmdGroupsString":     templater.cmdGroupsString,
 		"rootCmd":             templater.rootCmdName,
 		"isRootCmd":           templater.isRootCmd,
 		"optionsCmdFor":       templater.optionsCmdFor,
@@ -110,6 +115,20 @@ func newResponsiveWriter(out io.Writer) io.Writer {
 	return out
 }
 
+func (templater *templater) cmdGroups(c *cobra.Command, all []*cobra.Command) []CommandGroup {
+	if len(templater.CommandGroups) > 0 && c == templater.RootCmd {
+		all = filter(all, templater.Filtered...)
+		return AddAdditionalCommands(templater.CommandGroups, "Other Commands:", all)
+	}
+	all = filter(all, "options")
+	return []CommandGroup{
+		{
+			Message:  "Available Commands:",
+			Commands: all,
+		},
+	}
+}
+
 func (t *templater) groupPath(c *cobra.Command) string {
 	parentText := ""
 	parent := c.Parent()
@@ -120,6 +139,51 @@ func (t *templater) groupPath(c *cobra.Command) string {
 		}
 	}
 	return strings.TrimPrefix(parentText, "jx ") + c.Name()
+}
+
+func (t *templater) cmdGroupsString(c *cobra.Command) string {
+	groups := []string{}
+	maxLen := 1
+	for _, cmdGroup := range t.cmdGroups(c, c.Commands()) {
+		for _, cmd := range cmdGroup.Commands {
+			if cmd.Runnable() {
+				path := t.groupPath(cmd)
+				l := len(path)
+				if l > maxLen {
+					maxLen = l
+				}
+			}
+		}
+	}
+	pluginCommandGroups, _ := t.GetPluginCommandGroups()
+	for _, cmdGroup := range pluginCommandGroups {
+		for _, cmd := range cmdGroup.Commands {
+			l := len(cmd.SubCommand)
+			if l > maxLen {
+				maxLen = l
+			}
+		}
+	}
+	for _, cmdGroup := range t.cmdGroups(c, c.Commands()) {
+		cmds := []string{cmdGroup.Message}
+		for _, cmd := range cmdGroup.Commands {
+			if cmd.Runnable() {
+				path := t.groupPath(cmd)
+				//cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
+				cmds = append(cmds, "  "+table.PadRight(termcolor.ColorInfo(path), " ", maxLen)+" "+cmd.Short)
+			}
+		}
+		groups = append(groups, strings.Join(cmds, "\n"))
+	}
+	for _, cmdGroup := range pluginCommandGroups {
+		cmds := []string{cmdGroup.Message}
+		for _, cmd := range cmdGroup.Commands {
+			//cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
+			cmds = append(cmds, "  "+table.PadRight(termcolor.ColorInfo(cmd.SubCommand), " ", maxLen)+" "+fmt.Sprintf("%s (from plugin)", cmd.Description))
+		}
+		groups = append(groups, strings.Join(cmds, "\n"))
+	}
+	return fmt.Sprintf("%s\n", strings.Join(groups, "\n\n"))
 }
 
 func (t *templater) rootCmdName(c *cobra.Command) string {
