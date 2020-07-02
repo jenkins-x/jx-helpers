@@ -39,7 +39,7 @@ func PluginBinDir(envVar string, defaultDirName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(configDir, "plugins")
+	path := filepath.Join(configDir, "plugins", "bin")
 	err = os.MkdirAll(path, files.DefaultDirWritePermissions)
 	if err != nil {
 		return "", err
@@ -51,7 +51,7 @@ func PluginBinDir(envVar string, defaultDirName string) (string, error) {
 func DefaultPluginBinDir() (string, error) {
 	pluginBinDir, err := PluginBinDir(os.Getenv("JX3_HOME"), ".jx3")
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to find plugin home dir")
+		return "", errors.Wrapf(err, "failed to find plugin bin dir")
 	}
 	return pluginBinDir, nil
 }
