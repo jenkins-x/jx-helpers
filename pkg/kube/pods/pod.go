@@ -111,9 +111,24 @@ func waitForPodSelector(client kubernetes.Interface, namespace string, options m
 	_, err = tools_watch.UntilWithoutRetry(ctx, w, condition)
 
 	if err == wait.ErrWaitTimeout {
-		return fmt.Errorf("pod %s never became ready", options.String())
+		return fmt.Errorf("pod %s never became ready", ListOptionsString(options))
 	}
 	return nil
+}
+
+// ListOptionsString returns a string summary of the list options
+func ListOptionsString(options metav1.ListOptions) string {
+	var values []string
+	if options.FieldSelector != "" {
+		values = append(values, options.FieldSelector)
+	}
+	if options.LabelSelector != "" {
+		values = append(values, "selector: "+options.LabelSelector)
+	}
+	if options.ResourceVersion != "" {
+		values = append(values, "resourceVersion: "+options.ResourceVersion)
+	}
+	return strings.Join(values, ", ")
 }
 
 // HasContainerStarted returns true if the given Container has started running
