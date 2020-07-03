@@ -1,7 +1,6 @@
 package kube
 
 import (
-	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-kube-client/pkg/kubeclient"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/dynamic"
@@ -43,7 +42,7 @@ func LazyCreateKubeClient(client kubernetes.Interface) (kubernetes.Interface, er
 }
 
 // LazyCreateKubeClientAndNamespace lazy creates the kube client and/or the current namespace if not already defined
-func LazyCreateKubeClientAndNamespace(client versioned.Interface, ns string) (versioned.Interface, string, error) {
+func LazyCreateKubeClientAndNamespace(client kubernetes.Interface, ns string) (kubernetes.Interface, string, error) {
 	if client != nil && ns != "" {
 		return client, ns, nil
 	}
@@ -52,7 +51,7 @@ func LazyCreateKubeClientAndNamespace(client versioned.Interface, ns string) (ve
 	if err != nil {
 		return client, ns, errors.Wrap(err, "failed to get kubernetes config")
 	}
-	client, err = versioned.NewForConfig(cfg)
+	client, err = kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return client, ns, errors.Wrap(err, "error building kubernetes clientset")
 	}
