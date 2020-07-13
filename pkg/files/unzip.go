@@ -109,9 +109,7 @@ func extractFile(dest string, f *zip.File) error {
 			return err
 		}
 		defer f.Close()
-
-		limited := io.LimitReader(rc, 100*1024*1024)
-		_, err = io.Copy(f, limited)
+		_, err = io.Copy(f, rc)
 		if err != nil {
 			return err
 		}
