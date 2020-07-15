@@ -36,19 +36,21 @@ func ObjectNameMessage(objectMeta metav1.ObjectMeta, kindMessage string) string 
 }
 
 // AssertSecretEntryEquals asserts the Secret resource has the given value
-func AssertSecretEntryEquals(t *testing.T, secret *corev1.Secret, key string, expected string, kindMessage string) {
+func AssertSecretEntryEquals(t *testing.T, secret *corev1.Secret, key string, expected string, kindMessage string) string {
 	require.NotNil(t, secret, "Secret is nil for %s", kindMessage)
 	name := secret.Name
 	require.NotEmpty(t, secret.Data, "Data is empty in Secret %s for %s", name, kindMessage)
 
 	value := secret.Data[key]
 	require.NotNil(t, value, "Secret %s does not have key %s for %s", name, key, kindMessage)
-	assert.Equal(t, expected, string(value), "Secret %s key %s for %s", name, key, kindMessage)
+	stringValue := string(value)
+	assert.Equal(t, expected, stringValue, "Secret %s key %s for %s", name, key, kindMessage)
 	t.Logf("Secret %s has key %s=%s for %s", name, key, value, kindMessage)
+	return stringValue
 }
 
 // AssertConfigMapEntryEquals asserts the ConfigMap resource has the given data value
-func AssertConfigMapEntryEquals(t *testing.T, resource *corev1.ConfigMap, key string, expected string, kindMessage string) {
+func AssertConfigMapEntryEquals(t *testing.T, resource *corev1.ConfigMap, key string, expected string, kindMessage string) string {
 	require.NotNil(t, resource, "ConfigMap is nil for %s", kindMessage)
 	name := resource.Name
 	require.NotEmpty(t, resource.Data, "Data is empty in ConfigMap %s for %s", name, kindMessage)
@@ -56,10 +58,11 @@ func AssertConfigMapEntryEquals(t *testing.T, resource *corev1.ConfigMap, key st
 	value := resource.Data[key]
 	assert.Equal(t, expected, value, "ConfigMap %s key %s for %s", name, key, kindMessage)
 	t.Logf("ConfigMap %s has key %s=%s for %s", name, key, value, kindMessage)
+	return value
 }
 
 // AssertConfigMapData asserts the ConfigMap resource has the given data value
-func AssertConfigMapHasEntry(t *testing.T, resource *corev1.ConfigMap, key string, kindMessage string) {
+func AssertConfigMapHasEntry(t *testing.T, resource *corev1.ConfigMap, key string, kindMessage string) string {
 	require.NotNil(t, resource, "ConfigMap is nil for %s", kindMessage)
 	name := resource.Name
 	require.NotEmpty(t, resource.Data, "Data is empty in ConfigMap %s for %s", name, kindMessage)
@@ -67,4 +70,5 @@ func AssertConfigMapHasEntry(t *testing.T, resource *corev1.ConfigMap, key strin
 	value := resource.Data[key]
 	assert.NotEmpty(t, value, "ConfigMap %s key %s for %s", name, key, kindMessage)
 	t.Logf("ConfigMap %s has key %s=%s for %s", name, key, value, kindMessage)
+	return value
 }
