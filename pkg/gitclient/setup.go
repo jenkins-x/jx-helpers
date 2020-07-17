@@ -5,7 +5,6 @@ import (
 	"os/user"
 
 	"github.com/jenkins-x/jx-api/pkg/util"
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/homedir"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
@@ -48,22 +47,19 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string) (string, string, erro
 }
 
 // SetCredentialHelper sets the credential store so that we detect the ~/git/credentials file for
-// defaulting access tokens
-func SetCredentialHelper(runner cmdrunner.CommandRunner) error {
-	if runner == nil {
-		runner = cmdrunner.DefaultCommandRunner
+// defaulting access tokens.
+//
+// If the dir parameter is blank we will use the home dir
+func SetCredentialHelper(gitter Interface, dir string) error {
+	if dir == "" {
+		dir = homedir.HomeDir()
 	}
-	dir := homedir.HomeDir()
 	err := os.MkdirAll(dir, util.DefaultWritePermissions)
 	if err != nil {
 		return errors.Wrapf(err, "failed to make sure the home directory %s was created", dir)
 	}
 
-	c := &cmdrunner.Command{
-		Name: "git",
-		Args: []string{"config", "--global", "credential.helper", "store"},
-	}
-	_, err = runner(c)
+	_, err = gitter.Command(dir, "config", "--global", "credential.helper", "store")
 	if err != nil {
 		return errors.Wrapf(err, "failed to setup git")
 	}
