@@ -11,11 +11,17 @@ import (
 )
 
 // EnsureUserAndEmailSetup returns the user name and email for the gitter
-// lazily setting them if they are blank either from the environment variables
-// `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` or using default values
-func EnsureUserAndEmailSetup(gitter Interface, dir string) (string, string, error) {
+// lazily setting them if they are blank either from the given values or if they are empty
+// using environment variables `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` or using default values
+func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, gitUserEmail string) (string, string, error) {
 	userName, _ := gitter.Command(dir, "config", "--get", "user.name")
 	userEmail, _ := gitter.Command(dir, "config", "--get", "user.email")
+	if userName == "" {
+		userName = gitUserName
+	}
+	if userEmail == "" {
+		userEmail = gitUserEmail
+	}
 	if userName == "" {
 		userName = os.Getenv("GIT_AUTHOR_NAME")
 		if userName == "" {
