@@ -18,31 +18,30 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 	userEmail, _ := gitter.Command(dir, "config", "--get", "user.email")
 	if userName == "" {
 		userName = gitUserName
-	}
-	if userEmail == "" {
-		userEmail = gitUserEmail
-	}
-	if userName == "" {
-		userName = os.Getenv("GIT_AUTHOR_NAME")
 		if userName == "" {
-			user, err := user.Current()
-			if err == nil && user != nil {
-				userName = user.Username
+			userName = os.Getenv("GIT_AUTHOR_NAME")
+			if userName == "" {
+				user, err := user.Current()
+				if err == nil && user != nil {
+					userName = user.Username
+				}
+				if userName == "" {
+					userName = DefaultGitUserName
+				}
 			}
 		}
-		if userName == "" {
-			userName = DefaultGitUserName
-		}
-
 		_, err := gitter.Command(dir, "config", "--global", "--add", "user.name", userName)
 		if err != nil {
 			return userName, userEmail, errors.Wrapf(err, "Failed to set the git username to %s", userName)
 		}
 	}
 	if userEmail == "" {
-		userEmail = os.Getenv("GIT_AUTHOR_EMAIL")
+		userEmail = gitUserEmail
 		if userEmail == "" {
-			userEmail = DefaultGitUserEmail
+			userEmail = os.Getenv("GIT_AUTHOR_EMAIL")
+			if userEmail == "" {
+				userEmail = DefaultGitUserEmail
+			}
 		}
 		_, err := gitter.Command(dir, "config", "--global", "--add", "user.email", userEmail)
 		if err != nil {
