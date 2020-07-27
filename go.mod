@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/jenkins-x/jx-api v0.0.11
 	github.com/jenkins-x/jx-kube-client v0.0.8
-	github.com/jenkins-x/jx-logging v0.0.8
+	github.com/jenkins-x/jx-logging v0.0.11
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.5.2
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
