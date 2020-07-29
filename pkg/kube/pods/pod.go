@@ -10,6 +10,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -147,7 +148,7 @@ func HasContainerStarted(pod *v1.Pod, idx int) bool {
 	return false
 }
 
-// waits for the pod to become ready using the pod name
+// WaitForPodNameToBeReady waits for the pod to become ready using the pod name
 func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
 	options := metav1.ListOptions{
 		// TODO
@@ -173,6 +174,51 @@ func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name
 		return IsPodReady(pod), nil
 	}
 	return waitForPodSelector(client, namespace, options, timeout, condition)
+}
+
+// WaitForPodSelectorToBeReady waits for the pod to become ready using the given selector name
+func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, selector string, timeout time.Duration) (*corev1.Pod, error) {
+	// lets check if its already ready
+	opts := metav1.ListOptions{
+		LabelSelector: selector,
+	}
+	pod, err := GetReadyPodForSelector(client, namespace, selector)
+	if err != nil {
+		return pod, errors.Wrapf(err, "failed to ")
+	}
+	condition := func(event watch.Event) (bool, error) {
+		pod := event.Object.(*v1.Pod)
+		return IsPodReady(pod), nil
+	}
+	err = waitForPodSelector(client, namespace, opts, timeout, condition)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to ")
+	}
+	return GetReadyPodForSelector(client, namespace, selector)
+}
+
+// GetReadyPodForSelector returns the first ready pod for the given selector or nil
+func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selector string) (*corev1.Pod, error) {
+	// lets check if its already ready
+	opts := metav1.ListOptions{
+		LabelSelector: selector,
+	}
+	podList, err := client.CoreV1().Pods(namespace).List(opts)
+	if err != nil && apierrors.IsNotFound(err) {
+		err = nil
+	}
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to list pods in namespace %s with selector %s", namespace, selector)
+	}
+	if podList != nil {
+		for i := range podList.Items {
+			pod := &podList.Items[i]
+			if IsPodReady(pod) {
+				return pod, nil
+			}
+		}
+	}
+	return nil, nil
 }
 
 // WaitForPodNameToBeComplete waits for the pod to complete (succeed or fail) using the pod name
