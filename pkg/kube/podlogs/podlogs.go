@@ -22,7 +22,7 @@ func TailLogs(ns string, pod string, containerName string, errOut io.Writer, out
 	args = append(args, pod)
 	name := "kubectl"
 
-	log.Logger().Debug("about to run: kubectl %s\n", strings.Join(args, " "))
+	log.Logger().Debugf("about to run: kubectl %s\n", strings.Join(args, " "))
 
 	e := exec.Command(name, args...)
 	e.Stderr = errOut

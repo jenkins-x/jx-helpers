@@ -2,12 +2,15 @@ package gitclient
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/jenkins-x/jx-api/pkg/util"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
 )
@@ -246,4 +249,29 @@ func NthTag(g Interface, dir string, n int) (string, string, error) {
 	}
 
 	return fields[0], fields[1], nil
+}
+
+// CloneToDir clones the git repository to either the given directory or create a temporary
+func CloneToDir(g Interface, gitURL, dir string) (string, error) {
+	var err error
+	if dir != "" {
+		err = os.MkdirAll(dir, util.DefaultWritePermissions)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to create directory %s", dir)
+		}
+	} else {
+		dir, err = ioutil.TempDir("", "jx-git-")
+		if err != nil {
+			return "", errors.Wrap(err, "failed to create temporary directory")
+		}
+	}
+
+	log.Logger().Debugf("cloning %s to directory %s", termcolor.ColorInfo(gitURL), termcolor.ColorInfo(dir))
+
+	parentDir := filepath.Dir(dir)
+	_, err = g.Command(parentDir, "clone", gitURL, dir)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to clone repository %s to directory: %s", gitURL, dir)
+	}
+	return dir, nil
 }
