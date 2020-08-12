@@ -64,14 +64,23 @@ func CreateGitCredentialFromURL(gitURL string, username string, password string)
 	credential.Protocol = u.Scheme
 	credential.Host = u.Host
 	credential.Path = u.Path
+	user := u.User
+
+	// default missing user/pwd from the URL
+	if user != nil {
+		if username == "" {
+			username = user.Username()
+		}
+		if password == "" {
+			password, _ = user.Password()
+		}
+	}
 	if username != "" {
 		credential.Username = username
 	}
-
 	if password != "" {
 		credential.Password = password
 	}
-
 	return credential, nil
 }
 
