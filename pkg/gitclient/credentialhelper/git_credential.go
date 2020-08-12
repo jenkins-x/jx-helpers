@@ -122,7 +122,7 @@ func (g *GitCredential) Clone() GitCredential {
 func (g *GitCredential) URL() (url.URL, error) {
 	urlAsString := g.Protocol + "://" + g.Host
 	if g.Path != "" {
-		urlAsString = urlAsString + "/" + g.Path
+		urlAsString = stringhelpers.UrlJoin(urlAsString, g.Path)
 	}
 	u, err := url.Parse(urlAsString)
 	if err != nil {
