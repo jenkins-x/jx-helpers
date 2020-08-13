@@ -24,10 +24,11 @@ require (
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.16.5
 	k8s.io/apimachinery v0.16.5
 	k8s.io/client-go v0.16.5
+	sigs.k8s.io/kustomize/kyaml v0.6.0
 	sigs.k8s.io/yaml v1.1.0
 )
 
@@ -35,10 +36,8 @@ replace (
 	golang.org/x/sys => golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // pinned to release-branch.go1.13
 	golang.org/x/tools => golang.org/x/tools v0.0.0-20190821162956-65e3620a7ae7 // pinned to release-branch.go1.13
 	k8s.io/api => k8s.io/api v0.16.5
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190819143637-0dbe462fe92d
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.5
 	k8s.io/client-go => k8s.io/client-go v0.16.5
-	k8s.io/metrics => k8s.io/metrics v0.0.0-20190819143841-305e1cef1ab1
 )
 
 go 1.13
