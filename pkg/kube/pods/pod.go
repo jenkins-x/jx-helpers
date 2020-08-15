@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -186,8 +188,14 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 	if err != nil {
 		return pod, errors.Wrapf(err, "failed to ")
 	}
+	statusMap := map[string]string{}
 	condition := func(event watch.Event) (bool, error) {
 		pod := event.Object.(*v1.Pod)
+		status := PodStatus(pod)
+		if statusMap[pod.Name] != status && !IsPodCompleted(pod) && pod.DeletionTimestamp == nil {
+			log.Logger().Infof("pod %s has status %s", termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(status))
+			statusMap[pod.Name] = status
+		}
 		return IsPodReady(pod), nil
 	}
 	err = waitForPodSelector(client, namespace, opts, timeout, condition)
