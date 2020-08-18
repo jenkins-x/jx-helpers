@@ -24,6 +24,11 @@ func DefaultCommandRunner(c *Command) (string, error) {
 	return result, err
 }
 
+// QuietCommandRunner don't log commands that will be run or the output returned from the command
+func QuietCommandRunner(c *Command) (string, error) {
+	return c.RunWithoutRetry()
+}
+
 // DryRunCommandRunner output the commands to be run
 func DryRunCommandRunner(c *Command) (string, error) {
 	log.Logger().Infof(CLI(c))

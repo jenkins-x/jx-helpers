@@ -1,1 +1,12 @@
 buildPack: git
+pipelineConfig:
+  pipelines:
+    pullRequest:
+      pipeline:
+        stages:
+          - agent:
+              image: golang:1.13
+            name: cli
+            steps:
+              - name: test
+                command: make test
