@@ -1,0 +1,116 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: "2020-08-18T07:45:15Z"
+  labels:
+    app: jx-boot
+    git-operator.jenkins.io/commit-sha: 2dd66e5f3a1c5f8909ab93d5b30d1df82b07c33d
+    git-operator.jenkins.io/kind: git-operator
+    git-operator.jenkins.io/repository: jx-boot
+    jenkins-x.io/kind: jx-git-operator
+  name: jx-boot-2dd66e5f3a1c5f8909ab93d
+  namespace: jx
+  resourceVersion: "2004967"
+  selfLink: /apis/batch/v1/namespaces/jx/jobs/jx-boot-2dd66e5f3a1c5f8909ab93d
+  uid: 6e8b0c2d-c7d0-43c7-9027-c558d0b219e7
+spec:
+  backoffLimit: 4
+  completions: 1
+  parallelism: 1
+  selector:
+    matchLabels:
+      controller-uid: 6e8b0c2d-c7d0-43c7-9027-c558d0b219e7
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: jx-boot
+        controller-uid: 6e8b0c2d-c7d0-43c7-9027-c558d0b219e7
+        jenkins-x.io/kind: jx-git-operator
+        job-name: jx-boot-2dd66e5f3a1c5f8909ab93d
+    spec:
+      containers:
+      - args:
+        - apply
+        command:
+        - make
+        image: gcr.io/jenkinsxio-labs-private/jx-cli:0.0.342
+        imagePullPolicy: Always
+        name: job
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-volume
+        workingDir: /workspace/source
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - -c
+        - 'mkdir -p $HOME; git config --global --add user.name $GIT_AUTHOR_NAME; git
+          config --global --add user.email $GIT_AUTHOR_EMAIL; git config --global
+          credential.helper store; git clone https://${GIT_USER}:${GIT_TOKEN}@${GIT_URL#"https://"}
+          ${GIT_SUB_DIR}; echo cloned url: $(inputs.params.url) to dir: ${GIT_SUB_DIR};
+          cd ${GIT_SUB_DIR}; git checkout ${GIT_REVISION}; echo checked out revision:
+          ${GIT_REVISION} to dir: ${GIT_SUB_DIR}'
+        command:
+        - /bin/sh
+        env:
+        - name: GIT_URL
+          valueFrom:
+            secretKeyRef:
+              key: url
+              name: jx-boot
+        - name: GIT_USER
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: jx-boot
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: jx-boot
+        - name: GIT_REVISION
+          value: master
+        - name: GIT_SUB_DIR
+          value: source
+        - name: GIT_AUTHOR_EMAIL
+          value: jenkins-x@googlegroups.com
+        - name: GIT_AUTHOR_NAME
+          value: jenkins-x-labs-bot
+        - name: GIT_COMMITTER_EMAIL
+          value: jenkins-x@googlegroups.com
+        - name: GIT_COMMITTER_NAME
+          value: jenkins-x-labs-bot
+        - name: XDG_CONFIG_HOME
+          value: /workspace/xdg_config
+        image: gcr.io/jenkinsxio-labs-private/jx-cli:0.0.342
+        imagePullPolicy: IfNotPresent
+        name: git-clone
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-volume
+        workingDir: /workspace
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: jx-boot-job
+      serviceAccountName: jx-boot-job
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: workspace-volume
+status:
+  completionTime: "2020-08-18T07:48:35Z"
+  conditions:
+  - lastProbeTime: "2020-08-18T07:48:35Z"
+    lastTransitionTime: "2020-08-18T07:48:35Z"
+    status: "True"
+    type: Complete
+  startTime: "2020-08-18T07:45:15Z"
+  succeeded: 1

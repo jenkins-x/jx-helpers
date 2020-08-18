@@ -1,0 +1,118 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: "2020-08-18T05:51:47Z"
+  labels:
+    app: jx-boot
+    git-operator.jenkins.io/commit-sha: ff1fdcc9b089412e42d36a9621e879d351665b5d
+    git-operator.jenkins.io/kind: git-operator
+    git-operator.jenkins.io/repository: jx-boot
+    jenkins-x.io/kind: jx-git-operator
+  name: jx-boot-ff1fdcc9b089412e42d36a9
+  namespace: jx
+  resourceVersion: "1952510"
+  selfLink: /apis/batch/v1/namespaces/jx/jobs/jx-boot-ff1fdcc9b089412e42d36a9
+  uid: ae2b20a8-dfca-45b2-9af3-4e7a94694a63
+spec:
+  backoffLimit: 4
+  completions: 1
+  parallelism: 1
+  selector:
+    matchLabels:
+      controller-uid: ae2b20a8-dfca-45b2-9af3-4e7a94694a63
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: jx-boot
+        controller-uid: ae2b20a8-dfca-45b2-9af3-4e7a94694a63
+        jenkins-x.io/kind: jx-git-operator
+        job-name: jx-boot-ff1fdcc9b089412e42d36a9
+    spec:
+      containers:
+      - args:
+        - apply
+        command:
+        - make
+        image: gcr.io/jenkinsxio-labs-private/jx-cli:0.0.342
+        imagePullPolicy: Always
+        name: job
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-volume
+        workingDir: /workspace/source
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - -c
+        - 'mkdir -p $HOME; git config --global --add user.name $GIT_AUTHOR_NAME; git
+          config --global --add user.email $GIT_AUTHOR_EMAIL; git config --global
+          credential.helper store; git clone https://${GIT_USER}:${GIT_TOKEN}@${GIT_URL#"https://"}
+          ${GIT_SUB_DIR}; echo cloned url: $(inputs.params.url) to dir: ${GIT_SUB_DIR};
+          cd ${GIT_SUB_DIR}; git checkout ${GIT_REVISION}; echo checked out revision:
+          ${GIT_REVISION} to dir: ${GIT_SUB_DIR}'
+        command:
+        - /bin/sh
+        env:
+        - name: GIT_URL
+          valueFrom:
+            secretKeyRef:
+              key: url
+              name: jx-boot
+        - name: GIT_USER
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: jx-boot
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: jx-boot
+        - name: GIT_REVISION
+          value: master
+        - name: GIT_SUB_DIR
+          value: source
+        - name: GIT_AUTHOR_EMAIL
+          value: jenkins-x@googlegroups.com
+        - name: GIT_AUTHOR_NAME
+          value: jenkins-x-labs-bot
+        - name: GIT_COMMITTER_EMAIL
+          value: jenkins-x@googlegroups.com
+        - name: GIT_COMMITTER_NAME
+          value: jenkins-x-labs-bot
+        - name: XDG_CONFIG_HOME
+          value: /workspace/xdg_config
+        image: gcr.io/jenkinsxio-labs-private/jx-cli:0.0.342
+        imagePullPolicy: IfNotPresent
+        name: git-clone
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-volume
+        workingDir: /workspace
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: jx-boot-job
+      serviceAccountName: jx-boot-job
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: workspace-volume
+status:
+  conditions:
+  - lastProbeTime: "2020-08-18T05:54:02Z"
+    lastTransitionTime: "2020-08-18T05:54:02Z"
+    message: Job has reached the specified backoff limit
+    reason: BackoffLimitExceeded
+    status: "True"
+    type: Failed
+  failed: 4
+  startTime: "2020-08-18T05:51:47Z"
