@@ -76,6 +76,8 @@ type StableVersion struct {
 	Component string `json:"component,omitempty"`
 	// URL the URL for the documentation
 	URL string `json:"url,omitempty"`
+	// Namespace the default namespace to install this chart if none is specified
+	Namespace string `json:"namespace,omitempty"`
 }
 
 // VerifyPackage verifies the current version of the package is valid
@@ -155,7 +157,16 @@ func LoadStableVersion(wrkDir string, kind VersionKind, name string) (*StableVer
 	if kind == KindGit {
 		name = GitURLToName(name)
 	}
-	path := filepath.Join(wrkDir, string(kind), name+".yml")
+
+	// lets try the 3.x version of a file using a folder per name
+	path := filepath.Join(wrkDir, string(kind), name, "defaults.yaml")
+	exists, err := files.FileExists(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to check if path exists %s", path)
+	}
+	if !exists {
+		path = filepath.Join(wrkDir, string(kind), name+".yml")
+	}
 	return LoadStableVersionFile(path)
 }
 
