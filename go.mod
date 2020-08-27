@@ -25,7 +25,7 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.16.5
+	k8s.io/api v0.19.0
 	k8s.io/apimachinery v0.16.5
 	k8s.io/client-go v0.16.5
 	sigs.k8s.io/kustomize/kyaml v0.6.0
