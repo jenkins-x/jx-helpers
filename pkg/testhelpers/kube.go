@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 // AssertLabel asserts the object has the given label value
@@ -33,6 +35,30 @@ func AssertAnnotation(t *testing.T, annotation string, expected string, objectMe
 // ObjectNameMessage returns an object name message used in the tests
 func ObjectNameMessage(objectMeta metav1.ObjectMeta, kindMessage string) string {
 	return fmt.Sprintf("%s for name %s", kindMessage, objectMeta.Name)
+}
+
+// RequireConfigMapExists requires that the given configMap exists
+func RequireConfigMapExists(t *testing.T, client kubernetes.Interface, ns, name string) (*corev1.ConfigMap, string) {
+	message := fmt.Sprintf("ConfigMap %s in namespace %s", name, ns)
+	configMap, err := client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		require.Fail(t, "missing configMap", "no ConfigMap %s found in namespace %s", name, ns)
+		return configMap, message
+	}
+	require.NoError(t, err, "failed to find ConfigMap %s in namespace %s", name, ns)
+	return configMap, message
+}
+
+// RequireSecretExists requires that the given secret exists
+func RequireSecretExists(t *testing.T, client kubernetes.Interface, ns, name string) (*corev1.Secret, string) {
+	message := fmt.Sprintf("Secret %s in namespace %s", name, ns)
+	secret, err := client.CoreV1().Secrets(ns).Get(name, metav1.GetOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		require.Fail(t, "missing secret", "no Secret %s found in namespace %s", name, ns)
+		return secret, message
+	}
+	require.NoError(t, err, "failed to find Secret %s in namespace %s", name, ns)
+	return secret, message
 }
 
 // AssertSecretEntryEquals asserts the Secret resource has the given value
