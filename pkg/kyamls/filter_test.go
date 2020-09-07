@@ -18,6 +18,73 @@ func TestFilter(t *testing.T) {
 	}{
 		{
 			filter: kyamls.Filter{
+				Selector: map[string]string{
+					"chart":                        "myapp-0.0.12",
+					"gitops.jenkins-x.io/pipeline": "environment",
+				},
+			},
+			file:     "deployment.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Selector: map[string]string{
+					"beer": "stella",
+				},
+			},
+			file:     "service.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Selector: map[string]string{
+					"beer": "stella",
+					"wine": "shiraz",
+				},
+			},
+			file:     "service.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Selector: map[string]string{
+					"beer":   "stella",
+					"cheese": "edam",
+					"wine":   "shiraz",
+				},
+			},
+			file:     "service.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Selector: map[string]string{
+					"beer":   "stella",
+					"cheese": "edam",
+					"wine":   "malbec",
+				},
+			},
+			file:     "service.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
+				Selector: map[string]string{
+					"wine": "malbec",
+				},
+			},
+			file:     "service.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
+				Names: []string{"myapp-myapp"},
+			},
+			file:     "deployment.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
 				Kinds: []string{"apps/"},
 			},
 			file:     "deployment.yaml",
@@ -96,10 +163,10 @@ func TestFilter(t *testing.T) {
 
 		fn, err := filter.ToFilterFn()
 		require.NoError(t, err, "creating filter function for file %s", file)
-		require.NotNil(t, fn, "creating filter function for file %s", file)
+		require.NotNil(t, fn, "creating filter function for file %s filter %#v", file, filter)
 
 		flag, err := fn(node, file)
-		require.NoError(t, err, "evaluating filter function for file %s for %#v", file, filter)
+		require.NoError(t, err, "evaluating filter function for file %s filter %#v", file, filter)
 
 		assert.Equal(t, tc.expected, flag, "evaluating filter function for file %s for %#v", file, filter)
 

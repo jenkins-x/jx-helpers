@@ -4,6 +4,10 @@ metadata:
   name: cheese
   annotations:
     chart: cheese
+  labels:
+    beer: stella
+    wine: shiraz
+    cheese: edam
 spec:
   ports:
   - port: 80

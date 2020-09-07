@@ -3,6 +3,8 @@ package kyamls
 import (
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -11,15 +13,19 @@ import (
 type Filter struct {
 	Kinds       []string
 	KindsIgnore []string
+	Names       []string
+	Selector    map[string]string
 }
 
 // ToFilterFn creates a filter function
 func (f *Filter) ToFilterFn() (func(node *yaml.RNode, path string) (bool, error), error) {
 	kf := f.Parse()
-	if len(kf.Kinds) == 0 && len(kf.KindsIgnore) == 0 {
-		return nil, nil
-	}
 	return func(node *yaml.RNode, path string) (bool, error) {
+		name := GetName(node, path)
+		if len(f.Names) > 0 && stringhelpers.StringArrayIndex(f.Names, name) < 0 {
+			return false, nil
+		}
+
 		for _, filter := range kf.Kinds {
 			if filter.Matches(node, path) {
 				return true, nil
@@ -30,12 +36,39 @@ func (f *Filter) ToFilterFn() (func(node *yaml.RNode, path string) (bool, error)
 				return false, nil
 			}
 		}
-		if len(kf.Kinds) == 0 {
+		if len(kf.Kinds) > 0 {
+			return false, nil
+		}
+
+		// lets check if there's a selector
+		if f.Selector == nil {
 			return true, nil
 		}
-		return false, nil
+		labels, err := GetLabels(node, path)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to get labels for %s", path)
+		}
+		if labels == nil {
+			return false, nil
+		}
+		for k, v := range f.Selector {
+			actual := labels[k]
+			if trimQuotes(actual) != trimQuotes(v) {
+				return false, nil
+			}
+		}
+		return true, nil
 
 	}, nil
+}
+
+func trimQuotes(text string) string {
+	for _, q := range []string{"'", "\""} {
+		if strings.HasPrefix(text, q) && strings.HasSuffix(text, q) {
+			return text[1 : len(text)-1]
+		}
+	}
+	return text
 }
 
 // AddFlags add CLI flags for specifying a filter

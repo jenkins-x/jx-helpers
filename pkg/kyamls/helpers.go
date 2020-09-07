@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -27,6 +28,32 @@ func GetName(node *yaml.RNode, path string) string {
 // GetNamespace returns the namespace from the metadata
 func GetNamespace(node *yaml.RNode, path string) string {
 	return GetStringField(node, path, "metadata", "namespace")
+}
+
+// GetLabels returns the labels for the given file
+func GetLabels(node *yaml.RNode, path string) (map[string]string, error) {
+	labels, err := node.Pipe(yaml.Lookup("metadata", "labels"))
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get labels")
+	}
+	m := map[string]string{}
+	if labels == nil {
+		return m, nil
+	}
+	err = labels.VisitFields(func(node *yaml.MapNode) error {
+		v := ""
+		k, err := node.Key.String()
+		if err != nil {
+			return errors.Wrapf(err, "failed to find label key for path %s", path)
+		}
+		v, err = node.Value.String()
+		if err != nil {
+			return errors.Wrapf(err, "failed to find label %s value for path %s", k, path)
+		}
+		m[strings.TrimSpace(k)] = strings.TrimSpace(v)
+		return nil
+	})
+	return m, nil
 }
 
 /// GetStringField returns the given field from the node or returns a blank string if the field cannot be found
