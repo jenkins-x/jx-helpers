@@ -269,3 +269,24 @@ func StripTrailingSlash(url string) string {
 	}
 	return url
 }
+
+
+// HasPrefix returns true if the given string has one of the prefixes
+func HasPrefix(text string, prefixes ...string) bool {
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(text, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+// HasSuffix returns true if the given string has one of the suffixes
+func HasSuffix(text string, suffixes ...string) bool {
+	for _, suffix := range suffixes {
+		if strings.HasSuffix(text, suffix) {
+			return true
+		}
+	}
+	return false
+}

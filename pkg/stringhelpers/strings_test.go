@@ -134,3 +134,13 @@ func TestStripTrailingSlash(t *testing.T) {
 func Test_ToCamelCase(t *testing.T) {
 	assert.Equal(t, stringhelpers.ToCamelCase("my-super-name"), "MySuperName")
 }
+
+func TestHasPrefix(t *testing.T) {
+	assert.True(t, stringhelpers.HasPrefix("some text", "ignored", "some ", "another"), "should have found prefix for 2nd prefix")
+	assert.False(t, stringhelpers.HasPrefix("cheese text", "ignored", "some ", "another"), "should not have matched a prefix")
+}
+
+func TestHasSuffix(t *testing.T) {
+	assert.True(t, stringhelpers.HasSuffix("some text", "ignored", " text", "another"), "should have found suffix for 2nd suffix")
+	assert.False(t, stringhelpers.HasSuffix("cheese toast", "ignored", " something", "another"), "should not have matched a suffix")
+}
