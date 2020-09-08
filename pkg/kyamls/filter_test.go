@@ -28,6 +28,26 @@ func TestFilter(t *testing.T) {
 		},
 		{
 			filter: kyamls.Filter{
+				Kinds: []string{"Service"},
+				Selector: map[string]string{
+					"beer": "stella",
+				},
+			},
+			file:     "service.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Service"},
+				Selector: map[string]string{
+					"beer": "veltins",
+				},
+			},
+			file:     "service.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
 				Selector: map[string]string{
 					"beer": "stella",
 				},

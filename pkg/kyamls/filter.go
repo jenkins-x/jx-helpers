@@ -26,18 +26,23 @@ func (f *Filter) ToFilterFn() (func(node *yaml.RNode, path string) (bool, error)
 			return false, nil
 		}
 
-		for _, filter := range kf.Kinds {
-			if filter.Matches(node, path) {
-				return true, nil
-			}
-		}
 		for _, filter := range kf.KindsIgnore {
 			if filter.Matches(node, path) {
 				return false, nil
 			}
 		}
+
 		if len(kf.Kinds) > 0 {
-			return false, nil
+			matched := false
+			for _, filter := range kf.Kinds {
+				if filter.Matches(node, path) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				return false, nil
+			}
 		}
 
 		// lets check if there's a selector
