@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"net/url"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // UrlJoin joins the given paths so that there is only ever one '/' character between the paths
@@ -58,6 +60,25 @@ func SanitizeURL(unsanitizedUrl string) string {
 		return unsanitizedUrl
 	}
 	return stripCredentialsFromURL(u)
+}
+
+// URLSetUserPassword addss the user and password to the URL
+func URLSetUserPassword(rawURL, username, password string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL, errors.Wrapf(err, "failed to parse URL %s", rawURL)
+	}
+	user := u.User
+	if user != nil {
+		if username == "" {
+			username = user.Username()
+		}
+		if password == "" {
+			password, _ = user.Password()
+		}
+	}
+	u.User = url.UserPassword(username, password)
+	return u.String(), nil
 }
 
 // stripCredentialsFromURL strip credentials from URL
