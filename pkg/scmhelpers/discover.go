@@ -3,8 +3,12 @@ package scmhelpers
 import (
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/cli"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/gitdiscovery"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
 	"github.com/pkg/errors"
@@ -15,14 +19,17 @@ import (
 type Options struct {
 	Dir                string
 	FullRepositoryName string
-	Repository         string
 	Owner              string
+	Repository         string
+	Branch             string
 	ScmClient          *scm.Client
 	GitServerURL       string
 	SourceURL          string
 	GitKind            string
 	GitToken           string
 	GitURL             *giturl.GitRepository
+	GitClient          gitclient.Interface
+	CommandRunner      cmdrunner.CommandRunner
 }
 
 // AddFlags adds CLI arguments to configure the parameters
@@ -118,5 +125,26 @@ func (o *Options) discoverRepositoryDetails() error {
 	if o.FullRepositoryName == "" {
 		o.FullRepositoryName = scm.Join(o.Owner, o.Repository)
 	}
+	if o.Branch == "" {
+		o.Branch = os.Getenv("BRANCH_NAME")
+	}
+	if o.Branch == "" {
+		o.Branch, err = o.getBranch()
+		if err != nil {
+			return errors.Wrapf(err, "failed to resolve git branch")
+		}
+	}
 	return nil
+}
+
+func (o *Options) getBranch() (string, error) {
+	if o.GitClient == nil {
+		o.GitClient = cli.NewCLIClient("", o.CommandRunner)
+	}
+	branch, err := o.GitClient.Command(o.Dir, "rev-parse", "--abbrev-ref", "HEAD")
+	branch = strings.TrimSpace(branch)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to find git branch in dir %s", o.Dir)
+	}
+	return branch, nil
 }
