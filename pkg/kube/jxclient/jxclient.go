@@ -28,16 +28,19 @@ func LazyCreateJXClientAndNamespace(client versioned.Interface, ns string) (vers
 	if client != nil && ns != "" {
 		return client, ns, nil
 	}
-	f := kubeclient.NewFactory()
-	cfg, err := f.CreateKubeConfig()
-	if err != nil {
-		return client, ns, errors.Wrap(err, "failed to get kubernetes config")
-	}
-	client, err = versioned.NewForConfig(cfg)
-	if err != nil {
-		return client, ns, errors.Wrap(err, "error building jx clientset")
+	if client == nil {
+		f := kubeclient.NewFactory()
+		cfg, err := f.CreateKubeConfig()
+		if err != nil {
+			return client, ns, errors.Wrap(err, "failed to get kubernetes config")
+		}
+		client, err = versioned.NewForConfig(cfg)
+		if err != nil {
+			return client, ns, errors.Wrap(err, "error building jx clientset")
+		}
 	}
 	if ns == "" {
+		var err error
 		ns, err = kubeclient.CurrentNamespace()
 		if err != nil {
 			return client, ns, errors.Wrap(err, "failed to get current kubernetes namespace")
