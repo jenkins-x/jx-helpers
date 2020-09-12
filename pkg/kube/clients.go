@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // LazyCreateDynamicClient lazily creates the dynamic client if its not defined
@@ -62,4 +63,10 @@ func LazyCreateKubeClientAndNamespace(client kubernetes.Interface, ns string) (k
 		}
 	}
 	return client, ns, nil
+}
+
+// IsInCluster tells if we are running incluster
+func IsInCluster() bool {
+	_, err := rest.InClusterConfig()
+	return err == nil
 }
