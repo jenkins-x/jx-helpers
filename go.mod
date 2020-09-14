@@ -2,11 +2,14 @@ module github.com/jenkins-x/jx-helpers
 
 require (
 	github.com/MakeNowJust/heredoc v1.0.0
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.3.0
 	github.com/google/uuid v1.1.1
@@ -14,8 +17,11 @@ require (
 	github.com/jenkins-x/jx-api v0.0.17
 	github.com/jenkins-x/jx-kube-client v0.0.8
 	github.com/jenkins-x/jx-logging v0.0.11
+	github.com/magiconair/properties v1.8.0
 	github.com/onsi/ginkgo v1.10.1
 	github.com/onsi/gomega v1.7.0
+	github.com/pborman/uuid v1.2.0
+	github.com/petergtz/pegomock v2.7.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.5.2
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
@@ -31,6 +37,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.17.6
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v0.17.6
+	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/kustomize/kyaml v0.6.0
 	sigs.k8s.io/yaml v1.1.0

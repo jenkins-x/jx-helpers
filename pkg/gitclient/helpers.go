@@ -312,3 +312,33 @@ func CloneToDir(g Interface, gitURL, dir string) (string, error) {
 	}
 	return dir, nil
 }
+
+// GetLatestCommitSha returns the latest commit sha
+func GetLatestCommitSha(g Interface, dir string) (string, error) {
+	return g.Command(dir, "rev-parse", "HEAD")
+}
+
+// ForcePushBranch does a force push of the local branch into the remote branch of the repository at the given directory
+func ForcePushBranch(g Interface, dir string, localBranch string, remoteBranch string) error {
+	fullBranch := fmt.Sprintf("%s:%s", localBranch, remoteBranch)
+	return Push(g, dir, "origin", true, fullBranch)
+}
+
+// Push pushes the changes from the repository at the given directory
+func Push(g Interface, dir string, remote string, force bool, refspec ...string) error {
+	args := []string{"push", remote}
+	if force {
+		args = append(args, "--force")
+	}
+	args = append(args, refspec...)
+	_, err := g.Command(dir, args...)
+	if err != nil {
+		return errors.Wrapf(err, "failed to push to the branch %v", refspec)
+	}
+	return nil
+}
+
+// Branch returns the current branch of the repository located at the given directory
+func Branch(g Interface, dir string) (string, error) {
+	return g.Command(dir, "rev-parse", "--abbrev-ref", "HEAD")
+}
