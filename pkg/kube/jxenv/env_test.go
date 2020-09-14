@@ -12,7 +12,7 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1/core"
 	k8sv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kube_mocks "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 func init() {
@@ -104,11 +104,10 @@ func TestSortEnvironments2(t *testing.T) {
 func TestGetDevNamespace(t *testing.T) {
 	namespace := &k8sv1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "jx-testing",
-			Namespace: "jx-testing",
+			Name: "jx-testing",
 		},
 	}
-	kubernetesInterface := kube_mocks.NewSimpleClientset(namespace)
+	kubernetesInterface := fake.NewSimpleClientset(namespace)
 	testNS := "jx-testing"
 	testEnv := ""
 

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jenkins-x/jx-api/pkg/util"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
@@ -18,6 +19,42 @@ import (
 var (
 	splitDescribeRegex = regexp.MustCompile(`(?:~|\^|-g)`)
 )
+
+// AddAndCommitFiles add and commits files
+func AddAndCommitFiles(gitter Interface, dir, message string) (bool, error) {
+	_, err := gitter.Command(dir, "add", "*")
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to add files to git")
+	}
+	changes, err := HasChanges(gitter, dir)
+	if err != nil {
+		return changes, errors.Wrapf(err, "failed to check if there are changes")
+	}
+	if !changes {
+		return changes, nil
+	}
+	_, err = gitter.Command(dir, "commit", "-m", message)
+	if err != nil {
+		return changes, errors.Wrapf(err, "failed to git commit initial code changes")
+	}
+	return changes, nil
+}
+
+// CreateBranch creates a dynamic branch name and branch
+func CreateBranch(gitter Interface, dir string) (string, error) {
+	branchName := fmt.Sprintf("pr-%s", uuid.New().String())
+	gitRef := branchName
+	_, err := gitter.Command(dir, "branch", branchName)
+	if err != nil {
+		return branchName, errors.Wrapf(err, "create branch %s from %s", branchName, gitRef)
+	}
+
+	_, err = gitter.Command(dir, "checkout", branchName)
+	if err != nil {
+		return branchName, errors.Wrapf(err, "checkout branch %s", branchName)
+	}
+	return branchName, nil
+}
 
 // RefIsBranch looks for remove branches in ORIGIN for the provided directory and returns true if ref is found
 func RefIsBranch(gitter Interface, dir string, ref string) (bool, error) {

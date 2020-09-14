@@ -8,7 +8,6 @@ import (
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
-	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -36,28 +35,41 @@ func (o *PullRequestOptions) Validate() error {
 	}
 
 	if o.Number <= 0 {
-		envVar := "PULL_NUMBER"
-		prName := os.Getenv(envVar)
-		if prName == "" {
-			envVar = "BRANCH_NAME"
-			branchName := strings.ToUpper(os.Getenv(envVar))
-			prPrefix := "PR-"
-			if strings.HasPrefix(branchName, prPrefix) {
-				prName = strings.TrimPrefix(branchName, prPrefix)
-			}
+		o.Number, err = FindPullRequestFromEnvironment()
+		if err != nil {
+			return errors.Wrapf(err, "failed to get PullRequest from environment. Try supplying option: --pr")
 		}
-		if prName != "" {
-			o.Number, err = strconv.Atoi(prName)
-			if err != nil {
-				log.Logger().Warnf(
-					"Unable to convert PR "+prName+" to a number from env var %s", envVar)
-			}
+
+		if err != nil {
+			return errors.Wrapf(err, "failed to ")
 		}
 		if o.Number <= 0 {
 			return options.MissingOption("pr")
 		}
 	}
 	return nil
+}
+
+// FindPullRequestFromEnvironment returns the PullRequest number by looking for common Jenkins X environment variables
+func FindPullRequestFromEnvironment() (int, error) {
+	envVar := "PULL_NUMBER"
+	prName := os.Getenv(envVar)
+	if prName == "" {
+		envVar = "BRANCH_NAME"
+		branchName := strings.ToUpper(os.Getenv(envVar))
+		prPrefix := "PR-"
+		if strings.HasPrefix(branchName, prPrefix) {
+			prName = strings.TrimPrefix(branchName, prPrefix)
+		}
+	}
+	if prName == "" {
+		return 0, nil
+	}
+	answer, err := strconv.Atoi(prName)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to convert PR "+prName+" to a number from env var %s", envVar)
+	}
+	return answer, nil
 }
 
 // DiscoverPullRequest discovers the pull request for the current number
