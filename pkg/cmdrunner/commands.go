@@ -26,6 +26,15 @@ type Command struct {
 	Env                map[string]string
 }
 
+// NewCommand helper to create a new command
+func NewCommand(dir string, name string, args ...string) *Command {
+	return &Command{
+		Dir:  dir,
+		Name: name,
+		Args: args,
+	}
+}
+
 // CommandError is the error object encapsulating an error from a Command
 type CommandError struct {
 	Command Command
