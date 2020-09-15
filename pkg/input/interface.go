@@ -6,6 +6,9 @@ type Interface interface {
 	// PickValue pick a value
 	PickValue(message string, defaultValue string, required bool, help string) (string, error)
 
+	// PickValidValue gets an answer to a prompt from a user's free-form input with a given validator
+	PickValidValue(message string, defaultValue string, validator func(val interface{}) error, help string) (string, error)
+
 	// PickPassword pick a password
 	PickPassword(message string, help string) (string, error)
 

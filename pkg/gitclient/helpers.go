@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jenkins-x/jx-api/pkg/util"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
@@ -19,6 +20,25 @@ import (
 var (
 	splitDescribeRegex = regexp.MustCompile(`(?:~|\^|-g)`)
 )
+
+// Init inits a git repository into the given directory
+func Init(g Interface, dir string) error {
+	_, err := g.Command(dir, "init")
+	if err != nil {
+		return errors.Wrapf(err, "failed to initialise git in dir %s", dir)
+	}
+	return nil
+}
+
+// Add does a git add for all the given arguments
+func Add(g Interface, dir string, args ...string) error {
+	add := append([]string{"add"}, args...)
+	_, err := g.Command(dir, add...)
+	if err != nil {
+		return errors.Wrapf(err, "failed to add %s to git", strings.Join(args, ", "))
+	}
+	return nil
+}
 
 // AddAndCommitFiles add and commits files
 func AddAndCommitFiles(gitter Interface, dir, message string) (bool, error) {
@@ -54,6 +74,25 @@ func CreateBranch(gitter Interface, dir string) (string, error) {
 		return branchName, errors.Wrapf(err, "checkout branch %s", branchName)
 	}
 	return branchName, nil
+}
+
+// CreateBranchFrom creates a new branch called branchName from startPoint
+func CreateBranchFrom(g Interface, dir string, branchName string, startPoint string) error {
+	_, err := g.Command(dir, "branch", branchName, startPoint)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create branch %s from %s", branchName, startPoint)
+	}
+	return nil
+}
+
+// SetUpstreamTo will set the given branch to track the origin branch with the same name
+func SetUpstreamTo(g Interface, dir string, branch string) error {
+	upstream := fmt.Sprintf("origin/%s", branch)
+	_, err := g.Command(dir, "branch", "--set-upstream-to", upstream, branch)
+	if err != nil {
+		return errors.Wrapf(err, "failed to set upstream to %s for branch %s", upstream, branch)
+	}
+	return nil
 }
 
 // RefIsBranch looks for remove branches in ORIGIN for the provided directory and returns true if ref is found
@@ -341,4 +380,163 @@ func Push(g Interface, dir string, remote string, force bool, refspec ...string)
 // Branch returns the current branch of the repository located at the given directory
 func Branch(g Interface, dir string) (string, error) {
 	return g.Command(dir, "rev-parse", "--abbrev-ref", "HEAD")
+}
+
+// CloneOrPull performs a clone if the directory is empty otherwise a pull
+func CloneOrPull(g Interface, url string, dir string) error {
+	empty, err := files.IsEmpty(dir)
+	if err != nil {
+		return err
+	}
+
+	if !empty {
+		return Pull(g, dir)
+	}
+	_, err = CloneToDir(g, url, dir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to clone %s to %s", url, dir)
+	}
+	return nil
+
+}
+
+// Pull performs a git pull
+func Pull(g Interface, dir string) error {
+	_, err := g.Command(dir, "pull")
+	if err != nil {
+		return errors.Wrapf(err, "failed to git pull in dir %s", dir)
+	}
+	return nil
+}
+
+// FetchTags fetches all the tags
+func FetchTags(g Interface, dir string) error {
+	_, err := g.Command(dir, "fetch", "--tags")
+	if err != nil {
+		return errors.Wrapf(err, "failed to fetch tags")
+	}
+	return nil
+}
+
+// FetchRemoteTags fetches all the tags from a remote repository
+func FetchRemoteTags(g Interface, dir string, repo string) error {
+	_, err := g.Command(dir, "fetch", repo, "--tags")
+	if err != nil {
+		return errors.Wrapf(err, "failed to fetch remote tags")
+	}
+	return nil
+}
+
+// Tags returns all tags from the repository at the given directory
+func Tags(g Interface, dir string) ([]string, error) {
+	return FilterTags(g, dir, "")
+}
+
+// FilterTags returns all tags from the repository at the given directory that match the filter
+func FilterTags(g Interface, dir string, filter string) ([]string, error) {
+	args := []string{"tag"}
+	if filter != "" {
+		args = append(args, "--list", filter)
+	}
+	text, err := g.Command(dir, args...)
+	if err != nil {
+		return nil, err
+	}
+	text = strings.TrimSuffix(text, "\n")
+	split := strings.Split(text, "\n")
+	// Split will return the original string if it can't split it, and it may be empty
+	if len(split) == 1 && split[0] == "" {
+		return make([]string, 0), nil
+	}
+	return split, nil
+}
+
+// FetchBranch fetches the refspecs from the repo
+func FetchBranch(g Interface, dir string, repo string, refspecs ...string) error {
+	return fetchBranch(g, dir, repo, false, false, false, refspecs...)
+}
+
+// FetchBranch fetches the refspecs from the repo
+func fetchBranch(g Interface, dir string, repo string, unshallow bool, shallow bool,
+	verbose bool, refspecs ...string) error {
+	args := []string{"fetch", repo}
+	if shallow && unshallow {
+		return errors.Errorf("cannot use --depth=1 and --unshallow at the same time")
+	}
+	if shallow {
+		args = append(args, "--depth=1")
+	}
+	if unshallow {
+		args = append(args, "--unshallow")
+	}
+	for _, refspec := range refspecs {
+		args = append(args, refspec)
+	}
+	_, err := g.Command(dir, args...)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if verbose {
+		if shallow {
+			log.Logger().Infof("ran git fetch %s --depth=1 %s in dir %s", repo, strings.Join(refspecs, " "), dir)
+		} else if unshallow {
+			log.Logger().Infof("ran git fetch %s unshallow %s in dir %s", repo, strings.Join(refspecs, " "), dir)
+		} else {
+			log.Logger().Infof("ran git fetch %s --depth=1 %s in dir %s", repo, strings.Join(refspecs, " "), dir)
+		}
+
+	}
+	return nil
+}
+
+// Checkout checks out the given branch
+func Checkout(g Interface, dir string, branch string) error {
+	_, err := g.Command(dir, "checkout", branch)
+	if err != nil {
+		return errors.Wrapf(err, "failed to checkout %s", branch)
+	}
+	return nil
+}
+
+// CheckoutRemoteBranch checks out the given remote tracking branch
+func CheckoutRemoteBranch(g Interface, dir string, branch string) error {
+	remoteBranch := "origin/" + branch
+	remoteBranches, err := RemoteBranches(g, dir)
+	if err != nil {
+		return err
+	}
+	if stringhelpers.StringArrayIndex(remoteBranches, remoteBranch) < 0 {
+		_, err := g.Command(dir, "checkout", "-t", remoteBranch)
+		if err != nil {
+			return errors.Wrapf(err, "failed to checkout %s", remoteBranch)
+		}
+		return nil
+	}
+	cur, err := Branch(g, dir)
+	if err != nil {
+		return err
+	}
+	if cur == branch {
+		return nil
+	}
+	return Checkout(g, dir, branch)
+}
+
+// GetLatestCommitMessage returns the latest git commit message
+func GetLatestCommitMessage(g Interface, dir string) (string, error) {
+	return g.Command(dir, "log", "-1", "--pretty=%B")
+}
+
+// Remove removes the given file from a Git repository located at the given directory
+func Remove(g Interface, dir, fileName string) error {
+	_, err := g.Command(dir, "rm", "-r", fileName)
+	if err != nil {
+		return errors.Wrapf(err, "failed to remove %s in dir %s", fileName, dir)
+	}
+	return nil
+}
+
+// Status returns the status of the git repository at the given directory
+func Status(g Interface, dir string) (string, error) {
+	return g.Command(dir, "status")
 }

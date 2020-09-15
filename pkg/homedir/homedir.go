@@ -33,6 +33,19 @@ func ConfigDir(envVar string, defaultDirName string) (string, error) {
 	return path, nil
 }
 
+func CacheDir(envVar string, defaultDirName string) (string, error) {
+	h, err := ConfigDir(envVar, defaultDirName)
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(h, "cache")
+	err = os.MkdirAll(path, files.DefaultDirWritePermissions)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
 // PluginBinDir returns the plugin directory
 func PluginBinDir(envVar string, defaultDirName string) (string, error) {
 	configDir, err := ConfigDir(envVar, defaultDirName)
