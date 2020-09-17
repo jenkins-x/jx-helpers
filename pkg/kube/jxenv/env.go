@@ -370,3 +370,30 @@ func GetPermanentEnvironments(jxClient versioned.Interface, ns string) ([]*v1.En
 	}
 	return result, nil
 }
+
+// ModifyDevEnvironment modifies the dev environment
+func ModifyDevEnvironment(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, callback func(env *v1.Environment) error) error {
+	err := EnsureDevNamespaceCreatedWithoutEnvironment(kubeClient, ns)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create the %s Dev namespace", ns)
+	}
+
+	env, err := EnsureDevEnvironmentSetup(jxClient, ns)
+	if err != nil {
+		return errors.Wrapf(err, "failed to setup the dev environment for namespace '%s'", ns)
+	}
+
+	if env == nil {
+		return fmt.Errorf("No Development environment found for namespace %s", ns)
+	}
+
+	err = callback(env)
+	if err != nil {
+		return errors.Wrap(err, "failed to call the callback function for dev environment")
+	}
+	_, err = jxClient.JenkinsV1().Environments(ns).PatchUpdate(env)
+	if err != nil {
+		return fmt.Errorf("Failed to update Development environment in namespace %s: %s", ns, err)
+	}
+	return nil
+}

@@ -540,3 +540,12 @@ func Remove(g Interface, dir, fileName string) error {
 func Status(g Interface, dir string) (string, error) {
 	return g.Command(dir, "status")
 }
+
+// Merge merges the commitish into the current branch
+func Merge(g Interface, dir string, commitish string) error {
+	_, err := g.Command(dir, "merge", commitish)
+	if err != nil {
+		return errors.Wrapf(err, "failed to merge %s", commitish)
+	}
+	return nil
+}

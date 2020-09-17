@@ -48,15 +48,18 @@ func LazyCreateKubeClientAndNamespace(client kubernetes.Interface, ns string) (k
 		return client, ns, nil
 	}
 	f := kubeclient.NewFactory()
-	cfg, err := f.CreateKubeConfig()
-	if err != nil {
-		return client, ns, errors.Wrap(err, "failed to get kubernetes config")
-	}
-	client, err = kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return client, ns, errors.Wrap(err, "error building kubernetes clientset")
+	if client == nil {
+		cfg, err := f.CreateKubeConfig()
+		if err != nil {
+			return client, ns, errors.Wrap(err, "failed to get kubernetes config")
+		}
+		client, err = kubernetes.NewForConfig(cfg)
+		if err != nil {
+			return client, ns, errors.Wrap(err, "error building kubernetes clientset")
+		}
 	}
 	if ns == "" {
+		var err error
 		ns, err = kubeclient.CurrentNamespace()
 		if err != nil {
 			return client, ns, errors.Wrap(err, "failed to get current kubernetes namespace")
