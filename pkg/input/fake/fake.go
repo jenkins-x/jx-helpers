@@ -41,7 +41,7 @@ func (f *FakeInput) PickValue(message string, defaultValue string, required bool
 
 // PickValidValue gets an answer to a prompt from a user's free-form input with a given validator
 func (f *FakeInput) PickValidValue(message string, defaultValue string, validator func(val interface{}) error, help string) (string, error) {
-	return f.PickValidValue(message, defaultValue, nil, help)
+	return f.PickValue(message, defaultValue, false, help)
 }
 
 // PickNameWithDefault picks a value
