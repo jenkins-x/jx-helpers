@@ -3,7 +3,7 @@ module github.com/jenkins-x/jx-helpers
 require (
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921 // indirect
+	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
@@ -30,6 +30,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stoewer/go-strcase v1.2.0
 	github.com/stretchr/testify v1.6.1
+	github.com/xeipuuv/gojsonschema v1.2.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
