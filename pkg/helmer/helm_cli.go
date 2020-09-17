@@ -39,7 +39,7 @@ func NewHelmCLIWithRunner(runner cmdrunner.CommandRunner, binary, cwd string, de
 		Dir:  cwd,
 	}
 	if runner == nil {
-		runner = cmdrunner.DefaultCommandRunner
+		runner = cmdrunner.QuietCommandRunner
 	}
 	cli := &HelmCLI{
 		Binary:  binary,
