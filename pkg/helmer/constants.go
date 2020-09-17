@@ -26,9 +26,10 @@ const (
 
 	//RepoVaultPath is the path to the repo credentials in Vault
 	RepoVaultPath = "helm/repos"
-)
 
-const (
+	// JX3ChartRepository the default charts repo for the jx3 charts
+	JX3ChartRepository = "https://storage.googleapis.com/jenkinsxio/charts"
+	
 	// AnnotationChartName stores the chart name
 	AnnotationChartName = "jenkins.io/chart"
 	// AnnotationAppVersion stores the chart's app version
