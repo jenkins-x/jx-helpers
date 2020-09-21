@@ -321,7 +321,7 @@ func TestVersion(t *testing.T) {
 
 func TestSearchChartVersions(t *testing.T) {
 	expectedOutput := searchVersionOutput
-	expectedArgs := []string{"search", chart, "--versions"}
+	expectedArgs := []string{"search", "repo", chart, "--versions"}
 	helm, runner := createHelm(t, nil, expectedOutput)
 
 	versions, err := helm.SearchCharts(chart, true)
