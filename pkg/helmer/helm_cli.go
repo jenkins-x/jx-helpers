@@ -147,7 +147,7 @@ func (h *HelmCLI) ListRepos() (map[string]string, error) {
 // SearchCharts searches for all the charts matching the given filter
 func (h *HelmCLI) SearchCharts(filter string, allVersions bool) ([]ChartSummary, error) {
 	var answer []ChartSummary
-	args := []string{"search", filter}
+	args := []string{"search", "repo", filter}
 	if allVersions {
 		args = append(args, "--versions")
 	}
