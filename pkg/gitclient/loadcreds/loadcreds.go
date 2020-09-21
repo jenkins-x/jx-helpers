@@ -74,7 +74,7 @@ func GitCredentialsFile() (string, error) {
 func LoadGitCredential() ([]Credentials, error) {
 	fileName, err := GitCredentialsFile()
 	if err != nil {
-	  return nil, errors.Wrapf(err, "failed to find git credentials file")
+		return nil, errors.Wrapf(err, "failed to find git credentials file")
 	}
 	if fileName == "" {
 		return nil, nil
@@ -84,8 +84,8 @@ func LoadGitCredential() ([]Credentials, error) {
 
 // loadGitCredentialsAuthFile loads the git credentials file
 func LoadGitCredentialsFile(fileName string) ([]Credentials, error) {
-	log.Logger().Infof("loading git credentails file %s", termcolor.ColorInfo(fileName))
-	
+	log.Logger().Debugf("loading git credentials file %s", termcolor.ColorInfo(fileName))
+
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to load git credentials file %s", fileName)
