@@ -87,15 +87,15 @@ func GetPasswordFromSourceURL(sourceURL string) (string, error) {
 }
 
 func (o *Options) discoverRepositoryDetails() error {
-	if o.SourceURL == "" {
-		o.SourceURL = os.Getenv("SOURCE_URL")
-	}
 	var err error
 	if o.SourceURL == "" {
 		// lets try find the git URL from the current git clone
 		o.SourceURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
 		if err != nil {
-			return errors.Wrapf(err, "failed to discover git URL in dir %s. you could try pass the git URL as an argument", o.Dir)
+			o.SourceURL = os.Getenv("SOURCE_URL")
+			if o.SourceURL == "" {
+				return errors.Wrapf(err, "failed to discover git URL in dir %s. you could try pass the git URL as an argument", o.Dir)
+			}
 		}
 	}
 	if o.SourceURL != "" && o.GitURL == nil {
