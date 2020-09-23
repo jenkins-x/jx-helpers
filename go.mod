@@ -20,8 +20,6 @@ require (
 	github.com/magiconair/properties v1.8.0
 	github.com/onsi/ginkgo v1.10.1
 	github.com/onsi/gomega v1.7.0
-	github.com/pborman/uuid v1.2.0
-	github.com/petergtz/pegomock v2.7.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.5.2
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
@@ -35,7 +33,6 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.6
-	k8s.io/apiextensions-apiserver v0.17.6
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v0.17.6
 	k8s.io/helm v2.16.10+incompatible
@@ -48,7 +45,6 @@ replace (
 	//golang.org/x/sys => golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // pinned to release-branch.go1.13
 	//golang.org/x/tools => golang.org/x/tools v0.0.0-20190821162956-65e3620a7ae7 // pinned to release-branch.go1.13
 	k8s.io/api => k8s.io/api v0.17.6
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.6
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
 	k8s.io/client-go => k8s.io/client-go v0.17.6
 	k8s.io/kubernetes => k8s.io/kubernetes v1.14.7
