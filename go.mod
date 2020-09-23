@@ -34,7 +34,7 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.6
 	k8s.io/apimachinery v0.17.6
-	k8s.io/client-go v0.17.6
+	k8s.io/client-go v0.19.2
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/kustomize/kyaml v0.6.0
