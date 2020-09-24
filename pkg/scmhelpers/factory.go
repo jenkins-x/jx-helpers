@@ -27,7 +27,7 @@ func (o *Factory) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.GitServerURL, "git-server", "", "", "the git server URL to create the scm client")
 	cmd.Flags().StringVarP(&o.GitKind, "git-kind", "", "", "the kind of git server to connect to")
 	cmd.Flags().StringVarP(&o.GitToken, "git-token", "", "", "the git token used to operate on the git repository. If not specified it's loaded from the git credentials file")
-	cmd.Flags().StringVarP(&o.GitUsername, "git-user", "", "", "the git username used to operate on the git repository")
+	cmd.Flags().StringVarP(&o.GitUsername, "git-username", "", "", "the git username used to operate on the git repository")
 }
 
 // Create creates an ScmClient
