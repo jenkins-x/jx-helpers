@@ -127,6 +127,13 @@ func (o *Options) discoverRepositoryDetails() error {
 	}
 	if o.Branch == "" {
 		o.Branch = os.Getenv("BRANCH_NAME")
+		if o.Branch == "" {
+			// lets see if we have a PR number
+			pullNumber := os.Getenv("PULL_NUMBER")
+			if pullNumber != "" {
+				o.Branch = "PR-" + pullNumber
+			}
+		}
 	}
 	if o.Branch == "" {
 		o.Branch, err = o.getBranch()

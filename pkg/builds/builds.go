@@ -54,6 +54,12 @@ func GetBuildNumberFromLabels(m map[string]string) string {
 func GetBranchName() string {
 	branch := os.Getenv(EnvVarBranchName)
 	if branch == "" {
+		prNumber := os.Getenv("PULL_NUMBER")
+		if prNumber != "" {
+			branch = "PR-" + prNumber
+		}
+	}
+	if branch == "" {
 		m := getDownwardAPILabelsMap()
 		if m != nil {
 			branch = GetBranchNameFromLabels(m)
