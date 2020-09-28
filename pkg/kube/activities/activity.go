@@ -195,6 +195,7 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 	defaultActivity := &v1.PipelineActivity{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
+			Namespace:   ns,
 			Annotations: k.Annotations,
 			Labels:      k.Labels,
 		},
