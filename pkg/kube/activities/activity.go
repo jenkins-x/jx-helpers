@@ -41,6 +41,8 @@ type PipelineActivityKey struct {
 	GitInfo           *giturl.GitRepository
 	PullRefs          map[string]string
 	Context           string
+	Annotations       map[string]string
+	Labels            map[string]string
 }
 
 func (k *PipelineActivityKey) IsValid() bool {
@@ -192,7 +194,9 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 	create := false
 	defaultActivity := &v1.PipelineActivity{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:        name,
+			Annotations: k.Annotations,
+			Labels:      k.Labels,
 		},
 		Spec: v1.PipelineActivitySpec{},
 	}
