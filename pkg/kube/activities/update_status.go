@@ -54,6 +54,7 @@ func UpdateStatus(activity *v1.PipelineActivity, containersTerminated bool, onCo
 	}
 }
 
+// UpdateStepsStatus updates the status for the given status and steps
 func UpdateStepsStatus(status v1.ActivityStatusType, steps []v1.CoreActivityStep) v1.ActivityStatusType {
 	if status == v1.ActivityStatusTypeNone {
 		status = v1.ActivityStatusTypePending
@@ -88,9 +89,4 @@ func UpdateStepsStatus(status v1.ActivityStatusType, steps []v1.CoreActivityStep
 		return v1.ActivityStatusTypeSucceeded
 	}
 	return status
-}
-
-// UpdateStageStatus updates the status of a stage
-func UpdateStageStatus(stage *v1.StageActivityStep) {
-
 }
