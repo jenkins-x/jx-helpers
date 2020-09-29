@@ -17,6 +17,37 @@ func TestUpdateStatus(t *testing.T) {
 		expected v1.ActivityStatusType
 	}{
 		{
+			expected: v1.ActivityStatusTypePending,
+			activity: &v1.PipelineActivity{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "all-pending",
+					Namespace: ns,
+				},
+				Spec: v1.PipelineActivitySpec{
+					Steps: []v1.PipelineActivityStep{
+						{
+							Kind: v1.ActivityStepKindTypeStage,
+							Stage: &v1.StageActivityStep{
+								CoreActivityStep: v1.CoreActivityStep{
+									Name:   "step-1",
+									Status: v1.ActivityStatusTypePending,
+								},
+							},
+						},
+						{
+							Kind: v1.ActivityStepKindTypeStage,
+							Stage: &v1.StageActivityStep{
+								CoreActivityStep: v1.CoreActivityStep{
+									Name:   "step-2",
+									Status: v1.ActivityStatusTypePending,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			expected: v1.ActivityStatusTypeSucceeded,
 			activity: &v1.PipelineActivity{
 				ObjectMeta: metav1.ObjectMeta{
@@ -73,10 +104,8 @@ func TestUpdateStatus(t *testing.T) {
 							Preview: nil,
 						},
 						{
-							Kind: v1.ActivityStepKindTypeStage,
-							Stage: &v1.StageActivityStep{
-
-							},
+							Kind:  v1.ActivityStepKindTypeStage,
+							Stage: &v1.StageActivityStep{},
 							Promote: &v1.PromoteActivityStep{
 								CoreActivityStep: v1.CoreActivityStep{
 									Name:   "promote-to-staging",
