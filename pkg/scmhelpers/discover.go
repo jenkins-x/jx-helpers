@@ -12,12 +12,8 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/cli"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/gitdiscovery"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/jxclient"
-	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Options helper for discovering the git source URL and token
@@ -132,9 +128,11 @@ func (o *Options) discoverRepositoryDetails() error {
 	if o.FullRepositoryName == "" {
 		o.FullRepositoryName = scm.Join(o.Owner, o.Repository)
 	}
-	err = o.discoverGitKind()
-	if err != nil {
-		return errors.Wrapf(err, "failed to discover git kind")
+	if o.GitKind == "" {
+		o.GitKind, err = DiscoverGitKind(o.JXClient, o.Namespace, o.GitServerURL)
+		if err != nil {
+			return errors.Wrapf(err, "failed to discover git kind")
+		}
 	}
 	if o.Branch == "" {
 		o.Branch = os.Getenv("BRANCH_NAME")
@@ -165,46 +163,4 @@ func (o *Options) getBranch() (string, error) {
 		return "", errors.Wrapf(err, "failed to find git branch in dir %s", o.Dir)
 	}
 	return branch, nil
-}
-
-func (o *Options) discoverGitKind() error {
-	if o.GitKind != "" {
-		return nil
-	}
-
-	gitServiceUrl := strings.TrimSuffix(o.GitServerURL, "/")
-	if gitServiceUrl == "" {
-		log.Logger().Warnf("cannot discover git kind as no git server URL")
-		return nil
-	}
-
-	o.GitKind = giturl.SaasGitKind(gitServiceUrl)
-	if o.GitKind != "" {
-		return nil
-	}
-
-	// lets try detect the git kind from the SourceRepository
-
-	var err error
-	o.JXClient, o.Namespace, err = jxclient.LazyCreateJXClientAndNamespace(o.JXClient, o.Namespace)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create jx client")
-	}
-
-	resources, err := o.JXClient.JenkinsV1().SourceRepositories(o.Namespace).List(metav1.ListOptions{})
-	if err != nil && apierrors.IsNotFound(err) {
-		return errors.Wrapf(err, "failed to list SourceRepository resources in namespace %s", o.Namespace)
-	}
-	for _, sr := range resources.Items {
-		ss := &sr.Spec
-		if ss.Org == o.Owner && ss.Repo == o.Repository && strings.TrimSuffix(ss.Provider, "/") == gitServiceUrl {
-			if ss.ProviderKind != "" {
-				o.GitKind = ss.ProviderKind
-				return nil
-			}
-			log.Logger().Warnf("no gitKind for SourceRepository %s", sr.Name)
-		}
-	}
-	log.Logger().Warnf("no gitKind could be found for provider %s owner %s repository %s", gitServiceUrl, o.Owner, o.Repository)
-	return nil
 }
