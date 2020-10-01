@@ -8,6 +8,7 @@ import (
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +18,9 @@ type PullRequestOptions struct {
 
 	// Number the Pull Request number
 	Number int
+
+	// IgnoreMissingPullRequest does not return an error if no pull request could be found
+	IgnoreMissingPullRequest bool
 }
 
 // AddFlags adds CLI flags
@@ -37,13 +41,14 @@ func (o *PullRequestOptions) Validate() error {
 	if o.Number <= 0 {
 		o.Number, err = FindPullRequestFromEnvironment()
 		if err != nil {
+			if o.IgnoreMissingPullRequest {
+				log.Logger().Warnf("could not find Pull Request number from environment. Assuming main branch instead")
+				return nil
+			}
 			return errors.Wrapf(err, "failed to get PullRequest from environment. Try supplying option: --pr")
 		}
 
-		if err != nil {
-			return errors.Wrapf(err, "failed to ")
-		}
-		if o.Number <= 0 {
+		if o.Number <= 0 && !o.IgnoreMissingPullRequest {
 			return options.MissingOption("pr")
 		}
 	}
