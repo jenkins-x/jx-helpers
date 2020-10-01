@@ -5,8 +5,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 )
 
 // PrintCreateRepositoryGenerateAccessToken prints the access token URL of a Git repository

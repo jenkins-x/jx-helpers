@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,11 +9,11 @@ import (
 	"runtime"
 	"strings"
 
-	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
-	"github.com/jenkins-x/jx-helpers/pkg/extensions"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/jxclient"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	jenkinsv1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/extensions"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -43,7 +44,7 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create jx client")
 		}
-		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(metav1.ListOptions{})
+		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil && apierrors.IsNotFound(err) {
 			err = nil
 		}

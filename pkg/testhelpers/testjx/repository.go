@@ -1,8 +1,8 @@
 package testjx
 
 import (
-	jenkinsio "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io"
-	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	jenkinsio "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io"
+	jenkinsv1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

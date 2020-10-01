@@ -2,15 +2,16 @@ package extensions
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
-	jenkinsv1client "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/typed/jenkins.io/v1"
+	jenkinsv1client "github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned/typed/jenkins.io/v1"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/ghodss/yaml"
-	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	jenkinsv1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
 	"github.com/stoewer/go-strcase"
 )
 
@@ -39,7 +40,7 @@ func ToExecutable(e *jenkinsv1.ExtensionSpec, paramValues []jenkinsv1.ExtensionP
 		}
 	}
 
-	extension, err := exts.Get(e.FullyQualifiedKebabName(), metav1.GetOptions{})
+	extension, err := exts.Get(context.TODO(), e.FullyQualifiedKebabName(), metav1.GetOptions{})
 	if err != nil {
 		return jenkinsv1.ExtensionExecution{}, "", errors.Wrapf(err, "unable to find extension definition %s", e.FullyQualifiedKebabName())
 	}

@@ -3,7 +3,7 @@ package templater_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/templater"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/templater"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

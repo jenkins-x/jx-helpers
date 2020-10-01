@@ -1,6 +1,7 @@
 package activities
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -9,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -18,12 +19,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
 
 	"github.com/ghodss/yaml"
-	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
-	typev1 "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/typed/jenkins.io/v1"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	typev1 "github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned/typed/jenkins.io/v1"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -181,7 +182,7 @@ func GenerateBuildNumber(activities typev1.PipelineActivityInterface, pipelines 
 	spec := &a.Spec
 	updateActivitySpec(k, spec)
 
-	answer, err := activities.Create(a)
+	answer, err := activities.Create(context.TODO(), a, metav1.CreateOptions{})
 	if err != nil {
 		return "", nil, err
 	}
@@ -207,7 +208,7 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 		log.Logger().Errorf("No PipelineActivities client available")
 		return defaultActivity, create, fmt.Errorf("no PipelineActivities client available")
 	}
-	a, err := activitiesClient.Get(name, metav1.GetOptions{})
+	a, err := activitiesClient.Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		create = true
 		a = defaultActivity
@@ -234,15 +235,15 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 	}
 
 	if create {
-		answer, err := activitiesClient.Create(a)
+		answer, err := activitiesClient.Create(context.TODO(), a, metav1.CreateOptions{})
 		return answer, true, err
 	} else {
 		if !reflect.DeepEqual(&a.Spec, &oldSpec) || !reflect.DeepEqual(a.Labels, oldLabels) {
-			answer, err := activitiesClient.PatchUpdate(a)
+			answer, err := activitiesClient.Update(context.TODO(), a, metav1.UpdateOptions{})
 			if err != nil {
 				return answer, false, err
 			}
-			answer, err = activitiesClient.Get(name, metav1.GetOptions{})
+			answer, err = activitiesClient.Get(context.TODO(), name, metav1.GetOptions{})
 			return answer, false, err
 		}
 		return a, false, nil
@@ -308,7 +309,7 @@ func updateBatchBuildComprisingPRs(activitiesClient typev1.PipelineActivityInter
 	labels := currentActivity.Labels
 	paName := fmt.Sprintf("%s-%s-batch-%s", currentActivity.Spec.GitOwner, currentActivity.Spec.GitRepository, batchBuild)
 	log.Logger().Infof("Looking for batch pipeline activity with name %s", paName)
-	batchPipelineActivity, err := activitiesClient.Get(paName, metav1.GetOptions{})
+	batchPipelineActivity, err := activitiesClient.Get(context.TODO(), paName, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "there was a problem getting the PipelineActivity %s", paName)
 	}
@@ -327,14 +328,14 @@ func updateBatchBuildComprisingPRs(activitiesClient typev1.PipelineActivityInter
 		}
 	}
 
-	_, err = activitiesClient.Update(batchPipelineActivity)
+	_, err = activitiesClient.Update(context.TODO(), batchPipelineActivity, metav1.UpdateOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "there was a problem updating the batch PipelineActivity %s", paName)
 	}
 
 	log.Logger().Infof("Removing stale batch build information from %s", previousActivityForPR.Name)
 	previousActivityForPR.Spec.BatchPipelineActivity.BatchBuildNumber = ""
-	_, err = activitiesClient.Update(previousActivityForPR)
+	_, err = activitiesClient.Update(context.TODO(), previousActivityForPR, metav1.UpdateOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "there was a problem updating the PipelineActivity %s", previousActivityForPR.Name)
 	}
@@ -349,7 +350,7 @@ func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.Pipeline
 		listOptions := metav1.ListOptions{}
 		selector := fmt.Sprintf("lastCommitSha in (%s), branch in (PR-%s)", sha, prNumber)
 		listOptions.LabelSelector = selector
-		list, err := activitiesClient.List(listOptions)
+		list, err := activitiesClient.List(context.TODO(), listOptions)
 		if err != nil {
 			return errors.Wrapf(err, "there was a problem listing all PipelineActivities for PR-%s with lastCommitSha %s", prNumber, sha)
 		}
@@ -382,7 +383,7 @@ func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.Pipeline
 				BatchBuildNumber: k.Build,
 			}
 
-			_, err = activitiesClient.Update(&selectedPipeline)
+			_, err = activitiesClient.Update(context.TODO(), &selectedPipeline, metav1.UpdateOptions{})
 			if err != nil {
 				return errors.Wrap(err, "there was a problem updating the PR's PipelineActivity")
 			}
@@ -746,7 +747,7 @@ func (k *PromoteStepActivityKey) OnPromotePullRequest(kubeClient kubernetes.Inte
 	p2 := asYaml(a)
 
 	if added || p1 == "" || p1 != p2 {
-		_, err = activities.PatchUpdate(a)
+		_, err = activities.Update(context.TODO(), a, metav1.UpdateOptions{})
 	}
 	return err
 }
@@ -783,7 +784,7 @@ func (k *PromoteStepActivityKey) OnPromoteUpdate(kubeClient kubernetes.Interface
 	p2 := asYaml(a)
 
 	if added || p1 == "" || p1 != p2 {
-		_, err = activities.PatchUpdate(a)
+		_, err = activities.Update(context.TODO(), a, metav1.UpdateOptions{})
 	}
 	return err
 }
@@ -799,7 +800,7 @@ func ListSelectedPipelineActivities(activitiesClient typev1.PipelineActivityInte
 
 	// Field selectors cannot directly be applied to the list query for custom CRDs - https://github.com/kubernetes/kubernetes/issues/51046
 	// We just apply the label selectors and apply the field selection client side
-	pipelineActivityList, err := activitiesClient.List(listOptions)
+	pipelineActivityList, err := activitiesClient.List(context.TODO(), listOptions)
 	if err != nil {
 		return nil, err
 	}
