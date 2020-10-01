@@ -3,7 +3,7 @@ package fake
 import (
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 	"github.com/pkg/errors"
 )
 

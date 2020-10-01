@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -99,12 +99,12 @@ func GetCurrentPod(kubeClient kubernetes.Interface, ns string) (*v1.Pod, error) 
 		return nil, nil
 	}
 	name = naming.ToValidName(name)
-	return kubeClient.CoreV1().Pods(ns).Get(name, metav1.GetOptions{})
+	return kubeClient.CoreV1().Pods(ns).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 func waitForPodSelector(client kubernetes.Interface, namespace string, options metav1.ListOptions,
 	timeout time.Duration, condition func(event watch.Event) (bool, error)) error {
-	w, err := client.CoreV1().Pods(namespace).Watch(options)
+	w, err := client.CoreV1().Pods(namespace).Watch(context.TODO(), options)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name
 	}
 
 	// lets check if its already ready
-	pod, err := client.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := client.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}
@@ -211,7 +211,7 @@ func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selec
 	opts := metav1.ListOptions{
 		LabelSelector: selector,
 	}
-	podList, err := client.CoreV1().Pods(namespace).List(opts)
+	podList, err := client.CoreV1().Pods(namespace).List(context.TODO(), opts)
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}
@@ -247,7 +247,7 @@ func WaitForPodNameToBeComplete(client kubernetes.Interface, namespace string, n
 
 func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]string, error) {
 	var names []string
-	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
+	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return names, fmt.Errorf("Failed to load Pods %s", err)
 	}
@@ -264,7 +264,7 @@ func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]strin
 func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, map[string]*v1.Pod, error) {
 	var names []string
 	m := map[string]*v1.Pod{}
-	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
+	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return names, m, fmt.Errorf("Failed to load Pods %s", err)
 	}
@@ -283,7 +283,7 @@ func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, m
 func GetPodsWithLabels(client kubernetes.Interface, ns string, selector string) ([]string, map[string]*v1.Pod, error) {
 	var names []string
 	m := map[string]*v1.Pod{}
-	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{
+	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: selector,
 	})
 	if err != nil {

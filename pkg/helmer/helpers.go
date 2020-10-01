@@ -12,13 +12,14 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x/jx-api/pkg/util"
+
 	"github.com/google/uuid"
-	"github.com/jenkins-x/jx-api/cmd/codegen/util"
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/maps"
-	"github.com/jenkins-x/jx-helpers/pkg/table"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 
@@ -196,7 +197,7 @@ func findFileName(dir string, fileName string) (string, error) {
 		filepath.Join(dir, fileName),
 	}
 	for _, name := range names {
-		exists, err := util.FileExists(name)
+		exists, err := files.FileExists(name)
 		if err != nil {
 			return "", err
 		}
@@ -204,14 +205,14 @@ func findFileName(dir string, fileName string) (string, error) {
 			return name, nil
 		}
 	}
-	files, err := ioutil.ReadDir(dir)
+	myfiles, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return "", err
 	}
-	for _, f := range files {
+	for _, f := range myfiles {
 		if f.IsDir() {
 			name := filepath.Join(dir, f.Name(), fileName)
-			exists, err := util.FileExists(name)
+			exists, err := files.FileExists(name)
 			if err != nil {
 				return "", err
 			}
@@ -226,7 +227,7 @@ func findFileName(dir string, fileName string) (string, error) {
 	}
 	for _, d := range dirs {
 		name := filepath.Join(d, fileName)
-		exists, err := util.DirExists(d)
+		exists, err := files.DirExists(d)
 		if err != nil {
 			return "", err
 		}
@@ -239,7 +240,7 @@ func findFileName(dir string, fileName string) (string, error) {
 
 // LoadRequirementsFile loads the requirements file or creates empty requirements if the file does not exist
 func LoadRequirementsFile(fileName string) (*Requirements, error) {
-	exists, err := util.FileExists(fileName)
+	exists, err := files.FileExists(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +257,7 @@ func LoadRequirementsFile(fileName string) (*Requirements, error) {
 
 // LoadChartFile loads the chart file or creates empty chart if the file does not exist
 func LoadChartFile(fileName string) (*chart.Metadata, error) {
-	exists, err := util.FileExists(fileName)
+	exists, err := files.FileExists(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +273,7 @@ func LoadChartFile(fileName string) (*chart.Metadata, error) {
 
 // LoadValuesFile loads the values file or creates empty map if the file does not exist
 func LoadValuesFile(fileName string) (map[string]interface{}, error) {
-	exists, err := util.FileExists(fileName)
+	exists, err := files.FileExists(fileName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "checking %s exists", fileName)
 	}
@@ -297,7 +298,7 @@ func LoadParametersValuesFile(dir string) (map[string]interface{}, error) {
 
 // LoadTemplatesDir loads the files in the templates dir or creates empty map if none exist
 func LoadTemplatesDir(dirName string) (map[string]string, error) {
-	exists, err := util.DirExists(dirName)
+	exists, err := files.DirExists(dirName)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +400,7 @@ func AppendMyValues(valueFiles []string) ([]string, error) {
 		return nil, errors.Wrap(err, "failed to get the current working directory")
 	}
 	myValuesFile := filepath.Join(curDir, "myvalues.yaml")
-	exists, err := util.FileExists(myValuesFile)
+	exists, err := files.FileExists(myValuesFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check if the myvaules.yaml file exists in the current directory")
 	}

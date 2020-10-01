@@ -2,6 +2,7 @@ package extensions
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
@@ -39,7 +40,7 @@ func ToExecutable(e *jenkinsv1.ExtensionSpec, paramValues []jenkinsv1.ExtensionP
 		}
 	}
 
-	extension, err := exts.Get(e.FullyQualifiedKebabName(), metav1.GetOptions{})
+	extension, err := exts.Get(context.TODO(), e.FullyQualifiedKebabName(), metav1.GetOptions{})
 	if err != nil {
 		return jenkinsv1.ExtensionExecution{}, "", errors.Wrapf(err, "unable to find extension definition %s", e.FullyQualifiedKebabName())
 	}

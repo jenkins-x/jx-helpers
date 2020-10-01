@@ -1,7 +1,7 @@
 package kube
 
 import (
-	"github.com/jenkins-x/jx-kube-client/pkg/kubeclient"
+	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"

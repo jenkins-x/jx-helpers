@@ -1,6 +1,7 @@
 package extensions
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,12 +14,12 @@ import (
 	"time"
 
 	jenkinsv1client "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/httphelpers"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/httphelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
 	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 
@@ -249,7 +250,7 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 func ValidatePlugins(jxClient jenkinsv1client.Interface, ns string) error {
 	// TODO needs a test
 	// Validate installed plugins
-	plugins, err := jxClient.JenkinsV1().Plugins(ns).List(metav1.ListOptions{})
+	plugins, err := jxClient.JenkinsV1().Plugins(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

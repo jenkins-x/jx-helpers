@@ -2,7 +2,7 @@ package jxclient
 
 import (
 	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
-	"github.com/jenkins-x/jx-kube-client/pkg/kubeclient"
+	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
 	"github.com/pkg/errors"
 )
 

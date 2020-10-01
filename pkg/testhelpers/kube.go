@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -40,7 +41,7 @@ func ObjectNameMessage(objectMeta metav1.ObjectMeta, kindMessage string) string 
 // RequireConfigMapExists requires that the given configMap exists
 func RequireConfigMapExists(t *testing.T, client kubernetes.Interface, ns, name string) (*corev1.ConfigMap, string) {
 	message := fmt.Sprintf("ConfigMap %s in namespace %s", name, ns)
-	configMap, err := client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
+	configMap, err := client.CoreV1().ConfigMaps(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		require.Fail(t, "missing configMap", "no ConfigMap %s found in namespace %s", name, ns)
 		return configMap, message
@@ -52,7 +53,7 @@ func RequireConfigMapExists(t *testing.T, client kubernetes.Interface, ns, name 
 // RequireSecretExists requires that the given secret exists
 func RequireSecretExists(t *testing.T, client kubernetes.Interface, ns, name string) (*corev1.Secret, string) {
 	message := fmt.Sprintf("Secret %s in namespace %s", name, ns)
-	secret, err := client.CoreV1().Secrets(ns).Get(name, metav1.GetOptions{})
+	secret, err := client.CoreV1().Secrets(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		require.Fail(t, "missing secret", "no Secret %s found in namespace %s", name, ns)
 		return secret, message

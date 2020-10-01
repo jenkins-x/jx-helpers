@@ -5,9 +5,9 @@ import (
 	"os/user"
 
 	"github.com/jenkins-x/jx-api/pkg/util"
-	"github.com/jenkins-x/jx-helpers/pkg/homedir"
-	"github.com/jenkins-x/jx-helpers/pkg/kube"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/homedir"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
 

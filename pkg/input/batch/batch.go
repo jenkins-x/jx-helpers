@@ -1,7 +1,7 @@
 package batch
 
 import (
-	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 )
 
 type options struct {

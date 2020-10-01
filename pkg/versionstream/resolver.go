@@ -3,10 +3,10 @@ package versionstream
 import (
 	"fmt"
 
-	"github.com/jenkins-x/jx-helpers/pkg/errorutil"
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/errorutil"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 )
 
 // VersionResolver resolves versions of charts, packages or docker images
