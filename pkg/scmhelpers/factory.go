@@ -16,7 +16,6 @@ import (
 type Factory struct {
 	GitKind      string
 	GitServerURL string
-	Owner        string
 	GitUsername  string
 	GitToken     string
 	ScmClient    *scm.Client
