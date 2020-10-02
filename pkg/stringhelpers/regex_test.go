@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/stretchr/testify/assert"
 )
 

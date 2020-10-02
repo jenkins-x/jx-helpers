@@ -5,7 +5,7 @@ package giturl_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/stretchr/testify/assert"
 )
 

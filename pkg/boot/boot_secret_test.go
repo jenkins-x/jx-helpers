@@ -3,7 +3,7 @@ package boot_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/boot"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/boot"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

@@ -1,6 +1,7 @@
 package loadcreds
 
 import (
+	"context"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -11,15 +12,15 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/credentialhelper"
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
-	"github.com/jenkins-x/jx-helpers/pkg/kube"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/credentialhelper"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/homedir"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/homedir"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
 
@@ -148,10 +149,10 @@ func FindOperatorCredentials() (credentialhelper.GitCredential, error) {
 	if err != nil {
 		return credential, errors.Wrapf(err, "failed to create kube client")
 	}
-	secret, err := client.CoreV1().Secrets(ns).Get(BootSecretName, metav1.GetOptions{})
+	secret, err := client.CoreV1().Secrets(ns).Get(context.TODO(), BootSecretName, metav1.GetOptions{})
 	if err != nil && ns != OperatorNamespace {
 		var err2 error
-		secret, err2 = client.CoreV1().Secrets(OperatorNamespace).Get(BootSecretName, metav1.GetOptions{})
+		secret, err2 = client.CoreV1().Secrets(OperatorNamespace).Get(context.TODO(), BootSecretName, metav1.GetOptions{})
 		if err2 == nil {
 			err = nil
 		}

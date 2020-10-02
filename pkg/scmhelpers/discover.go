@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
-	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient"
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/cli"
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/gitdiscovery"
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/cli"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/gitdiscovery"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

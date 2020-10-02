@@ -3,7 +3,7 @@ package kyamls
 import (
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -78,8 +78,8 @@ func trimQuotes(text string) string {
 
 // AddFlags add CLI flags for specifying a filter
 func (f *Filter) AddFlags(cmd *cobra.Command) {
-	cmd.Flags().StringArrayVarP(&f.Kinds, "kind", "k", nil, "adds Kubernetes resource kinds to filter on. For kind expressions see: https://github.com/jenkins-x/jx-helpers/tree/master/docs/kind_filters.md")
-	cmd.Flags().StringArrayVarP(&f.KindsIgnore, "kind-ignore", "", nil, "adds Kubernetes resource kinds to exclude. For kind expressions see: https://github.com/jenkins-x/jx-helpers/tree/master/docs/kind_filters.md")
+	cmd.Flags().StringArrayVarP(&f.Kinds, "kind", "k", nil, "adds Kubernetes resource kinds to filter on. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
+	cmd.Flags().StringArrayVarP(&f.KindsIgnore, "kind-ignore", "", nil, "adds Kubernetes resource kinds to exclude. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
 }
 
 // Parse parses the filter strings

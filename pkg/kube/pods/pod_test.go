@@ -5,7 +5,7 @@ package pods_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kube/pods"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/pods"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

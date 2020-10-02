@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kube/jobs"
-	"github.com/jenkins-x/jx-helpers/pkg/yamls"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jobs"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"

@@ -3,11 +3,11 @@ package scmhelpers_test
 import (
 	"testing"
 
-	jxfake "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/fake"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
-	"github.com/jenkins-x/jx-helpers/pkg/scmhelpers"
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-helpers/pkg/testhelpers/testjx"
+	jxfake "github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned/fake"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers/testjx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

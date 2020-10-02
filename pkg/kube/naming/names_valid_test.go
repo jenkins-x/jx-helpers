@@ -5,7 +5,7 @@ package naming_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/stretchr/testify/assert"
 )
 

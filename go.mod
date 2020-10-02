@@ -1,4 +1,4 @@
-module github.com/jenkins-x/jx-helpers
+module github.com/jenkins-x/jx-helpers/v3
 
 require (
 	github.com/MakeNowJust/heredoc v1.0.0
@@ -11,14 +11,15 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/google/go-cmp v0.3.0
+	github.com/google/go-cmp v0.4.0
 	github.com/google/uuid v1.1.1
 	github.com/jenkins-x/go-scm v1.5.164
-	github.com/jenkins-x/jx-api v0.0.17
-	github.com/jenkins-x/jx-kube-client v0.0.8
-	github.com/jenkins-x/jx-logging v0.0.11
+	github.com/jenkins-x/jx-api/v3 v3.0.0
+	github.com/jenkins-x/jx-kube-client/v3 v3.0.0
+	github.com/jenkins-x/jx-logging/v3 v3.0.0
 	github.com/magiconair/properties v1.8.0
-	github.com/onsi/ginkgo v1.10.1
+	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
+	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.7.0
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.5.2
@@ -32,22 +33,13 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.17.6
-	k8s.io/apimachinery v0.17.6
-	k8s.io/client-go v0.17.6
+	k8s.io/api v0.19.2
+	k8s.io/apimachinery v0.19.2
+	k8s.io/client-go v0.19.2
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/kustomize/kyaml v0.6.0
-	sigs.k8s.io/yaml v1.1.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
-replace (
-	//golang.org/x/sys => golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // pinned to release-branch.go1.13
-	//golang.org/x/tools => golang.org/x/tools v0.0.0-20190821162956-65e3620a7ae7 // pinned to release-branch.go1.13
-	k8s.io/api => k8s.io/api v0.17.6
-	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
-	k8s.io/client-go => k8s.io/client-go v0.17.6
-	k8s.io/kubernetes => k8s.io/kubernetes v1.14.7
-)
-
-go 1.13
+go 1.15
