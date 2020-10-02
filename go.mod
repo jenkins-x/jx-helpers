@@ -16,7 +16,7 @@ require (
 	github.com/jenkins-x/go-scm v1.5.164
 	github.com/jenkins-x/jx-api/v3 v3.0.0
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.0
-	github.com/jenkins-x/jx-logging/v3 v3.0.0
+	github.com/jenkins-x/jx-logging/v3 v3.0.2
 	github.com/magiconair/properties v1.8.0
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
 	github.com/onsi/ginkgo v1.11.0
@@ -24,7 +24,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.5.2
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stoewer/go-strcase v1.2.0
