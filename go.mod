@@ -13,12 +13,11 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.4.0
 	github.com/google/uuid v1.1.1
-	github.com/jenkins-x/go-scm v1.5.164
+	github.com/jenkins-x/go-scm v1.5.177
 	github.com/jenkins-x/jx-api/v3 v3.0.0
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.0
 	github.com/jenkins-x/jx-logging/v3 v3.0.0
 	github.com/magiconair/properties v1.8.0
-	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.7.0
 	github.com/pkg/errors v0.9.1
