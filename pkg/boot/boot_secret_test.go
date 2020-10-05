@@ -43,6 +43,6 @@ func TestBootSecret(t *testing.T) {
 		assert.Equal(t, expectedUsername, bootSecret.Username, "bootSecret.Username for ns %s with secret namespace %s", ns, secretNS)
 		assert.Equal(t, expectedPassword, bootSecret.Password, "bootSecret.Password for ns %s with secret namespace %s", ns, secretNS)
 
-		t.Logf("loaded boot secret when secret namespace is %s: URL: %s user: %s pwd: %s\n", secretNS, bootSecret.URL, bootSecret.Username, bootSecret.Password)
+		t.Logf("loaded boot secret when secret namespace is %s: URL: %s user: %s pwd: %s\n", ns, bootSecret.URL, bootSecret.Username, bootSecret.Password)
 	}
 }
