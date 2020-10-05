@@ -19,7 +19,11 @@ type BootSecret struct {
 // LoadBootSecret loads the boot secret from the current namespace
 func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secretName, defaultUserName string) (*BootSecret, error) {
 	secret, err := kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), secretName, metav1.GetOptions{})
-	if err != nil && operatorNamespace != ns {
+	if err != nil {
+		// lets try either the namespace: jx-git-operator or jx whichever is different
+		if operatorNamespace == ns {
+			operatorNamespace = "jx"
+		}
 		var err2 error
 		secret, err2 = kubeClient.CoreV1().Secrets(operatorNamespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 		if err2 == nil {
@@ -28,7 +32,7 @@ func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secr
 	}
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Logger().Warnf("could not find secret %s in namespace %s", secretName, ns)
+			log.Logger().Warnf("could not find secret %s in namespace %s or %s", secretName, ns, operatorNamespace)
 			return nil, nil
 		}
 		return nil, errors.Wrapf(err, "failed to find Secret %s in namespace %s", secretName, ns)

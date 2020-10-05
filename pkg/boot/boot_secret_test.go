@@ -12,20 +12,20 @@ import (
 )
 
 func TestBootSecret(t *testing.T) {
-	ns := "jx"
-	operatorNS := boot.GitOperatorNamespace
-	secretName := boot.SecretName
-
 	expectedURL := "https://github.com/myorg/myrepo.git"
 	expectedUsername := "myuser"
 	expectedPassword := "mypwd"
 
-	for _, secretNS := range []string{ns, operatorNS} {
+	for _, ns := range []string{boot.SecretName, boot.GitOperatorNamespace, "random"} {
+		secretNS := ns
+		if secretNS == "random" {
+			secretNS = boot.GitOperatorNamespace
+		}
 		kubeClient := fake.NewSimpleClientset(
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      secretName,
-					Namespace: ns,
+					Name:      boot.SecretName,
+					Namespace: secretNS,
 				},
 				Data: map[string][]byte{
 					"url":      []byte(expectedURL),
@@ -35,7 +35,7 @@ func TestBootSecret(t *testing.T) {
 			},
 		)
 
-		bootSecret, err := boot.LoadBootSecret(kubeClient, ns, operatorNS, secretName, "")
+		bootSecret, err := boot.LoadBootSecret(kubeClient, ns, boot.GitOperatorNamespace, boot.SecretName, "")
 		require.NoError(t, err, "failed to load boot secret in ns %s with secret namespace %s", ns, secretNS)
 		require.NotNil(t, bootSecret, "no BootSecret in ns %s with secret namespace %s", ns, secretNS)
 
