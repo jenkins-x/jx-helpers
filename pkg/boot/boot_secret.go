@@ -27,7 +27,7 @@ func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secr
 		}
 	}
 	if err != nil {
-		if !apierrors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			log.Logger().Warnf("could not find secret %s in namespace %s", secretName, ns)
 			return nil, nil
 		}
