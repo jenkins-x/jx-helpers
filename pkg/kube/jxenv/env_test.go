@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	jenkinsio_v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/stretchr/testify/assert"
@@ -155,5 +156,45 @@ func TestGetPreviewEnvironmentReleaseName(t *testing.T) {
 		if releaseName != test.expectedReleaseName {
 			t.Errorf("[%d] Expected release name %s but got %s", i, test.expectedReleaseName, releaseName)
 		}
+	}
+}
+
+func TestGetRepositoryGitURL(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		args    *v1.SourceRepository
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "simple", args: &v1.SourceRepository{
+				Spec: v1.SourceRepositorySpec{
+					Org:      "foo",
+					Repo:     "bar",
+					Provider: "github.com",
+				},
+			}, want: "github.com/foo/bar.git", wantErr: false},
+		{
+			name: "bb-simple", args: &v1.SourceRepository{
+				Spec: v1.SourceRepositorySpec{
+					Org:          "foo",
+					Repo:         "bar",
+					Provider:     "bitbucketserver.com",
+					ProviderKind: "bitbucketserver",
+				},
+			}, want: "bitbucketserver.com/scm/foo/bar.git", wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := jxenv.GetRepositoryGitURL(tt.args)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetRepositoryGitURL() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetRepositoryGitURL() got = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/pkg/errors"
 
@@ -397,4 +399,44 @@ func ModifyDevEnvironment(kubeClient kubernetes.Interface, jxClient versioned.In
 		return fmt.Errorf("Failed to update Development environment in namespace %s: %s", ns, err)
 	}
 	return nil
+}
+
+// IsIncludedInTheGivenEnvs returns true if the given repository is an environment repository
+func IsIncludedInTheGivenEnvs(environments map[string]*v1.Environment, repository *v1.SourceRepository) bool {
+	gitURL, err := GetRepositoryGitURL(repository)
+	if err != nil {
+		return false
+	}
+	u2 := gitURL + ".git"
+
+	for _, env := range environments {
+		if env.Spec.Source.URL == gitURL || env.Spec.Source.URL == u2 {
+			return true
+		}
+	}
+	return false
+}
+
+// GetRepositoryGitURL returns the git repository clone URL
+func GetRepositoryGitURL(s *v1.SourceRepository) (string, error) {
+	spec := s.Spec
+	provider := spec.Provider
+	owner := spec.Org
+	repo := spec.Repo
+	if spec.HTTPCloneURL == "" {
+		if spec.ProviderKind == "bitbucketserver" {
+			provider = stringhelpers.UrlJoin(provider, "scm")
+		}
+		if provider == "" {
+			return spec.HTTPCloneURL, fmt.Errorf("missing provider in SourceRepository %s", s.Name)
+		}
+		if owner == "" {
+			return spec.HTTPCloneURL, fmt.Errorf("missing org in SourceRepository %s", s.Name)
+		}
+		if repo == "" {
+			return spec.HTTPCloneURL, fmt.Errorf("missing repo in SourceRepository %s", s.Name)
+		}
+		spec.HTTPCloneURL = stringhelpers.UrlJoin(provider, owner, repo) + ".git"
+	}
+	return spec.HTTPCloneURL, nil
 }
