@@ -20,8 +20,8 @@ require (
 	github.com/jenkins-x/jx-secret v0.0.164 // indirect
 	github.com/magiconair/properties v1.8.0
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
-	github.com/onsi/ginkgo v1.11.0
-	github.com/onsi/gomega v1.7.0
+	github.com/onsi/ginkgo v1.14.1
+	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.5.2
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
