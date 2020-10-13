@@ -81,7 +81,9 @@ func GitCredentialsFile() (string, error) {
 			return path, nil
 		}
 	}
-	return "", nil
+
+	// lets return the default name we think should be used....
+	return filepath.Join(cfgHome, "git", "credentials"), nil
 }
 
 // LoadGitCredentialsFile loads the git credentials from the `git/credentials` file
@@ -94,16 +96,28 @@ func LoadGitCredential() ([]Credentials, error) {
 	if fileName == "" {
 		return nil, nil
 	}
-	return LoadGitCredentialsFile(fileName)
+	data, _, err := LoadGitCredentialsFile(fileName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to load credential file")
+	}
+	return data, nil
 }
 
 // loadGitCredentialsAuthFile loads the git credentials file
-func LoadGitCredentialsFile(fileName string) ([]Credentials, error) {
+func LoadGitCredentialsFile(fileName string) ([]Credentials, bool, error) {
 	log.Logger().Debugf("loading git credentials file %s", termcolor.ColorInfo(fileName))
+
+	exists, err := files.FileExists(fileName)
+	if err != nil {
+		return nil, false, errors.Wrapf(err, "failed to check for file %s", fileName)
+	}
+	if !exists {
+		return nil, false, nil
+	}
 
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to load git credentials file %s", fileName)
+		return nil, true, errors.Wrapf(err, "failed to load git credentials file %s", fileName)
 	}
 
 	var answer []Credentials
@@ -137,7 +151,7 @@ func LoadGitCredentialsFile(fileName string) ([]Credentials, error) {
 		config.Password = password
 		answer = append(answer, config)
 	}
-	return answer, nil
+	return answer, true, nil
 }
 
 // FindOperatorCredentials detects the git operator secret so we have default credentials

@@ -11,16 +11,19 @@ import (
 type FakeInput struct {
 	// Values the values to return indexed by the message
 	Values map[string]string
+
+	// OrderedValues are used if there is not a value indexed by message
+	OrderedValues []string
+
+	// Counter the number of fields that have been requested so far
+	Counter int
 }
 
 var _ input.Interface = &FakeInput{}
 
 // PickPassword gets a password (via hidden input) from a user's free-form input
 func (f *FakeInput) PickPassword(message string, help string) (string, error) {
-	if f.Values == nil {
-		f.Values = map[string]string{}
-	}
-	value := f.Values[message]
+	value := f.getValue(message)
 	if value == "" {
 		return "", errors.Errorf("missing fake value for message: %s", message)
 	}
@@ -29,10 +32,7 @@ func (f *FakeInput) PickPassword(message string, help string) (string, error) {
 
 // PickValue picks a value
 func (f *FakeInput) PickValue(message string, defaultValue string, required bool, help string) (string, error) {
-	if f.Values == nil {
-		f.Values = map[string]string{}
-	}
-	value := f.Values[message]
+	value := f.getValue(message)
 	if value == "" {
 		value = defaultValue
 	}
@@ -46,10 +46,7 @@ func (f *FakeInput) PickValidValue(message string, defaultValue string, validato
 
 // PickNameWithDefault picks a value
 func (f *FakeInput) PickNameWithDefault(names []string, message string, defaultValue string, help string) (string, error) {
-	if f.Values == nil {
-		f.Values = map[string]string{}
-	}
-	value := f.Values[message]
+	value := f.getValue(message)
 	if value == "" {
 		value = defaultValue
 	}
@@ -82,4 +79,23 @@ func (f *FakeInput) Confirm(message string, defaultValue bool, help string) (boo
 	default:
 		return false, nil
 	}
+}
+
+// getValue returns the value using the message key or the ordered value if not available
+func (f *FakeInput) getValue(message string) string {
+	if f.Values == nil {
+		f.Values = map[string]string{}
+	}
+	if f.OrderedValues == nil {
+		f.OrderedValues = []string{}
+	}
+	value := f.Values[message]
+	if value == "" {
+		// lets see if we have an ordered value
+		if f.Counter < len(f.OrderedValues) {
+			value = f.OrderedValues[f.Counter]
+		}
+	}
+	f.Counter++
+	return value
 }
