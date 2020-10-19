@@ -17,9 +17,9 @@ func DiscoverUpstreamGitURL(gitConf string) (string, error) {
 	if len(remotes) == 0 {
 		return "", nil
 	}
-	rUrl := GetRemoteUrl(cfg, "upstream")
+	rUrl := GetRemoteUrl(cfg, "origin")
 	if rUrl == "" {
-		rUrl = GetRemoteUrl(cfg, "origin")
+		rUrl = GetRemoteUrl(cfg, "upstream")
 	}
 	return rUrl, nil
 }
