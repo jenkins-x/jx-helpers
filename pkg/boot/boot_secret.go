@@ -2,6 +2,7 @@ package boot
 
 import (
 	"context"
+
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -11,8 +12,13 @@ import (
 
 // BootSecret loads the boot secret
 type BootSecret struct {
-	URL      string
+	// URL the git URL to poll for git operator
+	URL string
+	// GitProviderURL the git provider URL such as: https://github.com
+	GitProviderURL string
+	// Username the git user name to clone git
 	Username string
+	// Password the git password/token to clone git
 	Password string
 }
 
@@ -40,9 +46,14 @@ func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secr
 	answer := &BootSecret{}
 	data := secret.Data
 	if data != nil {
+		if secret.Annotations != nil {
+			answer.GitProviderURL = secret.Annotations["tekton.dev/git-0"]
+		}
 		answer.URL = string(data["url"])
 		if answer.URL == "" {
-			log.Logger().Warnf("secret %s in namespace %s does not have a url entry", secretName, ns)
+		}
+		if answer.URL == "" {
+			log.Logger().Debugf("secret %s in namespace %s does not have a url entry", secretName, ns)
 		}
 		answer.Username = string(data["username"])
 		if answer.Username == "" {
