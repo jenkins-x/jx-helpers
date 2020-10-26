@@ -542,10 +542,10 @@ func (k *PromoteStepActivityKey) GetOrCreatePreview(jxClient versioned.Interface
 		return nil, nil, nil, false, err
 	}
 	spec := &a.Spec
-	for _, s := range spec.Steps {
-		step := s
-		if k.matchesPreview(&step) {
-			return a, &step, step.Preview, false, nil
+	for i := range spec.Steps {
+		step := &spec.Steps[i]
+		if k.matchesPreview(step) {
+			return a, step, step.Preview, false, nil
 		}
 	}
 	// if there is no initial release Stage lets add one
@@ -632,10 +632,10 @@ func (k *PromoteStepActivityKey) GetOrCreatePromote(jxClient versioned.Interface
 		return nil, nil, nil, false, err
 	}
 	spec := &a.Spec
-	for _, s := range spec.Steps {
-		step := s
-		if k.matchesPromote(&step) {
-			return a, &step, step.Promote, false, nil
+	for i := range spec.Steps {
+		step := &spec.Steps[i]
+		if k.matchesPromote(step) {
+			return a, step, step.Promote, false, nil
 		}
 	}
 	// if there is no initial release Stage lets add one
