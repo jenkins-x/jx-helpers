@@ -13,7 +13,7 @@ import (
 func PrintCreateRepositoryGenerateAccessToken(kind string, serverURL string, username string, o io.Writer) {
 	tokenUrl := ProviderAccessTokenURL(kind, serverURL, username)
 
-	fmt.Fprintf(o, "To be able to create a repository on %s we need an API Token\n", serverURL)
+	fmt.Fprintf(o, "To work with git provider %s we need an API Token\n", serverURL)
 	fmt.Fprintf(o, "Please click this URL and generate a token \n%s\n\n", termcolor.ColorInfo(tokenUrl))
 	fmt.Fprint(o, "Then COPY the token and enter it below:\n\n")
 }
