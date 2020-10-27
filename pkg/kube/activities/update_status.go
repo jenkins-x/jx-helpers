@@ -1,6 +1,8 @@
 package activities
 
 import (
+	"time"
+
 	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -32,6 +34,16 @@ func UpdateStatus(activity *v1.PipelineActivity, containersTerminated bool, onCo
 		}
 	}
 	spec.Status = UpdateStepsStatus(spec.Status, stageSteps)
+
+	// lets make sure we have a completed time
+	if spec.Status.IsTerminated() {
+		if spec.CompletedTimestamp == nil {
+			if biggestFinishedAt.IsZero() {
+				biggestFinishedAt.Time = time.Now()
+			}
+			spec.CompletedTimestamp = &biggestFinishedAt
+		}
+	}
 
 	if containersTerminated {
 		switch spec.Status {
