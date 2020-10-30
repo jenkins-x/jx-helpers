@@ -20,7 +20,7 @@ func TestLoadGitCredentials(t *testing.T) {
 
 	serverURL := "http://cheese.com"
 	username := "user2"
-	password := "pwd2"
+	password := "pwd2" //NOSONAR
 
 	assertServerUserPassword(t, config, "https://github.com", "user1", "pwd1")
 	assertServerUserPassword(t, config, serverURL, username, password)

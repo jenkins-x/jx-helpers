@@ -14,7 +14,7 @@ import (
 func TestBootSecret(t *testing.T) {
 	expectedURL := "https://github.com/myorg/myrepo.git"
 	expectedUsername := "myuser"
-	expectedPassword := "mypwd"
+	expectedPassword := "mypwd" //NOSONAR
 
 	for _, ns := range []string{boot.SecretName, boot.GitOperatorNamespace, "random"} {
 		secretNS := ns

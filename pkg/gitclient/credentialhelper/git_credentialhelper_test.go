@@ -91,7 +91,7 @@ var _ = Describe("GitCredential", func() {
 				"Host=github.com",
 				"Path=jenkins-x/jx",
 				"Username=johndoe",
-				"Password=1234",
+				"Password=1234", //NOSONAR
 			}
 			testCredential, err = CreateGitCredential(data)
 			Expect(err).Should(BeNil())

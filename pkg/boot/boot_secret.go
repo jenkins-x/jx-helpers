@@ -3,9 +3,10 @@ package boot
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -24,25 +25,11 @@ type BootSecret struct {
 
 // LoadBootSecret loads the boot secret from the current namespace
 func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secretName, defaultUserName string) (*BootSecret, error) {
-	secret, err := kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), secretName, metav1.GetOptions{})
+	secret, err := getBootSecret(kubeClient, ns, operatorNamespace, secretName)
 	if err != nil {
-		// lets try either the namespace: jx-git-operator or jx whichever is different
-		if operatorNamespace == ns {
-			operatorNamespace = "jx"
-		}
-		var err2 error
-		secret, err2 = kubeClient.CoreV1().Secrets(operatorNamespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-		if err2 == nil {
-			err = nil
-		}
+		return nil, errors.Wrapf(err, "failed to find boot secret")
 	}
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			log.Logger().Warnf("could not find secret %s in namespace %s or %s", secretName, ns, operatorNamespace)
-			return nil, nil
-		}
-		return nil, errors.Wrapf(err, "failed to find Secret %s in namespace %s", secretName, ns)
-	}
+
 	answer := &BootSecret{}
 	data := secret.Data
 	if data != nil {
@@ -50,8 +37,6 @@ func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secr
 			answer.GitProviderURL = secret.Annotations["tekton.dev/git-0"]
 		}
 		answer.URL = string(data["url"])
-		if answer.URL == "" {
-		}
 		if answer.URL == "" {
 			log.Logger().Debugf("secret %s in namespace %s does not have a url entry", secretName, ns)
 		}
@@ -62,4 +47,19 @@ func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secr
 		answer.Password = string(data["password"])
 	}
 	return answer, nil
+}
+
+func getBootSecret(kubeClient kubernetes.Interface, ns string, operatorNamespace string, secretName string) (*corev1.Secret, error) {
+	secret, err := kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), secretName, metav1.GetOptions{})
+	if err != nil {
+		// lets try either the namespace: jx-git-operator or jx whichever is different
+		if operatorNamespace == ns {
+			operatorNamespace = "jx"
+		}
+		secret, err = kubeClient.CoreV1().Secrets(operatorNamespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+	}
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to find secret %s in namespace %s or %s", secretName, ns, operatorNamespace)
+	}
+	return secret, nil
 }
