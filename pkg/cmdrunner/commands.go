@@ -220,24 +220,8 @@ func (c *Command) run() (string, error) {
 	if c.Dir != "" {
 		e.Dir = c.Dir
 	}
-	if len(c.Env) > 0 {
-		m := map[string]string{}
-		environ := os.Environ()
-		for _, kv := range environ {
-			paths := strings.SplitN(kv, "=", 2)
-			if len(paths) == 2 {
-				m[paths[0]] = paths[1]
-			}
-		}
-		for k, v := range c.Env {
-			m[k] = v
-		}
-		var envVars []string
-		for k, v := range m {
-			envVars = append(envVars, k+"="+v)
-		}
-		e.Env = envVars
-	}
+
+	c.addEnvironmentVariables(e)
 
 	if c.Out != nil {
 		e.Stdout = c.Out
@@ -276,4 +260,25 @@ func (c *Command) run() (string, error) {
 	}
 
 	return text, err
+}
+
+func (c *Command) addEnvironmentVariables(e *exec.Cmd) {
+	if len(c.Env) > 0 {
+		m := map[string]string{}
+		environ := os.Environ()
+		for _, kv := range environ {
+			paths := strings.SplitN(kv, "=", 2)
+			if len(paths) == 2 {
+				m[paths[0]] = paths[1]
+			}
+		}
+		for k, v := range c.Env {
+			m[k] = v
+		}
+		var envVars []string
+		for k, v := range m {
+			envVars = append(envVars, k+"="+v)
+		}
+		e.Env = envVars
+	}
 }

@@ -14,6 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	scriptsDir   = "/test_data/scripts"
+	errorMessage = "run should exit without failure"
+	failure      = "FAILURE!"
+)
+
 func TestRunPass(t *testing.T) {
 	t.Parallel()
 
@@ -23,7 +29,7 @@ func TestRunPass(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	exPath := filepath.Join(startPath, "/test_data/scripts")
+	exPath := filepath.Join(startPath, scriptsDir)
 	tempfile, err := os.Create(filepath.Join(exPath, tmpFileName))
 	tempfile.Close() // Close the file so that it can be edited by the script on windows
 	defer os.Remove(tempfile.Name())
@@ -37,7 +43,7 @@ func TestRunPass(t *testing.T) {
 
 	res, err := cmd.Run()
 
-	assert.NoError(t, err, "Run should exit without failure")
+	assert.NoError(t, err, errorMessage)
 	assert.Equal(t, "PASS", res)
 	assert.Equal(t, 2, len(cmd.Errors))
 	assert.Equal(t, 3, cmd.Attempts())
@@ -55,7 +61,7 @@ func TestRunPassFirstTime(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	exPath := startPath + "/test_data/scripts"
+	exPath := startPath + scriptsDir
 	tempfile, err := os.Create(filepath.Join(exPath, tmpFileName))
 	tempfile.Close()
 	defer os.Remove(tempfile.Name())
@@ -68,7 +74,7 @@ func TestRunPassFirstTime(t *testing.T) {
 
 	res, err := cmd.Run()
 
-	assert.NoError(t, err, "Run should exit without failure")
+	assert.NoError(t, err, errorMessage)
 	assert.Equal(t, "PASS", res)
 	assert.Equal(t, 0, len(cmd.Errors))
 	assert.Equal(t, 1, cmd.Attempts())
@@ -87,7 +93,7 @@ func TestRunFailWithTimeout(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	exPath := startPath + "/test_data/scripts"
+	exPath := startPath + scriptsDir
 	tempfile, err := os.Create(filepath.Join(exPath, tmpFileName))
 	tempfile.Close()
 	defer os.Remove(filepath.Join(exPath, tmpFileName))
@@ -101,7 +107,7 @@ func TestRunFailWithTimeout(t *testing.T) {
 
 	res, err := cmd.Run()
 
-	assert.Error(t, err, "Run should exit with failure")
+	assert.Error(t, err, errorMessage)
 	assert.Equal(t, "", res)
 	assert.Equal(t, true, cmd.DidError())
 	assert.Equal(t, true, cmd.DidFail())
@@ -114,7 +120,7 @@ func TestRunThreadSafety(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	exPath := filepath.Join(startPath, "/test_data/scripts")
+	exPath := filepath.Join(startPath, scriptsDir)
 	cmd := cmdrunner.Command{
 		Name:    filepath.Join(exPath, "sleep.sh"),
 		Dir:     exPath,
@@ -124,7 +130,7 @@ func TestRunThreadSafety(t *testing.T) {
 
 	res, err := cmd.Run()
 
-	assert.NoError(t, err, "Run should exit without failure")
+	assert.NoError(t, err, errorMessage)
 	assert.Equal(t, "0.2", res)
 	assert.Equal(t, false, cmd.DidError())
 	assert.Equal(t, false, cmd.DidFail())
@@ -140,11 +146,11 @@ func TestRunWithoutRetry(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	tempfile, err := os.Create(filepath.Join(startPath, "/test_data/scripts", tmpFileName))
+	tempfile, err := os.Create(filepath.Join(startPath, scriptsDir, tmpFileName))
 	tempfile.Close()
 	defer os.Remove(tempfile.Name())
 
-	dir := filepath.Join(startPath, "/test_data/scripts")
+	dir := filepath.Join(startPath, scriptsDir)
 	cmd := cmdrunner.Command{
 		Name:    filepath.Join(dir, getFailIteratorScript()),
 		Dir:     dir,
@@ -154,8 +160,8 @@ func TestRunWithoutRetry(t *testing.T) {
 
 	res, err := cmd.RunWithoutRetry()
 
-	assert.Error(t, err, "Run should exit with failure")
-	assert.Equal(t, "FAILURE!", res)
+	assert.Error(t, err, errorMessage)
+	assert.Equal(t, failure, res)
 	assert.Equal(t, true, cmd.DidError())
 	assert.Equal(t, true, cmd.DidFail())
 	assert.Equal(t, 1, len(cmd.Errors))
@@ -172,11 +178,11 @@ func TestRunVerbose(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	tempfile, err := os.Create(filepath.Join(startPath, "/test_data/scripts", tmpFileName))
+	tempfile, err := os.Create(filepath.Join(startPath, scriptsDir, tmpFileName))
 	tempfile.Close()
 	defer os.Remove(tempfile.Name())
 
-	dir := filepath.Join(startPath, "/test_data/scripts")
+	dir := filepath.Join(startPath, scriptsDir)
 	cmd := cmdrunner.Command{
 		Name:    filepath.Join(dir, getFailIteratorScript()),
 		Dir:     dir,
@@ -186,8 +192,8 @@ func TestRunVerbose(t *testing.T) {
 
 	res, err := cmd.RunWithoutRetry()
 
-	assert.Error(t, err, "Run should exit with failure")
-	assert.Equal(t, "FAILURE!", res)
+	assert.Error(t, err, errorMessage)
+	assert.Equal(t, failure, res)
 	assert.Equal(t, true, cmd.DidError())
 	assert.Equal(t, true, cmd.DidFail())
 	assert.Equal(t, 1, len(cmd.Errors))
@@ -203,11 +209,11 @@ func TestRunQuiet(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	tempfile, err := os.Create(filepath.Join(startPath, "/test_data/scripts", tmpFileName))
+	tempfile, err := os.Create(filepath.Join(startPath, scriptsDir, tmpFileName))
 	tempfile.Close()
 	defer os.Remove(tempfile.Name())
 
-	dir := filepath.Join(startPath, "/test_data/scripts")
+	dir := filepath.Join(startPath, scriptsDir)
 	cmd := cmdrunner.Command{
 		Name:    filepath.Join(dir, getFailIteratorScript()),
 		Dir:     dir,
@@ -217,8 +223,8 @@ func TestRunQuiet(t *testing.T) {
 
 	res, err := cmd.RunWithoutRetry()
 
-	assert.Error(t, err, "Run should exit with failure")
-	assert.Equal(t, "FAILURE!", res)
+	assert.Error(t, err, errorMessage)
+	assert.Equal(t, failure, res)
 	assert.Equal(t, true, cmd.DidError())
 	assert.Equal(t, true, cmd.DidFail())
 	assert.Equal(t, 1, len(cmd.Errors))

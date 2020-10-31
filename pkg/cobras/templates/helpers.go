@@ -37,21 +37,9 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 
 	o.addPlugins(localPlugins, otherCommands, groups)
 
-	// Managed plugins
-	var err error
-	if o.ManagedPluginsEnabled {
-		o.JXClient, o.Namespace, err = jxclient.LazyCreateJXClientAndNamespace(o.JXClient, o.Namespace)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create jx client")
-		}
-		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
-		if err != nil && apierrors.IsNotFound(err) {
-			err = nil
-		}
-		if err != nil {
-			log.Logger().Debugf("failed to find Plugin CRDs in kubernetes namespace %s due to: %s", o.Namespace, err.Error())
-		}
-		o.addPlugins(pluginList.Items, otherCommands, groups)
+	err := o.addManagedPlugins(otherCommands, groups)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to add managed plugins")
 	}
 
 	pathCommands := PluginCommandGroup{
@@ -107,6 +95,26 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 		pcgs = append(pcgs, pathCommands)
 	}
 	return pcgs, nil
+}
+
+func (o *Options) addManagedPlugins(otherCommands PluginCommandGroup, groups map[string]PluginCommandGroup) error {
+	// Managed plugins
+	var err error
+	if o.ManagedPluginsEnabled {
+		o.JXClient, o.Namespace, err = jxclient.LazyCreateJXClientAndNamespace(o.JXClient, o.Namespace)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create jx client")
+		}
+		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
+		if err != nil && apierrors.IsNotFound(err) {
+			err = nil
+		}
+		if err != nil {
+			log.Logger().Debugf("failed to find Plugin CRDs in kubernetes namespace %s due to: %s", o.Namespace, err.Error())
+		}
+		o.addPlugins(pluginList.Items, otherCommands, groups)
+	}
+	return nil
 }
 
 func (o *Options) addPlugins(pluginSlice []jenkinsv1.Plugin, otherCommands PluginCommandGroup, groups map[string]PluginCommandGroup) {
