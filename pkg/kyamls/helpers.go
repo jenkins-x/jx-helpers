@@ -89,6 +89,11 @@ func IsClusterKind(kind string) bool {
 	return kind == "" || kind == "CustomResourceDefinition" || kind == "Namespace" || strings.HasPrefix(kind, "Cluster")
 }
 
+// IsCustomResourceDefinition returns true if the kind is a customresourcedefinition
+func IsCustomResourceDefinition(kind string) bool {
+	return kind == "CustomResourceDefinition"
+}
+
 // JSONPath returns the fields separated by dots
 func JSONPath(fields ...string) string {
 	return strings.Join(fields, ".")
