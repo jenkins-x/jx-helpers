@@ -150,8 +150,26 @@ func HasContainerStarted(pod *v1.Pod, idx int) bool {
 	return false
 }
 
-// WaitForPodNameToBeReady waits for the pod to become ready using the pod name
+// WaitForPodNameToBeRunning waits for the pod with the given name to be running
+func WaitForPodNameToBeRunning(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
+	condition := func(event watch.Event) (bool, error) {
+		pod := event.Object.(*v1.Pod)
+		return pod != nil && pod.Status.Phase == corev1.PodRunning, nil
+	}
+	return WaitforPodNameCondition(client, namespace, name, timeout, condition)
+}
+
+// WaitForPodNameToBeReady waits for the pod with the given name to become ready
 func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
+	condition := func(event watch.Event) (bool, error) {
+		pod := event.Object.(*v1.Pod)
+		return pod != nil && IsPodReady(pod), nil
+	}
+	return WaitforPodNameCondition(client, namespace, name, timeout, condition)
+}
+
+// WaitforPodNameCondition waits for the given pod name to match the given condition function
+func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name string, timeout time.Duration, condition func(event watch.Event) (bool, error)) error {
 	options := metav1.ListOptions{
 		// TODO
 		//FieldSelector: fields.OneTermEqualSelector(api.ObjectNameField, name).String(),
@@ -168,12 +186,6 @@ func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name
 	}
 	if pod != nil && IsPodReady(pod) {
 		return nil
-	}
-
-	condition := func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
-
-		return IsPodReady(pod), nil
 	}
 	return waitForPodSelector(client, namespace, options, timeout, condition)
 }
