@@ -152,24 +152,22 @@ func HasContainerStarted(pod *v1.Pod, idx int) bool {
 
 // WaitForPodNameToBeRunning waits for the pod with the given name to be running
 func WaitForPodNameToBeRunning(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
-	condition := func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
-		return pod != nil && pod.Status.Phase == corev1.PodRunning, nil
+	condition := func(pod *corev1.Pod) (bool, error) {
+		return pod.Status.Phase == corev1.PodRunning, nil
 	}
 	return WaitforPodNameCondition(client, namespace, name, timeout, condition)
 }
 
 // WaitForPodNameToBeReady waits for the pod with the given name to become ready
 func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
-	condition := func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
-		return pod != nil && IsPodReady(pod), nil
+	condition := func(pod *corev1.Pod) (bool, error) {
+		return IsPodReady(pod), nil
 	}
 	return WaitforPodNameCondition(client, namespace, name, timeout, condition)
 }
 
 // WaitforPodNameCondition waits for the given pod name to match the given condition function
-func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name string, timeout time.Duration, condition func(event watch.Event) (bool, error)) error {
+func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name string, timeout time.Duration, condition func(pod *corev1.Pod) (bool, error)) error {
 	options := metav1.ListOptions{
 		// TODO
 		//FieldSelector: fields.OneTermEqualSelector(api.ObjectNameField, name).String(),
@@ -184,10 +182,22 @@ func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name
 	if err != nil {
 		return errors.Wrapf(err, "failed to get pod %s in namespace %s", name, namespace)
 	}
-	if pod != nil && IsPodReady(pod) {
-		return nil
+	if pod != nil {
+		flag, err := condition(pod)
+		if err != nil {
+			return errors.Wrap(err, "failed to check pod condition")
+		}
+		if flag {
+			return nil
+		}
 	}
-	return waitForPodSelector(client, namespace, options, timeout, condition)
+	return waitForPodSelector(client, namespace, options, timeout, func(event watch.Event) (bool, error) {
+		pod := event.Object.(*v1.Pod)
+		if pod == nil {
+			return false, err
+		}
+		return condition(pod)
+	})
 }
 
 // WaitForPodSelectorToBeReady waits for the pod to become ready using the given selector name
