@@ -219,12 +219,12 @@ func FindGitCredentialsFromSecret(secretName string) (credentialhelper.GitCreden
 
 	data := secret.Data
 	if data == nil {
-		return credential, errors.Wrapf(err, "failed to find data in secret %s", BootSecretName)
+		return credential, errors.Wrapf(err, "failed to find data in secret %s", secretName)
 	}
 
 	gitURL := string(data["url"])
 	if gitURL == "" {
-		log.Logger().Warnf("secret %s in namespace %s does not have a url entry", BootSecretName, ns)
+		log.Logger().Warnf("secret %s in namespace %s does not have a url entry", secretName, ns)
 		return credential, nil
 	}
 	// lets convert the git URL into a provider URL
