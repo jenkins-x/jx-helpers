@@ -202,3 +202,42 @@ func FindOperatorCredentials() (credentialhelper.GitCredential, error) {
 	}
 	return credential, nil
 }
+
+// FindGitCredentialsFromSecret detects the git secrets using a secret name
+func FindGitCredentialsFromSecret(secretName string) (credentialhelper.GitCredential, error) {
+	var client kubernetes.Interface
+	var credential credentialhelper.GitCredential
+	var err error
+	client, ns, err := kube.LazyCreateKubeClientAndNamespace(client, "")
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to create kube client")
+	}
+	secret, err := client.CoreV1().Secrets(ns).Get(context.TODO(), secretName, metav1.GetOptions{})
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to find Secret %s in namespace %s", BootSecretName, ns)
+	}
+
+	data := secret.Data
+	if data == nil {
+		return credential, errors.Wrapf(err, "failed to find data in secret %s", BootSecretName)
+	}
+
+	gitURL := string(data["url"])
+	if gitURL == "" {
+		log.Logger().Warnf("secret %s in namespace %s does not have a url entry", BootSecretName, ns)
+		return credential, nil
+	}
+	// lets convert the git URL into a provider URL
+	gitInfo, err := giturl.ParseGitURL(gitURL)
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to parse git URL %s", gitURL)
+	}
+	gitProviderURL := gitInfo.HostURL()
+	username := string(data["username"])
+	password := string(data["password"])
+	credential, err = credentialhelper.CreateGitCredentialFromURL(gitProviderURL, username, password)
+	if err != nil {
+		return credential, errors.Wrapf(err, "invalid git auth information")
+	}
+	return credential, nil
+}
