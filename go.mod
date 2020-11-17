@@ -14,7 +14,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.1.1
-	github.com/jenkins-x/go-scm v1.5.186
+	github.com/jenkins-x/go-scm v1.5.191
 	github.com/jenkins-x/jx-api/v3 v3.0.1
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.2
