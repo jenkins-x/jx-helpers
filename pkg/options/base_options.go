@@ -67,6 +67,7 @@ func (o *BaseOptions) Validate() error {
 // GetContext lazily creates the context if its not already set
 func (o *BaseOptions) GetContext() context.Context {
 	if o.Ctx == nil {
+		// handles ctrl-c
 		o.Ctx = signals.NewContext()
 	}
 	return o.Ctx
