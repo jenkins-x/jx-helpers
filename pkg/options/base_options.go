@@ -1,10 +1,12 @@
 package options
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/signals"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -23,6 +25,7 @@ type BaseOptions struct {
 	BatchMode bool
 	Verbose   bool
 	LogLevel  string
+	Ctx       context.Context
 	Command   *cobra.Command
 }
 
@@ -59,4 +62,12 @@ func (o *BaseOptions) Validate() error {
 
 	}
 	return nil
+}
+
+// GetContext lazily creates the context if its not already set
+func (o *BaseOptions) GetContext() context.Context {
+	if o.Ctx == nil {
+		o.Ctx = signals.NewContext()
+	}
+	return o.Ctx
 }
