@@ -129,13 +129,20 @@ func EnsurePluginInstalled(plugin jenkinsv1.Plugin, pluginBinDir string) (string
 func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir string, aliasFileName string) (string, error) {
 	var err error
 	version := plugin.Spec.Version
-	path := filepath.Join(pluginBinDir, fmt.Sprintf("%s-%s", plugin.Spec.Name, version))
+	pluginName := plugin.Spec.Name
+	envName := strings.ToUpper(pluginName)
+	envName = strings.ReplaceAll(envName, "-", "_") + "_VERSION"
+	customVersion := os.Getenv(envName)
+	if customVersion != "" {
+		version = customVersion
+	}
+	path := filepath.Join(pluginBinDir, fmt.Sprintf("%s-%s", pluginName, version))
 	if _, err = os.Stat(path); os.IsNotExist(err) {
 		u, err := FindPluginUrl(plugin.Spec)
 		if err != nil {
 			return "", err
 		}
-		log.Logger().Infof("Installing plugin %s version %s for command %s from %s into %s", termcolor.ColorInfo(plugin.Spec.Name),
+		log.Logger().Infof("Installing plugin %s version %s for command %s from %s into %s", termcolor.ColorInfo(pluginName),
 			termcolor.ColorInfo(version), termcolor.ColorInfo(fmt.Sprintf("jx %s", plugin.Spec.SubCommand)), termcolor.ColorInfo(u), pluginBinDir)
 
 		// Look for other versions to cleanup
@@ -171,7 +178,7 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 			return "", err
 		}
 		filename := filepath.Base(pluginURL.Path)
-		tmpDir, err := ioutil.TempDir("", plugin.Spec.Name)
+		tmpDir, err := ioutil.TempDir("", pluginName)
 		defer func() {
 			err := os.RemoveAll(tmpDir)
 			if err != nil {
@@ -223,14 +230,14 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 			if err != nil {
 				return "", err
 			}
-			oldPath = filepath.Join(tmpDir, plugin.Spec.Name)
+			oldPath = filepath.Join(tmpDir, pluginName)
 		}
 		if strings.HasSuffix(filename, ".zip") || strings.HasSuffix(aliasFileName, ".zip") {
 			err = files.Unzip(downloadFile, tmpDir)
 			if err != nil {
 				return "", err
 			}
-			oldPath = filepath.Join(tmpDir, plugin.Spec.Name)
+			oldPath = filepath.Join(tmpDir, pluginName)
 		}
 
 		err = files.CopyFile(oldPath, path)
