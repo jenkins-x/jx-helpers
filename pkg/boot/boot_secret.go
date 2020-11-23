@@ -21,6 +21,8 @@ type BootSecret struct {
 	Username string
 	// Password the git password/token to clone git
 	Password string
+	// GitInitCommands the optional commands to configure git before we clone
+	GitInitCommands string
 }
 
 // LoadBootSecret loads the boot secret from the current namespace
@@ -45,6 +47,7 @@ func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secr
 			answer.Username = defaultUserName
 		}
 		answer.Password = string(data["password"])
+		answer.GitInitCommands = string(data["gitInitCommands"])
 	}
 	return answer, nil
 }
