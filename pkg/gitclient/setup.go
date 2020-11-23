@@ -71,7 +71,10 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 		}
 	}
 	if userName == "" {
-		userName = os.Getenv("GIT_AUTHOR_NAME")
+		userName = os.Getenv("GIT_USER_NAME")
+		if userName == "" {
+			userName = os.Getenv("GIT_AUTHOR_NAME")
+		}
 		if userName == "" {
 			user, err := user.Current()
 			if err == nil && user != nil {
@@ -87,7 +90,10 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 		return userName, userEmail, errors.Wrapf(err, "Failed to set the git username to %s", userName)
 	}
 	if userEmail == "" {
-		userEmail = os.Getenv("GIT_AUTHOR_EMAIL")
+		userName = os.Getenv("GIT_USER_EMAIL")
+		if userEmail == "" {
+			userEmail = os.Getenv("GIT_AUTHOR_EMAIL")
+		}
 		if userEmail == "" {
 			userEmail = DefaultGitUserEmail
 		}
