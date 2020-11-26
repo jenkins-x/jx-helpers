@@ -17,9 +17,9 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	jenkinsv1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 
-	"github.com/jenkins-x/jx-api/v3/pkg/util"
+	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,13 +45,13 @@ func TestEnsurePluginInstalled(t *testing.T) {
 		err = srv.Close()
 		assert.NoError(t, err, "Error getting plugin bin dir for namespace jx-test")
 	}()
-	testPlugin := jenkinsv1.Plugin{
+	testPlugin := jxCore.Plugin{
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: binDirNs,
 		},
-		Spec: jenkinsv1.PluginSpec{
+		Spec: jxCore.PluginSpec{
 			Description: "Test Plugin",
-			Binaries: []jenkinsv1.Binary{
+			Binaries: []jxCore.Binary{
 				{
 					URL:    fmt.Sprintf("http://%s:%d/jx-test", "localhost", port),
 					Goarch: "amd64",

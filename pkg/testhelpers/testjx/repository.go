@@ -1,14 +1,14 @@
 package testjx
 
 import (
-	jenkinsio "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io"
-	jenkinsv1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	jenkinsio "github.com/jenkins-x/jx-api/v4/pkg/apis/core"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CreateSourceRepository tests a SourceRepository instance for a test case
-func CreateSourceRepository(ns, org, repo, kind, provider string) *jenkinsv1.SourceRepository {
-	return &jenkinsv1.SourceRepository{
+func CreateSourceRepository(ns, org, repo, kind, provider string) *jxCore.SourceRepository {
+	return &jxCore.SourceRepository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SourceRepository",
 			APIVersion: jenkinsio.GroupName + "/" + jenkinsio.Version,
@@ -17,7 +17,7 @@ func CreateSourceRepository(ns, org, repo, kind, provider string) *jenkinsv1.Sou
 			Name:      org + "-" + repo,
 			Namespace: ns,
 		},
-		Spec: jenkinsv1.SourceRepositorySpec{
+		Spec: jxCore.SourceRepositorySpec{
 			Provider:     provider,
 			Org:          org,
 			Repo:         repo,

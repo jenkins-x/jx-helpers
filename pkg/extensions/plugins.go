@@ -13,7 +13,8 @@ import (
 	"strings"
 	"time"
 
-	jenkinsv1client "github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	jxClient "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/httphelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
@@ -21,7 +22,7 @@ import (
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
-	jenkinsv1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 
 	"github.com/spf13/cobra"
 )
@@ -103,7 +104,7 @@ func isExecutable(fullPath string) (bool, error) {
 }
 
 // FindPluginUrl finds the download URL for the current platform for a plugin
-func FindPluginUrl(plugin jenkinsv1.PluginSpec) (string, error) {
+func FindPluginUrl(plugin jxCore.PluginSpec) (string, error) {
 	u := ""
 	for _, binary := range plugin.Binaries {
 		if strings.ToLower(runtime.GOOS) == strings.ToLower(binary.Goos) && strings.ToLower(runtime.
@@ -120,13 +121,13 @@ func FindPluginUrl(plugin jenkinsv1.PluginSpec) (string, error) {
 
 // EnsurePluginInstalled ensures that the correct version of a plugin is installed locally.
 // It will clean up old versions.
-func EnsurePluginInstalled(plugin jenkinsv1.Plugin, pluginBinDir string) (string, error) {
+func EnsurePluginInstalled(plugin jxCore.Plugin, pluginBinDir string) (string, error) {
 	return EnsurePluginInstalledForAliasFile(plugin, pluginBinDir, "")
 }
 
 // EnsurePluginInstalledForAliasFile ensures that the correct version of a plugin is installed locally.
 // It will clean up old versions.
-func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir string, aliasFileName string) (string, error) {
+func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string, aliasFileName string) (string, error) {
 	var err error
 	version := plugin.Spec.Version
 	pluginName := plugin.Spec.Name
@@ -254,17 +255,17 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 }
 
 // ValidatePlugins tells the user about any problems with plugins installed
-func ValidatePlugins(jxClient jenkinsv1client.Interface, ns string) error {
+func ValidatePlugins(jxClient jxClient.Interface, ns string) error {
 	// TODO needs a test
 	// Validate installed plugins
-	plugins, err := jxClient.JenkinsV1().Plugins(ns).List(context.TODO(), metav1.ListOptions{})
+	plugins, err := jxClient.CoreV4beta1().Plugins(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
-	seenSubCommands := make(map[string][]jenkinsv1.Plugin, 0)
+	seenSubCommands := make(map[string][]jxCore.Plugin, 0)
 	for _, plugin := range plugins.Items {
 		if _, ok := seenSubCommands[plugin.Spec.SubCommand]; !ok {
-			seenSubCommands[plugin.Spec.SubCommand] = make([]jenkinsv1.Plugin, 0)
+			seenSubCommands[plugin.Spec.SubCommand] = make([]jxCore.Plugin, 0)
 		}
 		seenSubCommands[plugin.Spec.SubCommand] = append(seenSubCommands[plugin.Spec.SubCommand], plugin)
 	}

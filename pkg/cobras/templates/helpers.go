@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"strings"
 
-	jenkinsv1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/extensions"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
@@ -28,7 +28,7 @@ type Options struct {
 }
 
 // GetPluginCommandGroups returns the plugin groups
-func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, localPlugins []jenkinsv1.Plugin) (PluginCommandGroups, error) {
+func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, localPlugins []jxCore.Plugin) (PluginCommandGroups, error) {
 
 	otherCommands := PluginCommandGroup{
 		Message: "Other Commands",
@@ -69,7 +69,7 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 			pluginPath := filepath.Join(dir, f.Name())
 			subCommand := strings.TrimPrefix(strings.Replace(filepath.Base(pluginPath), "-", " ", -1), "jx ")
 			pc := &PluginCommand{
-				PluginSpec: jenkinsv1.PluginSpec{
+				PluginSpec: jxCore.PluginSpec{
 					SubCommand:  subCommand,
 					Description: pluginPath,
 				},
@@ -105,7 +105,7 @@ func (o *Options) addManagedPlugins(otherCommands PluginCommandGroup, groups map
 		if err != nil {
 			return errors.Wrapf(err, "failed to create jx client")
 		}
-		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
+		pluginList, err := o.JXClient.CoreV4beta1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil && apierrors.IsNotFound(err) {
 			err = nil
 		}
@@ -117,7 +117,7 @@ func (o *Options) addManagedPlugins(otherCommands PluginCommandGroup, groups map
 	return nil
 }
 
-func (o *Options) addPlugins(pluginSlice []jenkinsv1.Plugin, otherCommands PluginCommandGroup, groups map[string]PluginCommandGroup) {
+func (o *Options) addPlugins(pluginSlice []jxCore.Plugin, otherCommands PluginCommandGroup, groups map[string]PluginCommandGroup) {
 	for _, plugin := range pluginSlice {
 		pluginCommand := &PluginCommand{
 			PluginSpec: plugin.Spec,

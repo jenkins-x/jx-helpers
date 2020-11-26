@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
@@ -54,11 +54,11 @@ func EnsureDevNamespaceCreatedWithoutEnvironment(kubeClient kubernetes.Interface
 // EnsureDevEnvironmentSetup ensures that the Environment is created in the given namespace
 func EnsureDevEnvironmentSetup(jxClient versioned.Interface, ns string) (*v1.Environment, error) {
 	// lets ensure there is a dev Environment setup so that we can easily switch between all the environments
-	env, err := jxClient.JenkinsV1().Environments(ns).Get(context.TODO(), kube.LabelValueDevEnvironment, metav1.GetOptions{})
+	env, err := jxClient.CoreV4beta1().Environments(ns).Get(context.TODO(), kube.LabelValueDevEnvironment, metav1.GetOptions{})
 	if err != nil {
 		// lets create a dev environment
 		env = CreateDefaultDevEnvironment(ns)
-		env, err = jxClient.JenkinsV1().Environments(ns).Create(context.TODO(), env, metav1.CreateOptions{})
+		env, err = jxClient.CoreV4beta1().Environments(ns).Create(context.TODO(), env, metav1.CreateOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -79,13 +79,10 @@ func CreateDefaultDevEnvironment(ns string) *v1.Environment {
 			PromotionStrategy: v1.PromotionStrategyTypeNever,
 			Kind:              v1.EnvironmentKindTypeDevelopment,
 			TeamSettings: v1.TeamSettings{
-				UseGitOps:   true,
-				AskOnCreate: false,
-				// TODO
-				//QuickstartLocations: kube.DefaultQuickstartLocations,
-				PromotionEngine: v1.PromotionEngineJenkins,
+				PromotionEngine: "Prow",
 				AppsRepository:  kube.DefaultChartMuseumURL,
 			},
+			WebHookEngine: v1.WebHookEngineLighthouse,
 		},
 	}
 }
@@ -97,8 +94,8 @@ func GetEnrichedDevEnvironment(kubeClient kubernetes.Interface, jxClient version
 	if err != nil {
 		return env, err
 	}
-	if env.Spec.WebHookEngine == v1.WebHookEngineNone {
-		env.Spec.WebHookEngine = v1.WebHookEngineProw
+	if env.Spec.WebHookEngine == "none" {
+		env.Spec.WebHookEngine = v1.WebHookEngineLighthouse
 	}
 	return env, nil
 }
@@ -106,7 +103,7 @@ func GetEnrichedDevEnvironment(kubeClient kubernetes.Interface, jxClient version
 // EnsureEditEnvironmentSetup ensures that the Environment is created in the given namespace
 func EnsureEditEnvironmentSetup(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, username string) (*v1.Environment, error) {
 	// lets ensure there is a dev Environment setup so that we can easily switch between all the environments
-	envList, err := jxClient.JenkinsV1().Environments(ns).List(context.TODO(), metav1.ListOptions{})
+	envList, err := jxClient.CoreV4beta1().Environments(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +173,7 @@ func EnsureEditEnvironmentSetup(kubeClient kubernetes.Interface, jxClient versio
 			Order: 1,
 		},
 	}
-	_, err = jxClient.JenkinsV1().Environments(ns).Create(context.TODO(), env, metav1.CreateOptions{})
+	_, err = jxClient.CoreV4beta1().Environments(ns).Create(context.TODO(), env, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
