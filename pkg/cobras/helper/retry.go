@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	DefaultCommandRetries = 3
+	DefaultCommandAttempts = 1
 )
 
 type retryOptions struct {
@@ -57,7 +57,7 @@ func RetryOnErrorCommand(command *cobra.Command, fn func(error) bool) *cobra.Com
 		cmd.Flags().AddFlag(flag)
 	})
 
-	cmd.Flags().IntVarP(&o.retryAttempts, "retries", "", DefaultCommandRetries, "Specify the number of times the command should be reattempted on failure")
+	cmd.Flags().IntVarP(&o.retryAttempts, "retries", "", DefaultCommandAttempts, "Specify the number of times the command should be reattempted on failure")
 
 	return cmd
 }
