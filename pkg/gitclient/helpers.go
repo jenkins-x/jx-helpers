@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/jenkins-x/jx-api/v3/pkg/util"
+	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"

@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jenkins-x/jx-api/v3/pkg/util"
+	"github.com/jenkins-x/jx-api/v4/pkg/util"
 
 	"github.com/google/uuid"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"

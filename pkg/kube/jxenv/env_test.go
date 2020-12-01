@@ -5,8 +5,8 @@ package jxenv_test
 import (
 	"testing"
 
-	jenkinsio_v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
-	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	jenkinsio_v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/stretchr/testify/assert"

@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/jenkins-x/jx-api/v3/pkg/util"
+	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/homedir"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"

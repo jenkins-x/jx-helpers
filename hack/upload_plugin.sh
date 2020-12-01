@@ -5,7 +5,7 @@ echo "uploading the plugin for version ${VERSION}"
 echo "creating the plugin.gz"
 cd dist
 
-echo "apiVersion: jenkins.io/v1
+echo "apiVersion: jenkins.io/v4beta1
 kind: Plugin
 metadata:
   labels:

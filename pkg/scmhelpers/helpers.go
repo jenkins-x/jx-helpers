@@ -7,7 +7,7 @@ import (
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/factory"
-	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/loadcreds"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
@@ -65,7 +65,7 @@ func DiscoverGitKind(jxClient versioned.Interface, namespace, gitServerURL strin
 		return gitKind, errors.Wrapf(err, "failed to create jx client")
 	}
 
-	resources, err := jxClient.JenkinsV1().SourceRepositories(namespace).List(context.TODO(), metav1.ListOptions{})
+	resources, err := jxClient.CoreV4beta1().SourceRepositories(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		return gitKind, errors.Wrapf(err, "failed to list SourceRepository resources in namespace %s", namespace)
 	}
