@@ -65,7 +65,7 @@ func DiscoverGitKind(jxClient versioned.Interface, namespace, gitServerURL strin
 		return gitKind, errors.Wrapf(err, "failed to create jx client")
 	}
 
-	resources, err := jxClient.CoreV4beta1().SourceRepositories(namespace).List(context.TODO(), metav1.ListOptions{})
+	resources, err := jxClient.JenkinsV1().SourceRepositories(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		return gitKind, errors.Wrapf(err, "failed to list SourceRepository resources in namespace %s", namespace)
 	}

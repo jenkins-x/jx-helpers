@@ -22,8 +22,8 @@ import (
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 
 	"github.com/ghodss/yaml"
-	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
-	typev1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/core/v4beta1"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
+	typev1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/jenkins.io/v1"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -202,7 +202,7 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 		},
 		Spec: v1.PipelineActivitySpec{},
 	}
-	activitiesClient := jxClient.CoreV4beta1().PipelineActivities(ns)
+	activitiesClient := jxClient.JenkinsV1().PipelineActivities(ns)
 
 	if activitiesClient == nil {
 		log.Logger().Errorf("No PipelineActivities client available")
@@ -726,7 +726,7 @@ func (k *PromoteStepActivityKey) OnPromotePullRequest(kubeClient kubernetes.Inte
 	if !k.IsValid() {
 		return nil
 	}
-	activities := jxClient.CoreV4beta1().PipelineActivities(ns)
+	activities := jxClient.JenkinsV1().PipelineActivities(ns)
 	if activities == nil {
 		log.Logger().Warn("Warning: no PipelineActivities client available!")
 		return nil
@@ -757,7 +757,7 @@ func (k *PromoteStepActivityKey) OnPromoteUpdate(kubeClient kubernetes.Interface
 	if !k.IsValid() {
 		return nil
 	}
-	activities := jxClient.CoreV4beta1().PipelineActivities(ns)
+	activities := jxClient.JenkinsV1().PipelineActivities(ns)
 	if activities == nil {
 		log.Logger().Warn("Warning: no PipelineActivities client available!")
 		return nil
