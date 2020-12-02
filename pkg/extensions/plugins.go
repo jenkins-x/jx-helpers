@@ -125,6 +125,27 @@ func EnsurePluginInstalled(plugin jxCore.Plugin, pluginBinDir string) (string, e
 	return EnsurePluginInstalledForAliasFile(plugin, pluginBinDir, "")
 }
 
+// CreateJXPlugin creates a jx plugin
+func CreateJXPlugin(org, name, version string) jxCore.Plugin {
+	binaries := CreateBinaries(func(p Platform) string {
+		return fmt.Sprintf("https://github.com/%s/jx-%s/releases/download/v%s/jx-%s-%s-%s.%s", org, name, version, name, strings.ToLower(p.Goos), strings.ToLower(p.Goarch), p.Extension())
+	})
+
+	plugin := jxCore.Plugin{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: jxCore.PluginSpec{
+			SubCommand:  name,
+			Binaries:    binaries,
+			Description: name + "  binary",
+			Name:        "jx-" + name,
+			Version:     version,
+		},
+	}
+	return plugin
+}
+
 // EnsurePluginInstalledForAliasFile ensures that the correct version of a plugin is installed locally.
 // It will clean up old versions.
 func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string, aliasFileName string) (string, error) {
@@ -136,6 +157,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 	customVersion := os.Getenv(envName)
 	if customVersion != "" {
 		version = customVersion
+		plugin = CreateJXPlugin("jenkins-x", plugin.Name, version)
 	}
 	path := filepath.Join(pluginBinDir, fmt.Sprintf("%s-%s", pluginName, version))
 	if _, err = os.Stat(path); os.IsNotExist(err) {
