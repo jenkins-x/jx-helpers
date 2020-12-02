@@ -1,7 +1,7 @@
 package templates
 
 import (
-	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/spf13/cobra"
 )

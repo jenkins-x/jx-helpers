@@ -17,7 +17,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/stretchr/testify/assert"

@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/extensions"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
@@ -105,7 +105,7 @@ func (o *Options) addManagedPlugins(otherCommands PluginCommandGroup, groups map
 		if err != nil {
 			return errors.Wrapf(err, "failed to create jx client")
 		}
-		pluginList, err := o.JXClient.CoreV4beta1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
+		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil && apierrors.IsNotFound(err) {
 			err = nil
 		}

@@ -11,11 +11,12 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.2.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/go-openapi/spec v0.19.7 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.1.1
 	github.com/jenkins-x/go-scm v1.5.191
-	github.com/jenkins-x/jx-api/v4 v4.0.10
+	github.com/jenkins-x/jx-api/v4 v4.0.11
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.2
 	github.com/magiconair/properties v1.8.0
@@ -28,9 +29,11 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
+	github.com/stoewer/go-strcase v1.2.0
 	github.com/stretchr/testify v1.6.1
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1

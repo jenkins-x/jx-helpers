@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	jxfake "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/fake"
-	typev1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/core/v4beta1"
+	typev1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/activities"
@@ -27,7 +27,7 @@ func TestGenerateBuildNumber(t *testing.T) {
 	ns := "jx"
 	jxClient := jxfake.NewSimpleClientset()
 
-	actList := jxClient.CoreV4beta1().PipelineActivities(ns)
+	actList := jxClient.JenkinsV1().PipelineActivities(ns)
 
 	org := "jstrachan"
 	repo := "cheese"
@@ -153,7 +153,7 @@ func TestCreateOrUpdateActivities(t *testing.T) {
 	assert.Nil(t, err)
 
 	// lets validate that we added a PromotePullRequest step
-	a, err := jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), expectedName, metav1.GetOptions{})
+	a, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), expectedName, metav1.GetOptions{})
 	assert.NotNil(t, a, "should have a PipelineActivity for %s", expectedName)
 	steps := a.Spec.Steps
 	assert.Equal(t, 2, len(steps), "Should have 2 steps!")
@@ -225,7 +225,7 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 		},
 	}
 
-	_, err := jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
+	_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "PA0",
 			Labels: map[string]string{
@@ -240,7 +240,7 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 	assert.NoError(t, err)
 
 	// lets create a build PA for the same PR but with a different SHA so we can check we discard it later
-	_, err = jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
+	_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "PA0-2",
 			Labels: map[string]string{
@@ -256,7 +256,7 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 
 	//lets create a few "builds" for PR-2 with the same SHA so we can check if we choose the right one
 	for i := 1; i < 4; i++ {
-		_, err = jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
+		_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("PA%d", i),
 				Labels: map[string]string{
@@ -278,10 +278,10 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 	assert.Equal(t, expectedPipeline, spec.Pipeline)
 	assert.Equal(t, expectedBuild, spec.Build)
 
-	pa1, err := jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA0", metav1.GetOptions{})
+	pa1, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA0", metav1.GetOptions{})
 	assert.NoError(t, err)
 
-	pa3, err := jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA3", metav1.GetOptions{})
+	pa3, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA3", metav1.GetOptions{})
 	assert.NoError(t, err)
 
 	assert.Len(t, a.Spec.BatchPipelineActivity.ComprisingPulLRequests, 2, "There should be %d PRs information in the ComprisingPullRequests property", 2)
@@ -337,7 +337,7 @@ func TestCreateOrUpdateActivityForBatchBuildWithoutExistingActivities(t *testing
 
 	//lets create a few "builds" for PR-2 with the same SHA so we can check if we choose the right one
 	for i := 1; i < 4; i++ {
-		_, err := jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
+		_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("PA%d", i),
 				Labels: map[string]string{
@@ -359,7 +359,7 @@ func TestCreateOrUpdateActivityForBatchBuildWithoutExistingActivities(t *testing
 	assert.Equal(t, expectedPipeline, spec.Pipeline)
 	assert.Equal(t, expectedBuild, spec.Build)
 
-	pa3, err := jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA3", metav1.GetOptions{})
+	pa3, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA3", metav1.GetOptions{})
 	assert.NoError(t, err)
 
 	assert.Len(t, a.Spec.BatchPipelineActivity.ComprisingPulLRequests, 1, "There should be %d PRs information in the ComprisingPullRequests property", 1)
@@ -456,7 +456,7 @@ func TestBatchReconciliationWithTwoPRBuildExecutions(t *testing.T) {
 		},
 	}
 
-	_, err := jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), pr1PA, metav1.CreateOptions{})
+	_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), pr1PA, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
 	batchPAName := fmt.Sprintf("%s-%s-batch-1", expectedOrganisation, expectedName)
@@ -481,7 +481,7 @@ func TestBatchReconciliationWithTwoPRBuildExecutions(t *testing.T) {
 		},
 	}
 
-	_, err = jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), batchPA, metav1.CreateOptions{})
+	_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), batchPA, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
 	expectedPipeline := expectedOrganisation + "/" + expectedName + "/PR-1"
@@ -504,10 +504,10 @@ func TestBatchReconciliationWithTwoPRBuildExecutions(t *testing.T) {
 	assert.Equal(t, expectedBatchBuild, a.Spec.BatchPipelineActivity.BatchBuildNumber, "The batch build in the BatchPipeline of the PR should be 1")
 
 	o := metav1.GetOptions{}
-	batchPA, err = jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), batchPAName, o)
+	batchPA, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), batchPAName, o)
 	assert.Equal(t, expectedBuild, batchPA.Spec.BatchPipelineActivity.ComprisingPulLRequests[0].LastBuildNumberForCommit, "The build number for the comprising PR should be 2")
 
-	pr1PA, err = jxClient.CoreV4beta1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), prPAName, o)
+	pr1PA, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), prPAName, o)
 	assert.Empty(t, pr1PA.Spec.BatchPipelineActivity.BatchBuildNumber, "The batch build number for the second PR should be empty")
 
 	assert.Equal(t, expectedBatchBuild, a.Spec.BatchPipelineActivity.BatchBuildNumber, "The batch build number for the second execution of the PR should be 1")

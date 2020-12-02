@@ -22,7 +22,7 @@ import (
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
-	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/spf13/cobra"
 )
@@ -280,7 +280,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 func ValidatePlugins(jxClient jxClient.Interface, ns string) error {
 	// TODO needs a test
 	// Validate installed plugins
-	plugins, err := jxClient.CoreV4beta1().Plugins(ns).List(context.TODO(), metav1.ListOptions{})
+	plugins, err := jxClient.JenkinsV1().Plugins(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
