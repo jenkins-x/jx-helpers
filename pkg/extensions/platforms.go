@@ -24,7 +24,7 @@ var (
 			Goos:   "Linux",
 		},
 		{
-			Goarch: "arm",
+			Goarch: "arm64",
 			Goos:   "Linux",
 		},
 		{
