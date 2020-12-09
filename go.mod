@@ -10,11 +10,11 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.2.1 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/go-openapi/spec v0.19.7 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.2
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/jenkins-x/go-scm v1.5.191
 	github.com/jenkins-x/jx-api/v4 v4.0.11
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
@@ -40,10 +40,9 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
+	k8s.io/apimachinery v0.20.0
 	k8s.io/client-go v0.19.2
 	k8s.io/helm v2.16.10+incompatible
-	k8s.io/kube-openapi v0.0.0-20200923155610-8b5066479488 // indirect
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/kustomize/kyaml v0.6.1
 	sigs.k8s.io/yaml v1.2.0
