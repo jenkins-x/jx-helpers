@@ -1,6 +1,10 @@
 package requirements
 
 import (
+	"os"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/credentialhelper"
+
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
@@ -18,6 +22,14 @@ func GetClusterRequirementsConfig(g gitclient.Interface, jxClient versioned.Inte
 
 	if env.Spec.Source.URL == "" {
 		return nil, errors.New("failed to find a source url on development environment resource")
+	}
+
+	// if we have a kubernetes secret with git auth mounted to the filesystem when running in cluster
+	// we need to turn it into a git credentials file see https://git-scm.com/docs/git-credential-store
+	secretMountPath := os.Getenv(credentialhelper.GIT_SECRET_MOUNT_PATH)
+	if secretMountPath != "" {
+		err = credentialhelper.WriteGitCredentialFromSecretMount()
+		return nil, errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
 	}
 
 	// clone cluster repo to a temp dir and load the requirements

@@ -3,12 +3,25 @@ package credentialhelper
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/url"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/pkg/errors"
+)
+
+const (
+	XDG_CONFIG_HOME         = "XDG_CONFIG_HOME"
+	GIT_SECRET_MOUNT_PATH   = "GIT_SECRET_MOUNT_PATH"
+	GIT_SECRET_KEY_USER     = "GIT_SECRET_KEY_USER"
+	GIT_SECRET_KEY_PASSWORD = "GIT_SECRET_KEY_PASSWORD"
+	GIT_SECRET_SERVER       = "GIT_SECRET_SERVER"
 )
 
 // GitCredential represents the different parts of a git credential URL
@@ -131,4 +144,107 @@ func (g *GitCredential) URL() (url.URL, error) {
 
 	u.User = url.UserPassword(g.Username, g.Password)
 	return *u, nil
+}
+
+// WriteGitCredentialFromSecretMount writes mounted kubernetes secret credentials to file $XDG_CONFIG_HOME/git/credentials
+// see for more details https://git-scm.com/docs/git-credential-store
+func WriteGitCredentialFromSecretMount() error {
+
+	xdgCongifHome := os.Getenv(XDG_CONFIG_HOME)
+	mountLocation := os.Getenv(GIT_SECRET_MOUNT_PATH)
+	userKey := os.Getenv(GIT_SECRET_KEY_USER)
+	passKey := os.Getenv(GIT_SECRET_KEY_PASSWORD)
+	server := os.Getenv(GIT_SECRET_SERVER)
+
+	if mountLocation == "" {
+		return fmt.Errorf("no $%s environment variable set", GIT_SECRET_MOUNT_PATH)
+	}
+
+	if userKey == "" {
+		userKey = "username"
+	}
+
+	if passKey == "" {
+		passKey = "password"
+	}
+
+	if server == "" {
+		server = "github.com"
+	}
+
+	exists, err := files.DirExists(mountLocation)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if %s exists", mountLocation)
+	}
+	if !exists {
+		return fmt.Errorf("failed to find directory %s", mountLocation)
+	}
+
+	userPath := filepath.Join(mountLocation, userKey)
+	passPath := filepath.Join(mountLocation, passKey)
+
+	exists, err = files.FileExists(userPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if %s exists", userPath)
+	}
+	if !exists {
+		return fmt.Errorf("failed to find user secret %s", userPath)
+	}
+
+	exists, err = files.FileExists(passPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if %s exists", passPath)
+	}
+	if !exists {
+		return fmt.Errorf("failed to find password secret %s", passPath)
+	}
+
+	userData, err := ioutil.ReadFile(userPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read %s", userPath)
+	}
+
+	passData, err := ioutil.ReadFile(passPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read %s", passPath)
+	}
+
+	// match structure defined here https://git-scm.com/docs/git-credential-store
+	file, err := getCredentialsFilename(xdgCongifHome)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get credentials filename to use to write git auth to")
+	}
+	contents := fmt.Sprintf("https://%s:%s@%s", userData, passData, server)
+
+	err = ioutil.WriteFile(file, []byte(contents), files.DefaultFileWritePermissions)
+	if err != nil {
+		return errors.Wrapf(err, "failed to write file %s", file)
+	}
+
+	return nil
+}
+
+// match structure defined here https://git-scm.com/docs/git-credential-store
+func getCredentialsFilename(xdgCongifHome string) (string, error) {
+
+	if xdgCongifHome == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", errors.Wrapf(err, "no $XDG_CONFIG_HOME set and failed to find user home directory")
+		}
+		return filepath.Join(home, ".git-credentials"), nil
+	}
+
+	writeDirectory := filepath.Join(xdgCongifHome, "git")
+	exists, err := files.DirExists(writeDirectory)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to check if directory %s exists", writeDirectory)
+	}
+	if !exists {
+		err = os.MkdirAll(writeDirectory, os.ModePerm)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to create directory %s", writeDirectory)
+		}
+	}
+	return filepath.Join(xdgCongifHome, "git", "credentials"), nil
 }
