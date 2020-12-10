@@ -29,9 +29,10 @@ func GetClusterRequirementsConfig(g gitclient.Interface, jxClient versioned.Inte
 	secretMountPath := os.Getenv(credentialhelper.GIT_SECRET_MOUNT_PATH)
 	if secretMountPath != "" {
 		err = credentialhelper.WriteGitCredentialFromSecretMount()
-		return nil, errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
+		}
 	}
-
 	// clone cluster repo to a temp dir and load the requirements
 	dir, err := gitclient.CloneToDir(g, env.Spec.Source.URL, "")
 	if err != nil {
@@ -40,8 +41,11 @@ func GetClusterRequirementsConfig(g gitclient.Interface, jxClient versioned.Inte
 
 	requirements, _, err := jxcore.LoadRequirementsConfig(dir, false)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
+		return nil, errors.Wrapf(err, "failed to find requirements from git clone in directory %s", dir)
 	}
 
+	if &requirements.Spec == nil {
+		return nil, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
+	}
 	return &requirements.Spec, nil
 }

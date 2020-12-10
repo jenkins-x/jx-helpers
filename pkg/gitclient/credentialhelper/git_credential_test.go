@@ -43,3 +43,14 @@ func TestWriteGitCredentialToUserHome(t *testing.T) {
 	testhelpers.AssertTextFileContentsEqual(t, filepath.Join(dir, "expected"), filepath.Join(dir, ".git-credentials"))
 
 }
+
+func TestWriteGitCredentialError(t *testing.T) {
+
+	os.Unsetenv(XDG_CONFIG_HOME)
+	os.Unsetenv(GIT_SECRET_MOUNT_PATH)
+
+	err := WriteGitCredentialFromSecretMount()
+	assert.Error(t, err)
+	assert.Equal(t, "no $GIT_SECRET_MOUNT_PATH environment variable set", err.Error())
+
+}
