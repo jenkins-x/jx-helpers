@@ -35,6 +35,9 @@ func NewScmClient(kind, gitServerURL, token string) (*scm.Client, string, error)
 		token = os.Getenv("GIT_TOKEN")
 	}
 	if token == "" {
+		token = os.Getenv("GITHUB_TOKEN")
+	}
+	if token == "" {
 		return nil, token, errors.Wrapf(err, "failed to load git credentials")
 	}
 	if kind == "" || kind == "github" {
