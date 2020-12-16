@@ -12,6 +12,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/cli"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/gitdiscovery"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -40,6 +41,7 @@ func (o *Options) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "", ".", "the directory to search for the .git to discover the git source URL")
 	cmd.Flags().StringVarP(&o.FullRepositoryName, "repo", "r", "", "the full git repository name of the form 'owner/name'")
 	cmd.Flags().StringVarP(&o.GitServerURL, "git-server", "", "", "the git server URL to create the git provider client. If not specified its defaulted from the current source URL")
+	cmd.Flags().StringVarP(&o.SourceURL, "source-url", "", "", "the git source URL of the repository")
 	cmd.Flags().StringVarP(&o.GitKind, "git-kind", "", "", "the kind of git server to connect to")
 	cmd.Flags().StringVarP(&o.GitToken, "git-token", "", "", "the git token used to operate on the git repository")
 }
@@ -91,6 +93,15 @@ func GetPasswordFromSourceURL(sourceURL string) (string, error) {
 
 func (o *Options) discoverRepositoryDetails() error {
 	var err error
+	if o.Owner == "" {
+		o.Owner = os.Getenv("REPO_OWNER")
+	}
+	if o.Repository == "" {
+		o.Repository = os.Getenv("REPO_NAME")
+	}
+	if o.FullRepositoryName == "" && o.Owner != "" && o.Repository != "" {
+		o.FullRepositoryName = scm.Join(o.Owner, o.Repository)
+	}
 	if o.SourceURL == "" {
 		// lets try find the git URL from the current git clone
 		o.SourceURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
@@ -98,6 +109,9 @@ func (o *Options) discoverRepositoryDetails() error {
 			o.SourceURL = os.Getenv("REPO_URL")
 			if o.SourceURL == "" {
 				o.SourceURL = os.Getenv("SOURCE_URL")
+			}
+			if o.SourceURL == "" && o.GitServerURL != "" && o.FullRepositoryName != "" {
+				o.SourceURL = stringhelpers.UrlJoin(o.GitServerURL, o.FullRepositoryName)
 			}
 			if o.SourceURL == "" {
 				return errors.Wrapf(err, "failed to discover git URL in dir %s. you could try pass the git URL as an argument", o.Dir)
@@ -121,15 +135,6 @@ func (o *Options) discoverRepositoryDetails() error {
 		if o.Repository == "" {
 			o.Repository = o.GitURL.Name
 		}
-	}
-	if o.Owner == "" {
-		o.Owner = os.Getenv("REPO_OWNER")
-	}
-	if o.Repository == "" {
-		o.Repository = os.Getenv("REPO_NAME")
-	}
-	if o.FullRepositoryName == "" {
-		o.FullRepositoryName = scm.Join(o.Owner, o.Repository)
 	}
 	if o.GitKind == "" {
 		o.GitKind, err = DiscoverGitKind(o.JXClient, o.Namespace, o.GitServerURL)
