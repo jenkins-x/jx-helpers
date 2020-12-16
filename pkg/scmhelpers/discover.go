@@ -44,6 +44,7 @@ func (o *Options) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.SourceURL, "source-url", "", "", "the git source URL of the repository")
 	cmd.Flags().StringVarP(&o.GitKind, "git-kind", "", "", "the kind of git server to connect to")
 	cmd.Flags().StringVarP(&o.GitToken, "git-token", "", "", "the git token used to operate on the git repository")
+	cmd.Flags().StringVarP(&o.Branch, "branch", "", "", "specifies the branch if not inside a git clone")
 }
 
 // Validate validates the inputs are valid and a ScmClient can be created
@@ -136,6 +137,9 @@ func (o *Options) discoverRepositoryDetails() error {
 			o.Repository = o.GitURL.Name
 		}
 	}
+	if o.FullRepositoryName == "" && o.Owner != "" && o.Repository != "" {
+		o.FullRepositoryName = scm.Join(o.Owner, o.Repository)
+	}
 	if o.GitKind == "" {
 		o.GitKind, err = DiscoverGitKind(o.JXClient, o.Namespace, o.GitServerURL)
 		if err != nil {
@@ -152,16 +156,14 @@ func (o *Options) discoverRepositoryDetails() error {
 			}
 		}
 	}
-	if o.Branch == "" {
-		o.Branch, err = o.getBranch()
-		if err != nil {
-			return errors.Wrapf(err, "failed to resolve git branch")
-		}
-	}
 	return nil
 }
 
-func (o *Options) getBranch() (string, error) {
+// GetBranch returns the configured branch or discovers it from git
+func (o *Options) GetBranch() (string, error) {
+	if o.Branch != "" {
+		return o.Branch, nil
+	}
 	if o.GitClient == nil {
 		o.GitClient = cli.NewCLIClient("", o.CommandRunner)
 	}
