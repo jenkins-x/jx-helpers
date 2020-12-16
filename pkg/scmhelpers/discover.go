@@ -95,7 +95,10 @@ func (o *Options) discoverRepositoryDetails() error {
 		// lets try find the git URL from the current git clone
 		o.SourceURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
 		if err != nil {
-			o.SourceURL = os.Getenv("SOURCE_URL")
+			o.SourceURL = os.Getenv("REPO_URL")
+			if o.SourceURL == "" {
+				o.SourceURL = os.Getenv("SOURCE_URL")
+			}
 			if o.SourceURL == "" {
 				return errors.Wrapf(err, "failed to discover git URL in dir %s. you could try pass the git URL as an argument", o.Dir)
 			}
