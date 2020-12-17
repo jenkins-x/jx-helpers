@@ -30,6 +30,7 @@ type Options struct {
 	GitKind            string
 	GitToken           string
 	Namespace          string
+	DiscoverFromGit    bool
 	JXClient           versioned.Interface
 	GitURL             *giturl.GitRepository
 	GitClient          gitclient.Interface
@@ -39,12 +40,14 @@ type Options struct {
 // AddFlags adds CLI arguments to configure the parameters
 func (o *Options) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "", ".", "the directory to search for the .git to discover the git source URL")
-	cmd.Flags().StringVarP(&o.FullRepositoryName, "repo", "r", "", "the full git repository name of the form 'owner/name'")
 	cmd.Flags().StringVarP(&o.GitServerURL, "git-server", "", "", "the git server URL to create the git provider client. If not specified its defaulted from the current source URL")
-	cmd.Flags().StringVarP(&o.SourceURL, "source-url", "", "", "the git source URL of the repository")
+	if !o.DiscoverFromGit {
+		cmd.Flags().StringVarP(&o.FullRepositoryName, "repo", "r", "", "the full git repository name of the form 'owner/name'")
+		cmd.Flags().StringVarP(&o.SourceURL, "source-url", "", "", "the git source URL of the repository")
+		cmd.Flags().StringVarP(&o.Branch, "branch", "", "", "specifies the branch if not inside a git clone")
+	}
 	cmd.Flags().StringVarP(&o.GitKind, "git-kind", "", "", "the kind of git server to connect to")
 	cmd.Flags().StringVarP(&o.GitToken, "git-token", "", "", "the git token used to operate on the git repository")
-	cmd.Flags().StringVarP(&o.Branch, "branch", "", "", "specifies the branch if not inside a git clone")
 }
 
 // Validate validates the inputs are valid and a ScmClient can be created
@@ -94,16 +97,18 @@ func GetPasswordFromSourceURL(sourceURL string) (string, error) {
 
 func (o *Options) discoverRepositoryDetails() error {
 	var err error
-	if o.Owner == "" {
-		o.Owner = os.Getenv("REPO_OWNER")
+	if !o.DiscoverFromGit {
+		if o.Owner == "" {
+			o.Owner = os.Getenv("REPO_OWNER")
+		}
+		if o.Repository == "" {
+			o.Repository = os.Getenv("REPO_NAME")
+		}
+		if o.FullRepositoryName == "" && o.Owner != "" && o.Repository != "" {
+			o.FullRepositoryName = scm.Join(o.Owner, o.Repository)
+		}
 	}
-	if o.Repository == "" {
-		o.Repository = os.Getenv("REPO_NAME")
-	}
-	if o.FullRepositoryName == "" && o.Owner != "" && o.Repository != "" {
-		o.FullRepositoryName = scm.Join(o.Owner, o.Repository)
-	}
-	if o.SourceURL == "" {
+	if o.SourceURL == "" || o.DiscoverFromGit {
 		// lets try find the git URL from the current git clone
 		o.SourceURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
 		if err != nil {
