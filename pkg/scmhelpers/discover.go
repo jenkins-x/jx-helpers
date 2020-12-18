@@ -158,6 +158,8 @@ func (o *Options) discoverRepositoryDetails() error {
 			pullNumber := os.Getenv("PULL_NUMBER")
 			if pullNumber != "" {
 				o.Branch = "PR-" + pullNumber
+			} else {
+				o.Branch = os.Getenv("PULL_BASE_REF")
 			}
 		}
 	}
