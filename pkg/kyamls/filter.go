@@ -11,10 +11,11 @@ import (
 
 // Filter for filtering
 type Filter struct {
-	Kinds       []string
-	KindsIgnore []string
-	Names       []string
-	Selector    map[string]string
+	Kinds          []string
+	KindsIgnore    []string
+	Names          []string
+	Selector       map[string]string
+	InvertSelector bool
 }
 
 // ToFilterFn creates a filter function
@@ -53,14 +54,25 @@ func (f *Filter) ToFilterFn() (func(node *yaml.RNode, path string) (bool, error)
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to get labels for %s", path)
 		}
-		if labels == nil {
+		if labels == nil && f.InvertSelector {
+			return true, nil
+		} else if labels == nil && !f.InvertSelector {
 			return false, nil
 		}
+
+		matchCount := 0
 		for k, v := range f.Selector {
 			actual := labels[k]
-			if trimQuotes(actual) != trimQuotes(v) {
+			match := trimQuotes(actual) == trimQuotes(v)
+			if !f.InvertSelector && !match {
 				return false, nil
+			} else if match {
+				matchCount++
 			}
+
+		}
+		if f.InvertSelector && matchCount == len(f.Selector) {
+			return false, nil
 		}
 		return true, nil
 
@@ -80,6 +92,8 @@ func trimQuotes(text string) string {
 func (f *Filter) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArrayVarP(&f.Kinds, "kind", "k", nil, "adds Kubernetes resource kinds to filter on. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
 	cmd.Flags().StringArrayVarP(&f.KindsIgnore, "kind-ignore", "", nil, "adds Kubernetes resource kinds to exclude. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
+	cmd.Flags().StringToStringVarP(&f.Selector, "selector", "", nil, "adds Kubernetes label selector to filter on, e.g. -s app=pusher-wave,heritage=Helm")
+	cmd.Flags().BoolVarP(&f.InvertSelector, "invert-selector", "", false, "inverts the effect of selector to exclude resources matched by selector")
 }
 
 // Parse parses the filter strings

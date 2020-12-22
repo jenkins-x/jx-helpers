@@ -173,6 +173,75 @@ func TestFilter(t *testing.T) {
 			file:     "service.yaml",
 			expected: false,
 		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart": "myapp-0.0.12",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart": "myapp-0.0.11",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart":  "myapp-0.0.12",
+					"pinkie": "pie",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart":                        "myapp-0.0.12",
+					"gitops.jenkins-x.io/pipeline": "environment",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"ConfigMap"},
+				Selector: map[string]string{
+					"chart":                        "myapp-0.0.12",
+					"gitops.jenkins-x.io/pipeline": "environment",
+				},
+				InvertSelector: true,
+			},
+			file:     "configmap.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"ConfigMap"},
+				Selector: map[string]string{
+					"chart":                        "myapp-0.0.12",
+					"gitops.jenkins-x.io/pipeline": "environment",
+				},
+			},
+			file:     "configmap.yaml",
+			expected: false,
+		},
 	}
 
 	for _, tc := range testCases {
