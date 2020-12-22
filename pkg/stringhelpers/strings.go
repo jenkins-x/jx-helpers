@@ -270,7 +270,6 @@ func StripTrailingSlash(url string) string {
 	return url
 }
 
-
 // HasPrefix returns true if the given string has one of the prefixes
 func HasPrefix(text string, prefixes ...string) bool {
 	for _, prefix := range prefixes {
