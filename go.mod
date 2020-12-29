@@ -10,8 +10,8 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.2.1 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/go-openapi/spec v0.19.7 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.1.1
@@ -45,7 +45,7 @@ require (
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kube-openapi v0.0.0-20200923155610-8b5066479488 // indirect
 	k8s.io/kubernetes v1.14.7
-	sigs.k8s.io/kustomize/kyaml v0.6.1
+	sigs.k8s.io/kustomize/kyaml v0.10.5
 	sigs.k8s.io/yaml v1.2.0
 )
 
