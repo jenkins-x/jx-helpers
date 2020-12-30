@@ -80,36 +80,36 @@ func TestGitServerGithub(t *testing.T) {
 	}
 }
 
-func TestGitServerAsHttpUrl(t *testing.T) {
+func TestGitServerAsNonGitHub(t *testing.T) {
 
-	dir := t.TempDir()
-	err := files.CopyDir(filepath.Join("test_data", "write_file_from_secret_http_url"), dir, true)
-	assert.NoError(t, err)
+	tests := []struct {
+		test_folder string
+		url         string
+	}{
 
-	os.Setenv(XDG_CONFIG_HOME, filepath.Join(dir, "foo"))
-	os.Setenv(GIT_SECRET_MOUNT_PATH, filepath.Join(dir, "bar"))
-	os.Setenv(GIT_SECRET_SERVER, "http://example.com")
+		{
+			test_folder: "write_file_from_secret_http_url",
+			url:         "http://example.com",
+		},
+		{
+			test_folder: "write_file_from_secret_https_url",
+			url:         "https://example.com",
+		},
+	}
 
-	err = WriteGitCredentialFromSecretMount()
-	assert.NoError(t, err)
+	for _, test := range tests {
 
-	testhelpers.AssertTextFileContentsEqual(t, filepath.Join(dir, "expected"), filepath.Join(dir, "foo", "git", "credentials"))
+		dir := t.TempDir()
+		err := files.CopyDir(filepath.Join("test_data", test.test_folder), dir, true)
+		assert.NoError(t, err)
 
-}
+		os.Setenv(XDG_CONFIG_HOME, filepath.Join(dir, "foo"))
+		os.Setenv(GIT_SECRET_MOUNT_PATH, filepath.Join(dir, "bar"))
+		os.Setenv(GIT_SECRET_SERVER, test.url)
 
-func TestGitServerAsHttpsUrl(t *testing.T) {
+		err = WriteGitCredentialFromSecretMount()
+		assert.NoError(t, err)
 
-	dir := t.TempDir()
-	err := files.CopyDir(filepath.Join("test_data", "write_file_from_secret_https_url"), dir, true)
-	assert.NoError(t, err)
-
-	os.Setenv(XDG_CONFIG_HOME, filepath.Join(dir, "foo"))
-	os.Setenv(GIT_SECRET_MOUNT_PATH, filepath.Join(dir, "bar"))
-	os.Setenv(GIT_SECRET_SERVER, "https://example.com")
-
-	err = WriteGitCredentialFromSecretMount()
-	assert.NoError(t, err)
-
-	testhelpers.AssertTextFileContentsEqual(t, filepath.Join(dir, "expected"), filepath.Join(dir, "foo", "git", "credentials"))
-
+		testhelpers.AssertTextFileContentsEqual(t, filepath.Join(dir, "expected"), filepath.Join(dir, "foo", "git", "credentials"))
+	}
 }
