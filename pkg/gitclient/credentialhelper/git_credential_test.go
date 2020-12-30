@@ -83,24 +83,24 @@ func TestGitServerGithub(t *testing.T) {
 func TestGitServerAsNonGitHub(t *testing.T) {
 
 	tests := []struct {
-		test_folder string
-		url         string
+		testFolder string
+		url        string
 	}{
 
 		{
-			test_folder: "write_file_from_secret_http_url",
-			url:         "http://example.com",
+			testFolder: "write_file_from_secret_http_url",
+			url:        "http://example.com",
 		},
 		{
-			test_folder: "write_file_from_secret_https_url",
-			url:         "https://example.com",
+			testFolder: "write_file_from_secret_https_url",
+			url:        "https://example.com",
 		},
 	}
 
 	for _, test := range tests {
 
 		dir := t.TempDir()
-		err := files.CopyDir(filepath.Join("test_data", test.test_folder), dir, true)
+		err := files.CopyDir(filepath.Join("test_data", test.testFolder), dir, true)
 		assert.NoError(t, err)
 
 		os.Setenv(XDG_CONFIG_HOME, filepath.Join(dir, "foo"))
