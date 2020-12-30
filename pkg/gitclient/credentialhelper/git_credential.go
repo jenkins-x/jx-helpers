@@ -154,7 +154,11 @@ func WriteGitCredentialFromSecretMount() error {
 	mountLocation := os.Getenv(GIT_SECRET_MOUNT_PATH)
 	userKey := os.Getenv(GIT_SECRET_KEY_USER)
 	passKey := os.Getenv(GIT_SECRET_KEY_PASSWORD)
-	server := os.Getenv(GIT_SECRET_SERVER)
+
+	server, err := parseGitSecretServerUrl(os.Getenv(GIT_SECRET_SERVER))
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse environment variable %s=%s", GIT_SECRET_SERVER, os.Getenv(GIT_SECRET_SERVER))
+	}
 
 	if mountLocation == "" {
 		return fmt.Errorf("no $%s environment variable set", GIT_SECRET_MOUNT_PATH)
@@ -166,10 +170,6 @@ func WriteGitCredentialFromSecretMount() error {
 
 	if passKey == "" {
 		passKey = "password"
-	}
-
-	if server == "" {
-		server = "github.com"
 	}
 
 	exists, err := files.DirExists(mountLocation)
@@ -214,7 +214,8 @@ func WriteGitCredentialFromSecretMount() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to get credentials filename to use to write git auth to")
 	}
-	contents := fmt.Sprintf("https://%s:%s@%s", userData, passData, server)
+
+	contents := fmt.Sprintf("%s://%s:%s@%s", server.Scheme, userData, passData, server.Host)
 
 	err = ioutil.WriteFile(file, []byte(contents), files.DefaultFileWritePermissions)
 	if err != nil {
@@ -247,4 +248,17 @@ func getCredentialsFilename(xdgCongifHome string) (string, error) {
 		}
 	}
 	return filepath.Join(xdgCongifHome, "git", "credentials"), nil
+}
+
+func parseGitSecretServerUrl(s string) (*url.URL, error) {
+
+	if s == "" {
+		return url.Parse("https://github.com")
+	}
+
+	if strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") {
+		return url.Parse(s)
+	}
+
+	return url.Parse("https://" + s)
 }
