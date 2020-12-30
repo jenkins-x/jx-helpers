@@ -64,3 +64,5 @@ docs/apidocs/static/scroll.js
 pkg/jx/cmd/verify-pod.log
 
 plugin.gz
+
+.history
