@@ -59,7 +59,13 @@ func IsPodFailed(pod *v1.Pod) bool {
 		return true
 	}
 	for _, c := range pod.Status.ContainerStatuses {
-		terminated := c.LastTerminationState.Terminated
+		if c.State.Running != nil {
+			continue
+		}
+		terminated := c.State.Terminated
+		if terminated == nil && c.State.Waiting != nil {
+			terminated = c.LastTerminationState.Terminated
+		}
 		if terminated != nil && terminated.ExitCode != 0 {
 			return true
 		}

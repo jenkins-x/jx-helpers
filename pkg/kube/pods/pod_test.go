@@ -3,10 +3,15 @@
 package pods_test
 
 import (
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/pods"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -31,6 +36,54 @@ func TestGetPodConditionPodReady(t *testing.T) {
 
 	assert.Equal(t, 0, resStatus)
 	assert.Equal(t, condition, res.Type)
+}
+
+func TestPodFailed(t *testing.T) {
+	t.Parallel()
+
+	sourceData := filepath.Join("test_data", "pod_failed")
+	fileNames, err := ioutil.ReadDir(sourceData)
+	assert.NoError(t, err)
+
+	for _, f := range fileNames {
+		name := f.Name()
+		if f.IsDir() || !strings.HasSuffix(name, ".yaml") {
+			continue
+		}
+		fileName := filepath.Join(sourceData, name)
+		pod := &v1.Pod{}
+		err := yamls.LoadFile(fileName, pod)
+		require.NoError(t, err, "failed to load file %s", fileName)
+
+		assert.Equal(t, true, pods.IsPodFailed(pod), "IsPodFailed for %s", name)
+		assert.Equal(t, false, pods.IsPodReady(pod), "IsPodReady for %s", name)
+
+		t.Logf("file %s has failed pod\n", name)
+	}
+}
+
+func TestPodReady(t *testing.T) {
+	t.Parallel()
+
+	sourceData := filepath.Join("test_data", "pod_ready")
+	fileNames, err := ioutil.ReadDir(sourceData)
+	assert.NoError(t, err)
+
+	for _, f := range fileNames {
+		name := f.Name()
+		if f.IsDir() || !strings.HasSuffix(name, ".yaml") {
+			continue
+		}
+		fileName := filepath.Join(sourceData, name)
+		pod := &v1.Pod{}
+		err := yamls.LoadFile(fileName, pod)
+		require.NoError(t, err, "failed to load file %s", fileName)
+
+		assert.Equal(t, false, pods.IsPodFailed(pod), "IsPodFailed for %s", name)
+		assert.Equal(t, true, pods.IsPodReady(pod), "IsPodReady for %s", name)
+
+		t.Logf("file %s has ready pod\n", name)
+	}
 }
 
 func TestGetPodConditionFailures(t *testing.T) {

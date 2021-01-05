@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  generateName: jx-git-operator-c6758b687-
+  labels:
+    app: jx-git-operator
+    pod-template-hash: c6758b687
+  name: jx-git-operator-c6758b687-nb9rx
+  namespace: jx-git-operator
+  ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: jx-git-operator-c6758b687
+      uid: ad64ea4a-fa26-4076-953e-73584c81655c
+spec:
+  containers:
+    - args:
+        - echo 'no custom git initialisation scripts'; jx-git-operator
+      command:
+        - /bin/sh
+        - -c
+      env:
+        - name: POLL_DURATION
+          value: 20s
+      image: gcr.io/jenkinsxio/jx-git-operator:0.0.143
+      imagePullPolicy: IfNotPresent
+      name: jx-git-operator
+      resources:
+        limits:
+          cpu: 100m
+          memory: 256Mi
+        requests:
+          cpu: 80m
+          memory: 128Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: jx-git-operator-token-j94jn
+          readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: gke-cluster-1-default-pool-74753b82-8xjk
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: { }
+  serviceAccount: jx-git-operator
+  serviceAccountName: jx-git-operator
+  terminationGracePeriodSeconds: 30
+  tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+  volumes:
+    - name: jx-git-operator-token-j94jn
+      secret:
+        defaultMode: 420
+        secretName: jx-git-operator-token-j94jn
+status:
+  conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-05T14:54:02Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-05T14:54:09Z"
+      message: 'containers with unready status: [jx-git-operator]'
+      reason: ContainersNotReady
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-05T14:54:09Z"
+      message: 'containers with unready status: [jx-git-operator]'
+      reason: ContainersNotReady
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-05T14:54:02Z"
+      status: "True"
+      type: PodScheduled
+  containerStatuses:
+    - containerID: docker://576659d96c58e842477a6f5fce09d1bb36653fec94c5233cf4c18a690e47ca64
+      image: gcr.io/jenkinsxio/jx-git-operator:0.0.143
+      imageID: docker-pullable://gcr.io/jenkinsxio/jx-git-operator@sha256:d01453e30857a59db5eaa5501503f8f102e8173946c842abb8b7328fde0345d5
+      lastState:
+        terminated:
+          containerID: docker://63f5163baf99c9e6d4973f6bf8a533853625c72f3153e6a6a87c1ab8e82019ea
+          exitCode: 1
+          finishedAt: "2021-01-05T14:54:05Z"
+          reason: Error
+          startedAt: "2021-01-05T14:54:03Z"
+      name: jx-git-operator
+      ready: false
+      restartCount: 1
+      started: false
+      state:
+        terminated:
+          containerID: docker://576659d96c58e842477a6f5fce09d1bb36653fec94c5233cf4c18a690e47ca64
+          exitCode: 1
+          finishedAt: "2021-01-05T14:54:08Z"
+          reason: Error
+          startedAt: "2021-01-05T14:54:06Z"
+  hostIP: 10.154.0.28
+  phase: Running
+  podIP: 10.24.2.6
+  podIPs:
+    - ip: 10.24.2.6
+  qosClass: Burstable
+  startTime: "2021-01-05T14:54:02Z"
