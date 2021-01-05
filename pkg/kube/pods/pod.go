@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/podlogs"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
@@ -47,6 +48,21 @@ func IsPodSucceeded(pod *v1.Pod) bool {
 	phase := pod.Status.Phase
 	if phase == v1.PodSucceeded {
 		return true
+	}
+	return false
+}
+
+// IsPodFailed returns true if a pod is failed
+func IsPodFailed(pod *v1.Pod) bool {
+	phase := pod.Status.Phase
+	if phase == v1.PodFailed {
+		return true
+	}
+	for _, c := range pod.Status.ContainerStatuses {
+		terminated := c.LastTerminationState.Terminated
+		if terminated != nil && terminated.ExitCode != 0 {
+			return true
+		}
 	}
 	return false
 }
@@ -116,7 +132,7 @@ func waitForPodSelector(client kubernetes.Interface, namespace string, options m
 	if err == wait.ErrWaitTimeout {
 		return fmt.Errorf("pod %s never became ready", ListOptionsString(options))
 	}
-	return nil
+	return err
 }
 
 // ListOptionsString returns a string summary of the list options
@@ -214,6 +230,18 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 	condition := func(event watch.Event) (bool, error) {
 		pod := event.Object.(*v1.Pod)
 		status := PodStatus(pod)
+		if IsPodFailed(pod) {
+			containerName := pod.Spec.Containers[0].Name
+			log.Logger().Warnf("pod %s/%s container %s failed so tailing the log:", termcolor.ColorInfo(namespace), termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(containerName))
+			log.Logger().Info("")
+
+			err = podlogs.TailLogs(namespace, pod.Name, containerName, os.Stderr, os.Stdout)
+			if err != nil {
+				return false, errors.Wrapf(err, "failed to log pod %s container %s", pod.Name, containerName)
+			}
+			log.Logger().Info("")
+			return false, errors.Errorf("pod %s/%s failed", namespace, pod.Name)
+		}
 		if statusMap[pod.Name] != status && !IsPodCompleted(pod) && pod.DeletionTimestamp == nil {
 			log.Logger().Infof("pod %s has status %s", termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(status))
 			statusMap[pod.Name] = status
