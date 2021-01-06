@@ -13,7 +13,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.2
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.4
 	github.com/jenkins-x/go-scm v1.5.202
 	github.com/jenkins-x/jx-api/v4 v4.0.16
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
