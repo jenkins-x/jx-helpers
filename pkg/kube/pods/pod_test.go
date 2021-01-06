@@ -62,27 +62,47 @@ func TestPodFailed(t *testing.T) {
 	}
 }
 
-func TestPodReady(t *testing.T) {
+func TestPodNotFailed(t *testing.T) {
 	t.Parallel()
 
 	sourceData := filepath.Join("test_data", "pod_ready")
-	fileNames, err := ioutil.ReadDir(sourceData)
-	assert.NoError(t, err)
 
-	for _, f := range fileNames {
-		name := f.Name()
-		if f.IsDir() || !strings.HasSuffix(name, ".yaml") {
-			continue
-		}
+	testCases := []struct {
+		file     string
+		validate func(string, *v1.Pod)
+	}{
+		{
+			file: "pod_ready.yaml",
+			validate: func(name string, pod *v1.Pod) {
+				assert.Equal(t, true, pods.IsPodReady(pod), "IsPodReady for %s", name)
+				assert.Equal(t, false, pods.IsPodPending(pod), "IsPodPending for %s", name)
+				assert.Equal(t, false, pods.IsPodFailed(pod), "IsPodFailed for %s", name)
+			},
+		},
+		{
+			file: "pod_pending.yaml",
+			validate: func(name string, pod *v1.Pod) {
+				assert.Equal(t, false, pods.IsPodReady(pod), "IsPodReady for %s", name)
+				assert.Equal(t, true, pods.IsPodPending(pod), "IsPodPending for %s", name)
+				assert.Equal(t, false, pods.IsPodFailed(pod), "IsPodFailed for %s", name)
+
+				t.Logf("pod %s ready %v\n", name, pods.IsPodReady(pod))
+				t.Logf("pod %s pending %v\n", name, pods.IsPodPending(pod))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		name := tc.file
 		fileName := filepath.Join(sourceData, name)
 		pod := &v1.Pod{}
 		err := yamls.LoadFile(fileName, pod)
 		require.NoError(t, err, "failed to load file %s", fileName)
 
 		assert.Equal(t, false, pods.IsPodFailed(pod), "IsPodFailed for %s", name)
-		assert.Equal(t, true, pods.IsPodReady(pod), "IsPodReady for %s", name)
 
-		t.Logf("file %s has ready pod\n", name)
+		tc.validate(name, pod)
+		t.Logf("pod from %s processed\n", name)
 	}
 }
 

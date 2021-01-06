@@ -34,6 +34,16 @@ func IsPodReady(pod *v1.Pod) bool {
 	return IsPodReadyConditionTrue(pod.Status)
 }
 
+// IsPodPending returns true if a pod is pending
+func IsPodPending(pod *v1.Pod) bool {
+	switch pod.Status.Phase {
+	case v1.PodFailed, v1.PodSucceeded, v1.PodRunning:
+		return false
+	default:
+		return true
+	}
+}
+
 // IsPodCompleted returns true if a pod is completed (succeeded or failed); false otherwise.
 func IsPodCompleted(pod *v1.Pod) bool {
 	phase := pod.Status.Phase
@@ -54,20 +64,23 @@ func IsPodSucceeded(pod *v1.Pod) bool {
 
 // IsPodFailed returns true if a pod is failed
 func IsPodFailed(pod *v1.Pod) bool {
-	phase := pod.Status.Phase
-	if phase == v1.PodFailed {
+	switch pod.Status.Phase {
+	case v1.PodSucceeded, v1.PodPending, v1.PodReasonUnschedulable:
+		return false
+	case v1.PodFailed:
 		return true
-	}
-	for _, c := range pod.Status.ContainerStatuses {
-		if c.State.Running != nil {
-			continue
-		}
-		terminated := c.State.Terminated
-		if terminated == nil && c.State.Waiting != nil {
-			terminated = c.LastTerminationState.Terminated
-		}
-		if terminated != nil && terminated.ExitCode != 0 {
-			return true
+	case v1.PodRunning:
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.State.Running != nil {
+				continue
+			}
+			terminated := c.State.Terminated
+			if terminated == nil && c.State.Waiting != nil {
+				terminated = c.LastTerminationState.Terminated
+			}
+			if terminated != nil && terminated.ExitCode != 0 {
+				return true
+			}
 		}
 	}
 	return false
