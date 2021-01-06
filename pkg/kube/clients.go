@@ -1,10 +1,16 @@
 package kube
 
 import (
+	"os"
+	"strings"
+
 	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
+	fakedyn "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 )
 
@@ -12,6 +18,10 @@ import (
 func LazyCreateDynamicClient(client dynamic.Interface) (dynamic.Interface, error) {
 	if client != nil {
 		return client, nil
+	}
+	if IsNoKubernetes() {
+		scheme := runtime.NewScheme()
+		return fakedyn.NewSimpleDynamicClient(scheme), nil
 	}
 	f := kubeclient.NewFactory()
 	cfg, err := f.CreateKubeConfig()
@@ -30,6 +40,9 @@ func LazyCreateKubeClient(client kubernetes.Interface) (kubernetes.Interface, er
 	if client != nil {
 		return client, nil
 	}
+	if IsNoKubernetes() {
+		return fake.NewSimpleClientset(), nil
+	}
 	f := kubeclient.NewFactory()
 	cfg, err := f.CreateKubeConfig()
 	if err != nil {
@@ -47,8 +60,17 @@ func LazyCreateKubeClientAndNamespace(client kubernetes.Interface, ns string) (k
 	if client != nil && ns != "" {
 		return client, ns, nil
 	}
-	f := kubeclient.NewFactory()
+	if IsNoKubernetes() {
+		if client == nil {
+			client = fake.NewSimpleClientset()
+		}
+		if ns == "" {
+			ns = "default"
+		}
+		return client, ns, nil
+	}
 	if client == nil {
+		f := kubeclient.NewFactory()
 		cfg, err := f.CreateKubeConfig()
 		if err != nil {
 			return client, ns, errors.Wrap(err, "failed to get kubernetes config")
@@ -72,4 +94,13 @@ func LazyCreateKubeClientAndNamespace(client kubernetes.Interface, ns string) (k
 func IsInCluster() bool {
 	_, err := rest.InClusterConfig()
 	return err == nil
+}
+
+// IsNoKubernetes returns true if we are inside a GitHub Action or not using kubernetes
+func IsNoKubernetes() bool {
+	// disable k8s by default if inside a github action
+	if strings.ToLower(os.Getenv("GITHUB_ACTIONS")) == "true" {
+		return true
+	}
+	return strings.ToLower(os.Getenv("JX_NO_KUBERNETES")) == "true"
 }
