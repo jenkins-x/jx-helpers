@@ -119,3 +119,7 @@ func IsScmNotFound(err error) bool {
 	}
 	return false
 }
+
+func IsScmResponseNotFound(res *scm.Response) bool {
+	return res != nil && res.Status == 404
+}
