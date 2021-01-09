@@ -22,7 +22,7 @@ func TestResponseNotFoundShouldBeFalseWhenResponseStatusIsOk(t *testing.T) {
 	assert.Falsef(t, f, "should be false when response has 200 status")
 }
 
-func TestResponseNotFoundShouldBeFalseWhenResponseStatusIsNotFound(t *testing.T) {
+func TestResponseNotFoundShouldBeTrueWhenResponseStatusIsNotFound(t *testing.T) {
 	res := new(scm.Response)
 	res.Status = 404
 
