@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	tools_watch "k8s.io/client-go/tools/watch"
+	"sigs.k8s.io/yaml"
 )
 
 // credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
@@ -249,9 +250,17 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 	condition := func(event watch.Event) (bool, error) {
 		pod := event.Object.(*v1.Pod)
 		status := PodStatus(pod)
+		if statusMap[pod.Name] != status && !IsPodCompleted(pod) && pod.DeletionTimestamp == nil {
+			log.Logger().Infof("pod %s has status %s", termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(status))
+			statusMap[pod.Name] = status
+		}
 		if IsPodFailed(pod) {
 			containerName := pod.Spec.Containers[0].Name
 			log.Logger().Warnf("pod %s/%s container %s failed so tailing the log:", termcolor.ColorInfo(namespace), termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(containerName))
+			statusYaml, err := yaml.Marshal(&pod.Status)
+			if err == nil {
+				log.Logger().Infof("pod status: %s", string(statusYaml))
+			}
 			log.Logger().Info("")
 
 			err = podlogs.TailLogs(namespace, pod.Name, containerName, os.Stderr, os.Stdout)
@@ -260,10 +269,6 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 			}
 			log.Logger().Info("")
 			return false, errors.Errorf("pod %s/%s failed", namespace, pod.Name)
-		}
-		if statusMap[pod.Name] != status && !IsPodCompleted(pod) && pod.DeletionTimestamp == nil {
-			log.Logger().Infof("pod %s has status %s", termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(status))
-			statusMap[pod.Name] = status
 		}
 		return IsPodReady(pod), nil
 	}
