@@ -34,9 +34,9 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
-	k8s.io/api v0.20.1
-	k8s.io/apimachinery v0.20.1
-	k8s.io/client-go v0.20.1
+	k8s.io/api v0.19.2
+	k8s.io/apimachinery v0.19.2
+	k8s.io/client-go v0.19.2
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/kustomize/kyaml v0.10.5
