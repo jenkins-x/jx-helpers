@@ -18,7 +18,7 @@ import (
 
 const (
 	// DefaultDirWritePermissions default permissions when creating a directory
-	DefaultDirWritePermissions = 0760
+	DefaultDirWritePermissions = 0766
 
 	// DefaultFileWritePermissions default permissions when creating a file
 	DefaultFileWritePermissions = 0644
