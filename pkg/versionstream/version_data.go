@@ -232,7 +232,7 @@ func LoadStableVersionNumber(wrkDir string, kind VersionKind, name string) (stri
 
 // SaveStableVersion saves the version file
 func SaveStableVersion(wrkDir string, kind VersionKind, name string, stableVersion *StableVersion) error {
-	path := filepath.Join(wrkDir, string(kind), name+".yml")
+	path := filepath.Join(wrkDir, string(kind), name, "defaults.yaml")
 	return SaveStableVersionFile(path, stableVersion)
 }
 

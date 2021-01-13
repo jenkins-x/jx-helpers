@@ -2,14 +2,18 @@ package helmer
 
 // FakeHelmer a fake helmer
 type FakeHelmer struct {
-	CWD   string
-	Repos map[string]string
+	CWD               string
+	Repos             map[string]string
+	Charts            map[string][]ChartSummary
+	ChartsAllVersions map[string][]ChartSummary
 }
 
 // NewFakeHelmer creates a
-func NewFakeHelmer() Helmer {
+func NewFakeHelmer() *FakeHelmer {
 	return &FakeHelmer{
-		Repos: map[string]string{},
+		Repos:             map[string]string{},
+		Charts:            map[string][]ChartSummary{},
+		ChartsAllVersions: map[string][]ChartSummary{},
 	}
 }
 
@@ -104,7 +108,10 @@ func (f *FakeHelmer) Version(tls bool) (string, error) {
 }
 
 func (f *FakeHelmer) SearchCharts(filter string, allVersions bool) ([]ChartSummary, error) {
-	return nil, nil
+	if allVersions {
+		return f.ChartsAllVersions[filter], nil
+	}
+	return f.Charts[filter], nil
 }
 
 func (f *FakeHelmer) Env() map[string]string {
