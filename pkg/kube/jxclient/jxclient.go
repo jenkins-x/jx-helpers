@@ -79,5 +79,10 @@ func noKubernetesFakeJXClient() (versioned.Interface, error) {
 	devEnv := jxenv.CreateDefaultDevEnvironment(ns)
 	devEnv.Namespace = ns
 	devEnv.Spec.Source.URL = gitURL
-	return fakejx.NewSimpleClientset(devEnv), nil
+
+	defaultNS := "default"
+	devEnvDefault := jxenv.CreateDefaultDevEnvironment(defaultNS)
+	devEnvDefault.Namespace = defaultNS
+	devEnvDefault.Spec.Source.URL = gitURL
+	return fakejx.NewSimpleClientset(devEnv, devEnvDefault), nil
 }

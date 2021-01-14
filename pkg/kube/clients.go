@@ -1,6 +1,8 @@
 package kube
 
 import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"strings"
 
@@ -41,7 +43,7 @@ func LazyCreateKubeClient(client kubernetes.Interface) (kubernetes.Interface, er
 		return client, nil
 	}
 	if IsNoKubernetes() {
-		return fake.NewSimpleClientset(), nil
+		return NewFakeKubernetesClient("default"), nil
 	}
 	f := kubeclient.NewFactory()
 	cfg, err := f.CreateKubeConfig()
@@ -61,11 +63,11 @@ func LazyCreateKubeClientAndNamespace(client kubernetes.Interface, ns string) (k
 		return client, ns, nil
 	}
 	if IsNoKubernetes() {
-		if client == nil {
-			client = fake.NewSimpleClientset()
-		}
 		if ns == "" {
 			ns = "default"
+		}
+		if client == nil {
+			client = NewFakeKubernetesClient(ns)
 		}
 		return client, ns, nil
 	}
@@ -103,4 +105,13 @@ func IsNoKubernetes() bool {
 		return true
 	}
 	return strings.ToLower(os.Getenv("JX_NO_KUBERNETES")) == "true"
+}
+
+// NewFakeKubernetesClient creates a fake k8s client if we have disabled kubernetes
+func NewFakeKubernetesClient(ns string) *fake.Clientset {
+	return fake.NewSimpleClientset(&corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: ns,
+		},
+	})
 }
