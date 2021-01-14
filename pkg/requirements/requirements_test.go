@@ -16,7 +16,8 @@ func TestEnvironmentGitURL(t *testing.T) {
 		},
 		Environments: []jxcore.EnvironmentConfig{
 			{
-				Key: "dev",
+				Key:        "dev",
+				Repository: "dev",
 			},
 			{
 				Key:        "repo",

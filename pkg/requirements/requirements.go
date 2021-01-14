@@ -58,6 +58,7 @@ func GetRequirementsFromGit(g gitclient.Interface, gitURL string) (*jxcore.Requi
 }
 
 // EnvironmentGitURL looks up the environment configuration based on environment name and returns the git URL
+// or an empty string if the environment does not have an owner or repository configured
 func EnvironmentGitURL(c *jxcore.RequirementsConfig, name string) string {
 	for _, env := range c.Environments {
 		if env.Key == name {
@@ -66,12 +67,14 @@ func EnvironmentGitURL(c *jxcore.RequirementsConfig, name string) string {
 			}
 			repo := env.Repository
 			if repo == "" {
-				repo = env.Key
+				return ""
 			}
 			gitServer := stringhelpers.FirstNotEmptyString(env.GitServer, c.Cluster.GitServer, giturl.GitHubURL)
 			gitKind := stringhelpers.FirstNotEmptyString(env.GitKind, c.Cluster.GitKind)
 			owner := stringhelpers.FirstNotEmptyString(env.Owner, c.Cluster.EnvironmentGitOwner)
-
+			if owner == "" || gitServer == "" {
+				return ""
+			}
 			if gitKind == "bitbucketserver" {
 				gitServer = stringhelpers.UrlJoin(gitServer, "scm")
 			}
