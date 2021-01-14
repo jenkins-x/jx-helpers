@@ -1,6 +1,8 @@
 package requirements
 
 import (
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"os"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/credentialhelper"
@@ -53,4 +55,28 @@ func GetRequirementsFromGit(g gitclient.Interface, gitURL string) (*jxcore.Requi
 		return nil, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
 	}
 	return &requirements.Spec, nil
+}
+
+// EnvironmentGitURL looks up the environment configuration based on environment name and returns the git URL
+func EnvironmentGitURL(c *jxcore.RequirementsConfig, name string) string {
+	for _, env := range c.Environments {
+		if env.Key == name {
+			if env.GitURL != "" {
+				return env.GitURL
+			}
+			repo := env.Repository
+			if repo == "" {
+				repo = env.Key
+			}
+			gitServer := stringhelpers.FirstNotEmptyString(env.GitServer, c.Cluster.GitServer, giturl.GitHubURL)
+			gitKind := stringhelpers.FirstNotEmptyString(env.GitKind, c.Cluster.GitKind)
+			owner := stringhelpers.FirstNotEmptyString(env.Owner, c.Cluster.EnvironmentGitOwner)
+
+			if gitKind == "bitbucketserver" {
+				gitServer = stringhelpers.UrlJoin(gitServer, "scm")
+			}
+			return stringhelpers.UrlJoin(gitServer, owner, repo) + ".git"
+		}
+	}
+	return ""
 }
