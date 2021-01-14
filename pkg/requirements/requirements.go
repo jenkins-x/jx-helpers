@@ -24,20 +24,24 @@ func GetClusterRequirementsConfig(g gitclient.Interface, jxClient versioned.Inte
 	if env.Spec.Source.URL == "" {
 		return nil, errors.New("failed to find a dev environment source url on development environment resource")
 	}
+	return GetRequirementsFromGit(g, env.Spec.Source.URL)
+}
 
+// GetRequirementsFromGit gets the requiremnets from the given git URL
+func GetRequirementsFromGit(g gitclient.Interface, gitURL string) (*jxcore.RequirementsConfig, error) {
 	// if we have a kubernetes secret with git auth mounted to the filesystem when running in cluster
 	// we need to turn it into a git credentials file see https://git-scm.com/docs/git-credential-store
 	secretMountPath := os.Getenv(credentialhelper.GIT_SECRET_MOUNT_PATH)
 	if secretMountPath != "" {
-		err = credentialhelper.WriteGitCredentialFromSecretMount()
+		err := credentialhelper.WriteGitCredentialFromSecretMount()
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
 		}
 	}
 	// clone cluster repo to a temp dir and load the requirements
-	dir, err := gitclient.CloneToDir(g, env.Spec.Source.URL, "")
+	dir, err := gitclient.CloneToDir(g, gitURL, "")
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to clone cluster git repo %s", env.Spec.Source.URL)
+		return nil, errors.Wrapf(err, "failed to clone cluster git repo %s", gitURL)
 	}
 
 	requirements, _, err := jxcore.LoadRequirementsConfig(dir, false)
