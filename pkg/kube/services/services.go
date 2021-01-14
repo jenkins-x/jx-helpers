@@ -258,7 +258,7 @@ func GetServiceURL(svc *v1.Service) string {
 	}
 	if url == "" {
 		scheme := "http"
-		if svc.Spec.Ports != nil {
+		if svc != nil && svc.Spec.Ports != nil {
 			for _, port := range svc.Spec.Ports {
 				if port.Port == 443 {
 					scheme = "https"
@@ -268,7 +268,7 @@ func GetServiceURL(svc *v1.Service) string {
 		}
 
 		// lets check if its a LoadBalancer
-		if svc.Spec.Type == v1.ServiceTypeLoadBalancer {
+		if svc != nil && svc.Spec.Type == v1.ServiceTypeLoadBalancer {
 			for _, ing := range svc.Status.LoadBalancer.Ingress {
 				if ing.IP != "" {
 					return scheme + "://" + ing.IP + "/"
@@ -336,7 +336,9 @@ func WaitForExternalIP(client kubernetes.Interface, name, namespace string, time
 		return HasExternalAddress(svc), nil
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	_, err = tools_watch.UntilWithoutRetry(ctx, w, condition)
 
 	if err == wait.ErrWaitTimeout {
@@ -360,7 +362,9 @@ func WaitForService(client kubernetes.Interface, name, namespace string, timeout
 		svc := event.Object.(*v1.Service)
 		return svc.GetName() == name, nil
 	}
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	_, err = tools_watch.UntilWithoutRetry(ctx, w, condition)
 
 	if err == wait.ErrWaitTimeout {
@@ -491,7 +495,11 @@ func AnnotateServicesWithCertManagerIssuer(c kubernetes.Interface, ns, issuer st
 			}
 			s, err = c.CoreV1().Services(ns).Update(context.TODO(), s, meta_v1.UpdateOptions{})
 			if err != nil {
-				return result, fmt.Errorf("failed to annotate and update service %s in namespace %s: %v", s.Name, ns, err)
+				name := ""
+				if s != nil {
+					name = s.Name
+				}
+				return result, fmt.Errorf("failed to annotate and update service %s in namespace %s: %v", name, ns, err)
 			}
 			result = append(result, s)
 		}

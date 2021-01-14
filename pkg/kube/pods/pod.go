@@ -146,7 +146,8 @@ func waitForPodSelector(client kubernetes.Interface, namespace string, options m
 	}
 	defer w.Stop()
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	_, err = tools_watch.UntilWithoutRetry(ctx, w, condition)
 
 	if err == wait.ErrWaitTimeout {

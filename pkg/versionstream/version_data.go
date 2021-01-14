@@ -400,9 +400,9 @@ func SaveQuickStarts(dir string, qs *QuickStarts) error {
 
 // RepositoryPrefixes maps repository prefixes to URLs
 type RepositoryPrefixes struct {
-	Repositories []RepositoryURLs    `json:"repositories"`
-	urlToPrefix  map[string]string   `json:"-"`
-	prefixToURLs map[string][]string `json:"-"`
+	Repositories []RepositoryURLs `json:"repositories"`
+	urlToPrefix  map[string]string
+	prefixToURLs map[string][]string
 }
 
 // RepositoryURLs contains the prefix and URLS for a repository
