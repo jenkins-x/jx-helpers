@@ -109,6 +109,9 @@ func (o *Factory) FindGitToken() error {
 	if o.GitToken == "" {
 		o.GitToken = os.Getenv("GIT_TOKEN")
 	}
+	if o.GitToken == "" {
+		o.GitToken = os.Getenv("GITHUB_TOKEN")
+	}
 
 	// lets try default missing values
 	if o.Input != nil && (o.GitUsername == "" || o.GitToken == "") {
