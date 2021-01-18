@@ -313,6 +313,7 @@ github.com/jenkins-x/go-scm v1.5.211 h1:I7Wpo0mXZ1Gok/sbWaxDjhM3HkqnGCN9Z8KQKmkl
 github.com/jenkins-x/go-scm v1.5.211/go.mod h1:Iuk0V0mt0QGIt50TZyChHqRIiXTnp1ink9RyNoe7o7c=
 github.com/jenkins-x/jx-api/v4 v4.0.22 h1:DFx7fZq84+mMA02fuiOXT1xDHjLnFMJs8J8eodt8htU=
 github.com/jenkins-x/jx-api/v4 v4.0.22/go.mod h1:3QDwUjxzVhnnfkuWdYDYZ4wUHfLxntKGmecqdIeFUdo=
+github.com/jenkins-x/jx-api/v4 v4.0.23/go.mod h1:IC88X+24Nmexuj7lRNRgzfrchzlo0qysfwkICpqDmMQ=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.1 h1:zMnxoLRXJJ85PAd9OVPlgXT5T8xHgbmxSMhpYPTF5mw=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.1/go.mod h1:0CYp1ACEgSmOxul1bx5qbZgQGEcyAeGdBOBa+u62zZY=
 github.com/jenkins-x/jx-logging/v3 v3.0.3 h1:sVACbwiKuaDFYPfJeVAU10MJI4DA6LcH1RqJKwfNozc=
