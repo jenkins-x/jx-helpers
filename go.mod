@@ -14,8 +14,8 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.1.4
-	github.com/jenkins-x/go-scm v1.5.209
-	github.com/jenkins-x/jx-api/v4 v4.0.21
+	github.com/jenkins-x/go-scm v1.5.211
+	github.com/jenkins-x/jx-api/v4 v4.0.22
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
 	github.com/magiconair/properties v1.8.4
@@ -34,9 +34,9 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
-	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
-	k8s.io/client-go v0.19.2
+	k8s.io/api v0.20.2
+	k8s.io/apimachinery v0.20.2
+	k8s.io/client-go v0.20.2
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubernetes v1.14.7
 	sigs.k8s.io/kustomize/kyaml v0.10.5
