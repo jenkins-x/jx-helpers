@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/podlogs"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
@@ -22,7 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	tools_watch "k8s.io/client-go/tools/watch"
-	"sigs.k8s.io/yaml"
 )
 
 // credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
@@ -247,6 +245,7 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 		return pod, errors.Wrapf(err, "failed to ")
 	}
 	statusMap := map[string]string{}
+	logFailed := false
 	condition := func(event watch.Event) (bool, error) {
 		pod := event.Object.(*v1.Pod)
 		status := PodStatus(pod)
@@ -255,20 +254,14 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 			statusMap[pod.Name] = status
 		}
 		if IsPodFailed(pod) {
-			containerName := pod.Spec.Containers[0].Name
-			log.Logger().Warnf("pod %s/%s container %s failed so tailing the log:", termcolor.ColorInfo(namespace), termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(containerName))
-			statusYaml, err := yaml.Marshal(&pod.Status)
-			if err == nil {
-				log.Logger().Infof("pod status: %s", string(statusYaml))
+			if !logFailed {
+				logFailed = true
 			}
-			log.Logger().Info("")
-
-			err = podlogs.TailLogs(namespace, pod.Name, containerName, os.Stderr, os.Stdout)
-			if err != nil {
-				return false, errors.Wrapf(err, "failed to log pod %s container %s", pod.Name, containerName)
-			}
-			log.Logger().Info("")
-			return false, errors.Errorf("pod %s/%s failed", namespace, pod.Name)
+			cmdLine := fmt.Sprintf("kubectl log -n %s %s", namespace, pod.Name)
+			log.Logger().Info()
+			log.Logger().Warnf("the git operator pod has failed but will restart")
+			log.Logger().Infof("to view the log of the failed git operator pod run: %s", termcolor.ColorInfo(cmdLine))
+			log.Logger().Info()
 		}
 		return IsPodReady(pod), nil
 	}
