@@ -102,7 +102,7 @@ func IsInCluster() bool {
 func IsNoKubernetes() bool {
 	// disable k8s by default if inside a github action
 	if strings.ToLower(os.Getenv("GITHUB_ACTIONS")) == "true" {
-		return true
+		return strings.ToLower(os.Getenv("JX_KUBERNETES")) != "true"
 	}
 	return strings.ToLower(os.Getenv("JX_NO_KUBERNETES")) == "true"
 }
