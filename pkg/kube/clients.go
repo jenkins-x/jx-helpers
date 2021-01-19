@@ -39,10 +39,16 @@ func LazyCreateDynamicClient(client dynamic.Interface) (dynamic.Interface, error
 
 // LazyCreateKubeClient lazy creates the kube client if its not defined
 func LazyCreateKubeClient(client kubernetes.Interface) (kubernetes.Interface, error) {
+	return LazyCreateKubeClientWithMandatory(client, false)
+}
+
+// LazyCreateKubeClientWithMandatory if mandatory is specified then the env vars are ignored to determine if we use
+// kubernetes or not
+func LazyCreateKubeClientWithMandatory(client kubernetes.Interface, mandatory bool) (kubernetes.Interface, error) {
 	if client != nil {
 		return client, nil
 	}
-	if IsNoKubernetes() {
+	if !mandatory && IsNoKubernetes() {
 		return NewFakeKubernetesClient("default"), nil
 	}
 	f := kubeclient.NewFactory()
