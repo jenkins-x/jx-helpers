@@ -86,7 +86,8 @@ func GetPasswordFromSourceURL(sourceURL string) (string, error) {
 	}
 	u, err := url.Parse(sourceURL)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to parse URL %s", sourceURL)
+		// we may be a git: style URL so lets just ignore errors
+		return "", nil
 	}
 	if u == nil || u.User == nil {
 		return "", nil
