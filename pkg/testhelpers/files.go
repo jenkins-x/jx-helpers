@@ -85,6 +85,16 @@ func AssertEqualFileText(t *testing.T, expectedFile string, actualFile string) e
 	return nil
 }
 
+// AssertFilesEqualText asserts that all the given paths in the expected dir are equal to the files in the actual dir
+func AssertFilesEqualText(t *testing.T, expectedDir string, actualDir string, paths ...string) {
+	for _, f := range paths {
+		generated := filepath.Join(actualDir, f)
+		expected := filepath.Join(expectedDir, f)
+		AssertEqualFileText(t, expected, generated)
+		t.Logf("file %s matches expected text\n", f)
+	}
+}
+
 // AssertLoadFileText asserts that the given file name can be loaded and returns the string contents
 func AssertLoadFileText(t *testing.T, fileName string) (string, error) {
 	if !assert.FileExists(t, fileName) {
