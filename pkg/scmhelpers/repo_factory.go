@@ -94,6 +94,19 @@ func (r *CreateRepository) CreateRepository(scmClient *scm.Client) (*scm.Reposit
 		Name:    r.Repository,
 		Private: !r.GitPublic,
 	}
+
+	// lazily load the current user name if its not populated
+	if r.CurrentUsername == "" {
+		user, _, err := scmClient.Users.Find(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to find current username")
+		}
+		r.CurrentUsername = user.Login
+		if r.CurrentUsername == "" {
+			return nil, errors.Errorf("no login for current git user %#v", user)
+		}
+	}
+
 	// only specify owner if its not the current user
 	if r.CurrentUsername != r.Owner {
 		repoInput.Namespace = r.Owner
