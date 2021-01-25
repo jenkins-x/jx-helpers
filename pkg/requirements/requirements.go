@@ -3,6 +3,7 @@ package requirements
 import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"os"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/credentialhelper"
@@ -39,6 +40,8 @@ func GetRequirementsFromGit(g gitclient.Interface, gitURL string) (*jxcore.Requi
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
 		}
+	} else {
+		log.Logger().Warnf("no $GIT_SECRET_MOUNT_PATH environment variable set")
 	}
 	// clone cluster repo to a temp dir and load the requirements
 	dir, err := gitclient.CloneToDir(g, gitURL, "")

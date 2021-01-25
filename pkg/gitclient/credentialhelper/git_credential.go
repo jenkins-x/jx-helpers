@@ -3,6 +3,8 @@ package credentialhelper
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -149,7 +151,6 @@ func (g *GitCredential) URL() (url.URL, error) {
 // WriteGitCredentialFromSecretMount writes mounted kubernetes secret credentials to file $XDG_CONFIG_HOME/git/credentials
 // see for more details https://git-scm.com/docs/git-credential-store
 func WriteGitCredentialFromSecretMount() error {
-
 	xdgCongifHome := os.Getenv(XDG_CONFIG_HOME)
 	mountLocation := os.Getenv(GIT_SECRET_MOUNT_PATH)
 	userKey := os.Getenv(GIT_SECRET_KEY_USER)
@@ -222,12 +223,12 @@ func WriteGitCredentialFromSecretMount() error {
 		return errors.Wrapf(err, "failed to write file %s", file)
 	}
 
+	log.Logger().Infof("wrote git credentials file %s", termcolor.ColorInfo(file))
 	return nil
 }
 
 // match structure defined here https://git-scm.com/docs/git-credential-store
 func getCredentialsFilename(xdgCongifHome string) (string, error) {
-
 	if xdgCongifHome == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
