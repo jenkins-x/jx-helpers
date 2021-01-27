@@ -31,6 +31,7 @@ type Options struct {
 	GitToken           string
 	Namespace          string
 	DiscoverFromGit    bool
+	PreferUpstream     bool
 	JXClient           versioned.Interface
 	GitURL             *giturl.GitRepository
 	GitClient          gitclient.Interface
@@ -112,7 +113,7 @@ func (o *Options) discoverRepositoryDetails() error {
 	if o.SourceURL == "" {
 		if o.DiscoverFromGit {
 			// lets try find the git URL from the current git clone
-			o.SourceURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
+			o.SourceURL, err = gitdiscovery.FindGitURLFromDir(o.Dir, o.PreferUpstream)
 			if err != nil {
 				o.SourceURL = os.Getenv("REPO_URL")
 				if o.SourceURL == "" {
