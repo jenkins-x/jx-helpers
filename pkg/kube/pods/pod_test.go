@@ -1,19 +1,28 @@
-// +build unit
-
 package pods_test
 
 import (
+	"context"
+	"errors"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/pods"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
+	clienttesting "k8s.io/client-go/testing"
 )
 
 func TestGetPodConditionPodReady(t *testing.T) {
@@ -326,4 +335,105 @@ func TestIsPodReadyFailures(t *testing.T) {
 
 	res = pods.IsPodReady(pod)
 	assert.Equal(t, false, res)
+}
+
+func TestWaitForPodSelectorToBeReady(t *testing.T) {
+	t.Parallel()
+
+	testers := []func(client kubernetes.Interface){
+		func(client kubernetes.Interface) {
+			pod, err := pods.WaitForPodSelectorToBeReady(client, "jx-testing", "name=test", time.Second*2)
+			assert.NoError(t, err)
+			assert.NotNil(t, pod)
+		},
+		func(client kubernetes.Interface) {
+			err := pods.WaitForPodNameToBeReady(client, "jx-testing", "web", time.Second*2)
+			assert.NoError(t, err)
+		},
+		func(client kubernetes.Interface) {
+			pod, err := pods.WaitForPod(client, "jx-testing", func(options metav1.ListOptions) {
+				// for this test, select any pod
+			}, time.Second*2, func(pod *v1.Pod) bool {
+				// for this test, match any pod
+				return true
+			})
+			assert.NoError(t, err)
+			assert.NotNil(t, pod)
+		},
+	}
+
+	for _, tester := range testers {
+		client := fake.NewSimpleClientset(
+			&corev1.Namespace{TypeMeta: metav1.TypeMeta{
+				Kind:       "Namespace",
+				APIVersion: "v1",
+			}},
+		)
+		wg := new(sync.WaitGroup)
+		wg.Add(1)
+
+		var lists uint64
+
+		client.PrependReactor("list", "*", func(action clienttesting.Action) (handled bool, ret runtime.Object, err error) {
+
+			l := lists
+			atomic.AddUint64(&lists, 1)
+
+			if l == 0 {
+				// simulate an error on the fist list call
+				return true, nil, errors.New("test error")
+			}
+
+			go func() {
+				time.Sleep(time.Millisecond * 100)
+				wg.Done()
+			}()
+			return false, nil, nil
+		})
+
+		go func() {
+
+			// wait until the pod list has succeded
+			wg.Wait()
+
+			// create the pod that the tester is expecting
+			client.CoreV1().Pods("jx-testing").Create(context.TODO(),
+				&v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "web",
+						Labels: map[string]string{
+							"name": "test",
+						},
+						Namespace: "jx-testing",
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							{
+								Name:  "web",
+								Image: "nginx:1.12",
+								Ports: []v1.ContainerPort{
+									{
+										Name:          "http",
+										Protocol:      v1.ProtocolTCP,
+										ContainerPort: 80,
+									},
+								},
+							},
+						},
+					},
+					Status: v1.PodStatus{
+						Phase: v1.PodRunning,
+						Conditions: []v1.PodCondition{
+							{
+								Type:   v1.PodReady,
+								Status: v1.ConditionTrue,
+							},
+						},
+					},
+				}, metav1.CreateOptions{})
+		}()
+
+		tester(client)
+	}
+
 }
