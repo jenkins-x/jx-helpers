@@ -1,0 +1,12 @@
+apiVersion: updatebot.jenkins-x.io/v1alpha1
+kind: UpdateConfig
+spec:
+  rules:
+    - urls:
+        - https://github.com/jenkins-x/jx-pipelines-visualizer 
+      changes:
+        - regex:
+            pattern: |
+              jx-helpers/v3 v"(.*)"
+            files:
+              - "go.mod"
