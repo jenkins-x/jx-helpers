@@ -1,6 +1,7 @@
 module github.com/jenkins-x/jx-helpers/v3
 
 require (
+	cloud.google.com/go v0.76.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.17 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.11 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0
@@ -11,13 +12,14 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-logr/logr v0.2.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.5.4
+	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.1.4
-	github.com/googleapis/gnostic v0.4.2 // indirect
+	github.com/googleapis/gnostic v0.5.4 // indirect
+	github.com/gophercloud/gophercloud v0.15.0 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/jenkins-x/go-scm v1.5.216
 	github.com/jenkins-x/jx-api/v4 v4.0.24
@@ -35,17 +37,24 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	github.com/xeipuuv/gojsonschema v1.2.0
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
+	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c // indirect
+	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/text v0.3.5 // indirect
+	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
-	k8s.io/client-go v0.20.2
+	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/helm v2.16.10+incompatible
+	k8s.io/klog v1.0.0 // indirect
+	k8s.io/klog/v2 v2.5.0 // indirect
 	k8s.io/kubernetes v1.14.7
+	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.10.5
 	sigs.k8s.io/yaml v1.2.0
 )
