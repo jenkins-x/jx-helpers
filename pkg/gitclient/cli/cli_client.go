@@ -2,7 +2,6 @@ package cli
 
 import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 )
 
 type client struct {
@@ -12,7 +11,7 @@ type client struct {
 
 // NewCLIClient creates a new CLI based client
 // if no binary or runner is supplied then use the defaults
-func NewCLIClient(binary string, runner cmdrunner.CommandRunner) gitclient.Interface {
+func NewCLIClient(binary string, runner cmdrunner.CommandRunner) *client {
 	if binary == "" {
 		binary = "git"
 	}
