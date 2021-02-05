@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
 
 const (
 	// DefaultDirWritePermissions default permissions when creating a directory
-	DefaultDirWritePermissions = 0760
+	DefaultDirWritePermissions = 0766
 
 	// DefaultFileWritePermissions default permissions when creating a file
 	DefaultFileWritePermissions = 0644

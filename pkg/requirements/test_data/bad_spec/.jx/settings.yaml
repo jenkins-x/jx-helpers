@@ -1,0 +1,5 @@
+apiVersion: core.jenkins-x.io/v4beta1
+kind: Settings
+spec:
+  gitUrl: "https://something.com/cheese.git"
+  doesNotExist: cheese

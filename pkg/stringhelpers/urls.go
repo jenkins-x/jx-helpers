@@ -62,7 +62,7 @@ func SanitizeURL(unsanitizedUrl string) string {
 	return stripCredentialsFromURL(u)
 }
 
-// URLSetUserPassword addss the user and password to the URL
+// URLSetUserPassword adds the user and password to the URL
 func URLSetUserPassword(rawURL, username, password string) (string, error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {

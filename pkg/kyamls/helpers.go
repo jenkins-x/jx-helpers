@@ -3,7 +3,7 @@ package kyamls
 import (
 	"strings"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -87,6 +87,11 @@ func TrimSpaceAndQuotes(answer string) string {
 // IsClusterKind returns true if the kind is a cluster kind
 func IsClusterKind(kind string) bool {
 	return kind == "" || kind == "CustomResourceDefinition" || kind == "Namespace" || strings.HasPrefix(kind, "Cluster")
+}
+
+// IsCustomResourceDefinition returns true if the kind is a customresourcedefinition
+func IsCustomResourceDefinition(kind string) bool {
+	return kind == "CustomResourceDefinition"
 }
 
 // JSONPath returns the fields separated by dots

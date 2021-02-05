@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 )
 
 const (

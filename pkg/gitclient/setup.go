@@ -4,9 +4,10 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/jenkins-x/jx-api/pkg/util"
-	"github.com/jenkins-x/jx-helpers/pkg/homedir"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-api/v4/pkg/util"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/homedir"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
 
@@ -53,11 +54,27 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 
 // SetUserAndEmail sets the user and email if they have not been set
 // Uses environment variables `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL`
-func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEmail string) (string, string, error) {
-	userName := gitUserName
-	userEmail := gitUserEmail
+func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEmail string, assumeInCluster bool) (string, string, error) {
+	userName := ""
+	userEmail := ""
+	if assumeInCluster || kube.IsInCluster() {
+		userName = gitUserName
+		userEmail = gitUserEmail
+	} else {
+		// lets load the current values and if they are specified lets not modify them as they are probably correct
+		userName, _ = gitter.Command(dir, "config", "--global", "--get", "user.name")
+		userEmail, _ = gitter.Command(dir, "config", "--global", "--get", "user.email")
+
+		if userName != "" && userEmail != "" {
+			log.Logger().Infof("have git user name %s and email %s setup already so not going to modify them", userName, userEmail)
+			return userName, userEmail, nil
+		}
+	}
 	if userName == "" {
-		userName = os.Getenv("GIT_AUTHOR_NAME")
+		userName = os.Getenv("GIT_USER_NAME")
+		if userName == "" {
+			userName = os.Getenv("GIT_AUTHOR_NAME")
+		}
 		if userName == "" {
 			user, err := user.Current()
 			if err == nil && user != nil {
@@ -73,7 +90,10 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 		return userName, userEmail, errors.Wrapf(err, "Failed to set the git username to %s", userName)
 	}
 	if userEmail == "" {
-		userEmail = os.Getenv("GIT_AUTHOR_EMAIL")
+		userName = os.Getenv("GIT_USER_EMAIL")
+		if userEmail == "" {
+			userEmail = os.Getenv("GIT_AUTHOR_EMAIL")
+		}
 		if userEmail == "" {
 			userEmail = DefaultGitUserEmail
 		}

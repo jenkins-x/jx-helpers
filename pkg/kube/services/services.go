@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kube"
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -43,7 +43,7 @@ type ServiceURL struct {
 
 func GetServices(client kubernetes.Interface, ns string) (map[string]*v1.Service, error) {
 	answer := map[string]*v1.Service{}
-	list, err := client.CoreV1().Services(ns).List(meta_v1.ListOptions{})
+	list, err := client.CoreV1().Services(ns).List(context.TODO(), meta_v1.ListOptions{})
 	if err != nil {
 		return answer, fmt.Errorf("failed to load Services %s", err)
 	}
@@ -58,7 +58,7 @@ func GetServices(client kubernetes.Interface, ns string) (map[string]*v1.Service
 // GetServicesByName returns a list of Service objects from a list of service names
 func GetServicesByName(client kubernetes.Interface, ns string, services []string) ([]*v1.Service, error) {
 	answer := make([]*v1.Service, 0)
-	svcList, err := client.CoreV1().Services(ns).List(meta_v1.ListOptions{})
+	svcList, err := client.CoreV1().Services(ns).List(context.TODO(), meta_v1.ListOptions{})
 	if err != nil {
 		return answer, errors.Wrapf(err, "listing the services in namespace %q", ns)
 	}
@@ -74,7 +74,7 @@ func GetServicesByName(client kubernetes.Interface, ns string, services []string
 
 func GetServiceNames(client kubernetes.Interface, ns string, filter string) ([]string, error) {
 	var names []string
-	list, err := client.CoreV1().Services(ns).List(meta_v1.ListOptions{})
+	list, err := client.CoreV1().Services(ns).List(context.TODO(), meta_v1.ListOptions{})
 	if err != nil {
 		return names, fmt.Errorf("failed to load Services %s", err)
 	}
@@ -94,7 +94,7 @@ func GetServiceURLFromMap(services map[string]*v1.Service, name string) string {
 
 func FindServiceURL(client kubernetes.Interface, namespace string, name string) (string, error) {
 	log.Logger().Debugf("Finding service url for %s in namespace %s", name, namespace)
-	svc, err := client.CoreV1().Services(namespace).Get(name, meta_v1.GetOptions{})
+	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}
@@ -113,7 +113,7 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 	log.Logger().Debugf("Couldn't find service url, attempting to look up via ingress")
 
 	// lets try find the service via Ingress
-	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(name, meta_v1.GetOptions{})
+	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}
@@ -134,7 +134,7 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 func FindIngressURL(client kubernetes.Interface, namespace string, name string) (string, error) {
 	log.Logger().Debugf("Finding ingress url for %s in namespace %s", name, namespace)
 	// lets try find the service via Ingress
-	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(name, meta_v1.GetOptions{})
+	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		log.Logger().Debugf("Error finding ingress for %s in namespace %s - err %s", name, namespace, err)
 		return "", nil
@@ -215,7 +215,7 @@ func IngressProtocol(ing *v1beta1.Ingress) string {
 
 func FindServiceHostname(client kubernetes.Interface, namespace string, name string) (string, error) {
 	// lets try find the service via Ingress
-	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(name, meta_v1.GetOptions{})
+	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if ing != nil && err == nil {
 		if len(ing.Spec.Rules) > 0 {
 			rule := ing.Spec.Rules[0]
@@ -237,12 +237,12 @@ func FindServiceHostname(client kubernetes.Interface, namespace string, name str
 
 // FindService looks up a service by name across all namespaces
 func FindService(client kubernetes.Interface, name string) (*v1.Service, error) {
-	nsl, err := client.CoreV1().Namespaces().List(meta_v1.ListOptions{})
+	nsl, err := client.CoreV1().Namespaces().List(context.TODO(), meta_v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	for _, ns := range nsl.Items {
-		svc, err := client.CoreV1().Services(ns.GetName()).Get(name, meta_v1.GetOptions{})
+		svc, err := client.CoreV1().Services(ns.GetName()).Get(context.TODO(), name, meta_v1.GetOptions{})
 		if err == nil {
 			return svc, nil
 		}
@@ -284,7 +284,7 @@ func GetServiceURL(svc *v1.Service) string {
 
 // FindServiceSchemePort parses the service definition and interprets http scheme in the absence of an external ingress
 func FindServiceSchemePort(client kubernetes.Interface, namespace string, name string) (string, string, error) {
-	svc, err := client.CoreV1().Services(namespace).Get(name, meta_v1.GetOptions{})
+	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return "", "", errors.Wrapf(err, "failed to find service %s in namespace %s", name, namespace)
 	}
@@ -298,7 +298,7 @@ func GetServiceURLFromName(c kubernetes.Interface, name, ns string) (string, err
 func FindServiceURLs(client kubernetes.Interface, namespace string) ([]ServiceURL, error) {
 	options := meta_v1.ListOptions{}
 	var urls []ServiceURL
-	svcs, err := client.CoreV1().Services(namespace).List(options)
+	svcs, err := client.CoreV1().Services(namespace).List(context.TODO(), options)
 	if err != nil {
 		return urls, err
 	}
@@ -324,7 +324,7 @@ func WaitForExternalIP(client kubernetes.Interface, name, namespace string, time
 		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
 	}
 
-	w, err := client.CoreV1().Services(namespace).Watch(options)
+	w, err := client.CoreV1().Services(namespace).Watch(context.TODO(), options)
 
 	if err != nil {
 		return err
@@ -350,7 +350,7 @@ func WaitForService(client kubernetes.Interface, name, namespace string, timeout
 	options := meta_v1.ListOptions{
 		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
 	}
-	w, err := client.CoreV1().Services(namespace).Watch(options)
+	w, err := client.CoreV1().Services(namespace).Watch(context.TODO(), options)
 	if err != nil {
 		return err
 	}
@@ -395,7 +395,7 @@ func CreateServiceLink(client kubernetes.Interface, currentNamespace, targetName
 		},
 	}
 
-	_, err := client.CoreV1().Services(currentNamespace).Create(&svc)
+	_, err := client.CoreV1().Services(currentNamespace).Create(context.TODO(), &svc, meta_v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -404,7 +404,7 @@ func CreateServiceLink(client kubernetes.Interface, currentNamespace, targetName
 }
 
 func DeleteService(client *kubernetes.Clientset, namespace string, serviceName string) error {
-	return client.CoreV1().Services(namespace).Delete(serviceName, &meta_v1.DeleteOptions{})
+	return client.CoreV1().Services(namespace).Delete(context.TODO(), serviceName, meta_v1.DeleteOptions{})
 }
 
 func GetService(client kubernetes.Interface, currentNamespace, targetNamespace, serviceName string) error {
@@ -418,7 +418,7 @@ func GetService(client kubernetes.Interface, currentNamespace, targetNamespace, 
 			ExternalName: fmt.Sprintf("%s.%s.svc.cluster.local", serviceName, targetNamespace),
 		},
 	}
-	_, err := client.CoreV1().Services(currentNamespace).Create(&svc)
+	_, err := client.CoreV1().Services(currentNamespace).Create(context.TODO(), &svc, meta_v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -426,7 +426,7 @@ func GetService(client kubernetes.Interface, currentNamespace, targetNamespace, 
 }
 
 func IsServicePresent(c kubernetes.Interface, name, ns string) (bool, error) {
-	svc, err := c.CoreV1().Services(ns).Get(name, meta_v1.GetOptions{})
+	svc, err := c.CoreV1().Services(ns).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil || svc == nil {
 		return false, err
 	}
@@ -435,7 +435,7 @@ func IsServicePresent(c kubernetes.Interface, name, ns string) (bool, error) {
 
 // GetServiceAppName retrieves the application name from the service labels
 func GetServiceAppName(c kubernetes.Interface, name, ns string) (string, error) {
-	svc, err := c.CoreV1().Services(ns).Get(name, meta_v1.GetOptions{})
+	svc, err := c.CoreV1().Services(ns).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil || svc == nil {
 		return "", errors.Wrapf(err, "retrieving service %q", name)
 	}
@@ -489,7 +489,7 @@ func AnnotateServicesWithCertManagerIssuer(c kubernetes.Interface, ns, issuer st
 			} else {
 				s.Annotations[ExposeIngressAnnotation] = certManagerAnnotation + ": " + issuer
 			}
-			s, err = c.CoreV1().Services(ns).Update(s)
+			s, err = c.CoreV1().Services(ns).Update(context.TODO(), s, meta_v1.UpdateOptions{})
 			if err != nil {
 				return result, fmt.Errorf("failed to annotate and update service %s in namespace %s: %v", s.Name, ns, err)
 			}
@@ -528,7 +528,7 @@ func AnnotateServicesWithBasicAuth(client kubernetes.Interface, ns string, servi
 			ingressAnnotations = basicAuthAnnotations
 		}
 		service.Annotations[ExposeIngressAnnotation] = ingressAnnotations
-		_, err = client.CoreV1().Services(ns).Update(service)
+		_, err = client.CoreV1().Services(ns).Update(context.TODO(), service, meta_v1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "updating the service %q in namesapce %q", service.GetName(), ns)
 		}
@@ -577,7 +577,7 @@ func CleanServiceAnnotations(c kubernetes.Interface, ns string, services ...stri
 			}
 			delete(s.Annotations, ExposeURLAnnotation)
 
-			_, err = c.CoreV1().Services(ns).Update(s)
+			_, err = c.CoreV1().Services(ns).Update(context.TODO(), s, meta_v1.UpdateOptions{})
 			if err != nil {
 				return fmt.Errorf("failed to clean service %s annotations in namespace %s: %v", s.Name, ns, err)
 			}

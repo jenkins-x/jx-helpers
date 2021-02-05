@@ -8,29 +8,43 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 	tools_watch "k8s.io/client-go/tools/watch"
 )
 
-// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
+// PodPredicate is a predicate over a pod
+type PodPredicate func(pod *v1.Pod) bool
+
 // IsPodReady returns true if a pod is ready; false otherwise.
+// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
 func IsPodReady(pod *v1.Pod) bool {
 	phase := pod.Status.Phase
 	if phase != v1.PodRunning || pod.DeletionTimestamp != nil {
 		return false
 	}
 	return IsPodReadyConditionTrue(pod.Status)
+}
+
+// IsPodPending returns true if a pod is pending
+func IsPodPending(pod *v1.Pod) bool {
+	switch pod.Status.Phase {
+	case v1.PodFailed, v1.PodSucceeded, v1.PodRunning:
+		return false
+	default:
+		return true
+	}
 }
 
 // IsPodCompleted returns true if a pod is completed (succeeded or failed); false otherwise.
@@ -51,8 +65,37 @@ func IsPodSucceeded(pod *v1.Pod) bool {
 	return false
 }
 
-// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
+// IsPodFailed returns true if a pod is failed
+func IsPodFailed(pod *v1.Pod) bool {
+	switch pod.Status.Phase {
+	case v1.PodSucceeded, v1.PodPending, v1.PodReasonUnschedulable:
+		return false
+	case v1.PodFailed:
+		return true
+	case v1.PodRunning:
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.State.Running != nil {
+				continue
+			}
+			terminated := c.State.Terminated
+			if terminated == nil && c.State.Waiting != nil {
+				terminated = c.LastTerminationState.Terminated
+			}
+			if terminated != nil && terminated.ExitCode != 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// IsPodRunning returns true if a pod is running
+func IsPodRunning(pod *corev1.Pod) bool {
+	return pod.Status.Phase == corev1.PodRunning
+}
+
 // IsPodReady retruns true if a pod is ready; false otherwise.
+// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
 func IsPodReadyConditionTrue(status v1.PodStatus) bool {
 	condition := GetPodReadyCondition(status)
 	return condition != nil && condition.Status == v1.ConditionTrue
@@ -69,17 +112,17 @@ func PodStatus(pod *v1.Pod) string {
 	return string(phase)
 }
 
-// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
-// Extracts the pod ready condition from the given status and returns that.
+// GetPodReadyCondition Extracts the pod ready condition from the given status and returns that.
 // Returns nil if the condition is not present.
+// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
 func GetPodReadyCondition(status v1.PodStatus) *v1.PodCondition {
 	_, condition := GetPodCondition(&status, v1.PodReady)
 	return condition
 }
 
-// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
 // GetPodCondition extracts the provided condition from the given status and returns that.
 // Returns nil and -1 if the condition is not present, and the index of the located condition.
+// credit https://github.com/kubernetes/kubernetes/blob/8719b4a/pkg/api/v1/pod/util.go
 func GetPodCondition(status *v1.PodStatus, conditionType v1.PodConditionType) (int, *v1.PodCondition) {
 	if status == nil {
 		return -1, nil
@@ -99,24 +142,36 @@ func GetCurrentPod(kubeClient kubernetes.Interface, ns string) (*v1.Pod, error) 
 		return nil, nil
 	}
 	name = naming.ToValidName(name)
-	return kubeClient.CoreV1().Pods(ns).Get(name, metav1.GetOptions{})
+	return kubeClient.CoreV1().Pods(ns).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
-func waitForPodSelector(client kubernetes.Interface, namespace string, options metav1.ListOptions,
-	timeout time.Duration, condition func(event watch.Event) (bool, error)) error {
-	w, err := client.CoreV1().Pods(namespace).Watch(options)
-	if err != nil {
-		return err
-	}
-	defer w.Stop()
+// WaitForPod waits for a pod filtered by `optionsModifier` that match `condition`
+func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier func(options metav1.ListOptions), timeout time.Duration, condition PodPredicate) (*v1.Pod, error) {
 
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	_, err = tools_watch.UntilWithoutRetry(ctx, w, condition)
 
-	if err == wait.ErrWaitTimeout {
-		return fmt.Errorf("pod %s never became ready", ListOptionsString(options))
+	lw := &cache.ListWatch{
+		ListFunc: func(o metav1.ListOptions) (runtime.Object, error) {
+			optionsModifier(o)
+			return client.CoreV1().Pods(namespace).List(context.TODO(), o)
+		},
+		WatchFunc: func(o metav1.ListOptions) (watch.Interface, error) {
+			optionsModifier(o)
+			return client.CoreV1().Pods(namespace).Watch(context.TODO(), o)
+		},
 	}
-	return nil
+
+	watch, err := tools_watch.UntilWithSync(ctx, lw, &v1.Pod{}, func(store cache.Store) (bool, error) { return false, nil }, func(event watch.Event) (bool, error) {
+		pod := event.Object.(*v1.Pod)
+		if pod == nil {
+			return false, errors.New("watched object is not a Pod")
+		}
+		return condition(pod), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return watch.Object.(*v1.Pod), nil
 }
 
 // ListOptionsString returns a string summary of the list options
@@ -150,59 +205,57 @@ func HasContainerStarted(pod *v1.Pod, idx int) bool {
 	return false
 }
 
-// WaitForPodNameToBeReady waits for the pod to become ready using the pod name
+// WaitForPodNameToBeRunning waits for the pod with the given name to be running
+func WaitForPodNameToBeRunning(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
+	return WaitforPodNameCondition(client, namespace, name, timeout, IsPodRunning)
+}
+
+// WaitForPodNameToBeReady waits for the pod with the given name to become ready
 func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
-	options := metav1.ListOptions{
+	return WaitforPodNameCondition(client, namespace, name, timeout, IsPodReady)
+}
+
+// WaitforPodNameCondition waits for the given pod name to match the given condition function
+func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name string, timeout time.Duration, condition PodPredicate) error {
+	optionsModifier := func(options metav1.ListOptions) {
 		// TODO
-		//FieldSelector: fields.OneTermEqualSelector(api.ObjectNameField, name).String(),
-		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
+		//options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
+		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", name).String()
 	}
-
-	// lets check if its already ready
-	pod, err := client.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
-	if err != nil && apierrors.IsNotFound(err) {
-		err = nil
-	}
-	if err != nil {
-		return errors.Wrapf(err, "failed to get pod %s in namespace %s", name, namespace)
-	}
-	if pod != nil && IsPodReady(pod) {
-		return nil
-	}
-
-	condition := func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
-
-		return IsPodReady(pod), nil
-	}
-	return waitForPodSelector(client, namespace, options, timeout, condition)
+	_, err := WaitForPod(client, namespace, optionsModifier, timeout, condition)
+	return err
 }
 
 // WaitForPodSelectorToBeReady waits for the pod to become ready using the given selector name
+// it also has the side effect of logging the following
+// * the logs of a pod that is detected as failed
+// * the status of the pod
 func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, selector string, timeout time.Duration) (*corev1.Pod, error) {
 	// lets check if its already ready
-	opts := metav1.ListOptions{
-		LabelSelector: selector,
-	}
-	pod, err := GetReadyPodForSelector(client, namespace, selector)
-	if err != nil {
-		return pod, errors.Wrapf(err, "failed to ")
+	optionsModifier := func(options metav1.ListOptions) {
+		options.LabelSelector = selector
 	}
 	statusMap := map[string]string{}
-	condition := func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
+	logFailed := false
+	condition := func(pod *v1.Pod) bool {
 		status := PodStatus(pod)
 		if statusMap[pod.Name] != status && !IsPodCompleted(pod) && pod.DeletionTimestamp == nil {
 			log.Logger().Infof("pod %s has status %s", termcolor.ColorInfo(pod.Name), termcolor.ColorInfo(status))
 			statusMap[pod.Name] = status
 		}
-		return IsPodReady(pod), nil
+		if IsPodFailed(pod) {
+			if !logFailed {
+				logFailed = true
+			}
+			cmdLine := fmt.Sprintf("kubectl log -n %s %s", namespace, pod.Name)
+			log.Logger().Info()
+			log.Logger().Warnf("the git operator pod has failed but will restart")
+			log.Logger().Infof("to view the log of the failed git operator pod run: %s", termcolor.ColorInfo(cmdLine))
+			log.Logger().Info()
+		}
+		return IsPodReady(pod)
 	}
-	err = waitForPodSelector(client, namespace, opts, timeout, condition)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to ")
-	}
-	return GetReadyPodForSelector(client, namespace, selector)
+	return WaitForPod(client, namespace, optionsModifier, timeout, condition)
 }
 
 // GetReadyPodForSelector returns the first ready pod for the given selector or nil
@@ -211,7 +264,7 @@ func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selec
 	opts := metav1.ListOptions{
 		LabelSelector: selector,
 	}
-	podList, err := client.CoreV1().Pods(namespace).List(opts)
+	podList, err := client.CoreV1().Pods(namespace).List(context.TODO(), opts)
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}
@@ -232,22 +285,18 @@ func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selec
 // WaitForPodNameToBeComplete waits for the pod to complete (succeed or fail) using the pod name
 func WaitForPodNameToBeComplete(client kubernetes.Interface, namespace string, name string,
 	timeout time.Duration) error {
-	options := metav1.ListOptions{
+	optionsModifier := func(options metav1.ListOptions) {
 		// TODO
-		//FieldSelector: fields.OneTermEqualSelector(api.ObjectNameField, name).String(),
-		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
+		//options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
+		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", name).String()
 	}
-	condition := func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
-
-		return IsPodCompleted(pod), nil
-	}
-	return waitForPodSelector(client, namespace, options, timeout, condition)
+	_, err := WaitForPod(client, namespace, optionsModifier, timeout, IsPodCompleted)
+	return err
 }
 
 func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]string, error) {
 	var names []string
-	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
+	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return names, fmt.Errorf("Failed to load Pods %s", err)
 	}
@@ -264,7 +313,7 @@ func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]strin
 func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, map[string]*v1.Pod, error) {
 	var names []string
 	m := map[string]*v1.Pod{}
-	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
+	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return names, m, fmt.Errorf("Failed to load Pods %s", err)
 	}
@@ -283,7 +332,7 @@ func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, m
 func GetPodsWithLabels(client kubernetes.Interface, ns string, selector string) ([]string, map[string]*v1.Pod, error) {
 	var names []string
 	m := map[string]*v1.Pod{}
-	list, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{
+	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: selector,
 	})
 	if err != nil {
@@ -301,7 +350,7 @@ func GetPodsWithLabels(client kubernetes.Interface, ns string, selector string) 
 	return names, m, nil
 }
 
-// GetPodRestars returns the number of restarts of a POD
+// GetPodRestarts returns the number of restarts of a POD
 func GetPodRestarts(pod *v1.Pod) int32 {
 	var restarts int32
 	statuses := pod.Status.ContainerStatuses

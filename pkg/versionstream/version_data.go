@@ -5,10 +5,10 @@ import (
 	"sort"
 
 	"github.com/blang/semver"
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 
@@ -27,9 +27,6 @@ type Callback func(kind VersionKind, name string, version *StableVersion) (bool,
 type VersionKind string
 
 const (
-	// KindApp represents the app (application) defaults configuration for use with hemlfile and helm 3
-	KindApp VersionKind = "apps"
-
 	// KindChart represents a chart version
 	KindChart VersionKind = "charts"
 
@@ -235,7 +232,7 @@ func LoadStableVersionNumber(wrkDir string, kind VersionKind, name string) (stri
 
 // SaveStableVersion saves the version file
 func SaveStableVersion(wrkDir string, kind VersionKind, name string, stableVersion *StableVersion) error {
-	path := filepath.Join(wrkDir, string(kind), name+".yml")
+	path := filepath.Join(wrkDir, string(kind), name, "defaults.yaml")
 	return SaveStableVersionFile(path, stableVersion)
 }
 

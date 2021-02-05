@@ -8,7 +8,7 @@ import (
 )
 
 // DiscoverUpstreamGitURL discovers the upstream git URL from the given git configuration
-func DiscoverUpstreamGitURL(gitConf string) (string, error) {
+func DiscoverUpstreamGitURL(gitConf string, preferUpstream bool) (string, error) {
 	cfg, err := parseGitConfig(gitConf)
 	if err != nil {
 		return "", fmt.Errorf("failed to unmarshal %s due to %s", gitConf, err)
@@ -17,11 +17,17 @@ func DiscoverUpstreamGitURL(gitConf string) (string, error) {
 	if len(remotes) == 0 {
 		return "", nil
 	}
-	rUrl := GetRemoteUrl(cfg, "upstream")
-	if rUrl == "" {
-		rUrl = GetRemoteUrl(cfg, "origin")
+	names := []string{"origin", "upstream"}
+	if preferUpstream {
+		names = []string{"upstream", "origin"}
 	}
-	return rUrl, nil
+	for _, name := range names {
+		u := GetRemoteUrl(cfg, name)
+		if u != "" {
+			return u, nil
+		}
+	}
+	return "", nil
 }
 
 // GetRemoteUrl returns the remote URL from the given git config

@@ -1,7 +1,7 @@
 package templates
 
 import (
-	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/spf13/cobra"
 )
@@ -14,7 +14,7 @@ type PluginCommandGroup struct {
 
 // PluginCommand is a reference to a particular Command provided by a Plugin
 type PluginCommand struct {
-	jenkinsv1.PluginSpec
+	jxCore.PluginSpec
 	Errors []error
 }
 

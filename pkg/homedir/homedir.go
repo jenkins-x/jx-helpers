@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/pkg/errors"
 )
 
@@ -27,6 +27,19 @@ func ConfigDir(envVar string, defaultDirName string) (string, error) {
 	h := HomeDir()
 	path := filepath.Join(h, defaultDirName)
 	err := os.MkdirAll(path, files.DefaultDirWritePermissions)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+func CacheDir(envVar string, defaultDirName string) (string, error) {
+	h, err := ConfigDir(envVar, defaultDirName)
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(h, "cache")
+	err = os.MkdirAll(path, files.DefaultDirWritePermissions)
 	if err != nil {
 		return "", err
 	}

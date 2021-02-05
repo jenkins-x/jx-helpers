@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kyamls"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kyamls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -171,6 +171,75 @@ func TestFilter(t *testing.T) {
 				Kinds: []string{"ConfigMap"},
 			},
 			file:     "service.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart": "myapp-0.0.12",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart": "myapp-0.0.11",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart":  "myapp-0.0.12",
+					"pinkie": "pie",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"Deployment"},
+				Selector: map[string]string{
+					"chart":                        "myapp-0.0.12",
+					"gitops.jenkins-x.io/pipeline": "environment",
+				},
+				InvertSelector: true,
+			},
+			file:     "deployment.yaml",
+			expected: false,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"ConfigMap"},
+				Selector: map[string]string{
+					"chart":                        "myapp-0.0.12",
+					"gitops.jenkins-x.io/pipeline": "environment",
+				},
+				InvertSelector: true,
+			},
+			file:     "configmap.yaml",
+			expected: true,
+		},
+		{
+			filter: kyamls.Filter{
+				Kinds: []string{"ConfigMap"},
+				Selector: map[string]string{
+					"chart":                        "myapp-0.0.12",
+					"gitops.jenkins-x.io/pipeline": "environment",
+				},
+			},
+			file:     "configmap.yaml",
 			expected: false,
 		},
 	}

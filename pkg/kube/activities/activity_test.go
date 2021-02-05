@@ -3,21 +3,21 @@
 package activities_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
-	jenkinsio_v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
-	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
-	jxfake "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/fake"
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
-	"github.com/jenkins-x/jx-helpers/pkg/kube"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/activities"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
+	jxfake "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/fake"
+	typev1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/jenkins.io/v1"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/activities"
 	appsv1 "k8s.io/api/apps/v1"
 	k8s_v1 "k8s.io/api/core/v1"
 
-	typev1 "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/typed/jenkins.io/v1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kube_mocks "k8s.io/client-go/kubernetes/fake"
@@ -38,7 +38,8 @@ func TestGenerateBuildNumber(t *testing.T) {
 	for i := 1; i < 4; i++ {
 		buildNumberText := strconv.Itoa(i)
 		pID := activities.NewPipelineID(repo, org, branch)
-		pipelines := getPipelines(actList)
+		pipelines, err := getPipelines(actList)
+		assert.NoError(t, err, "failed to get pipelines")
 		build, activity, err := activities.GenerateBuildNumber(actList, pipelines, pID)
 		if assert.NoError(t, err, "GenerateBuildNumber %d", i) {
 			if assert.NotNil(t, activity, "No PipelineActivity returned!") {
@@ -51,14 +52,17 @@ func TestGenerateBuildNumber(t *testing.T) {
 	assert.Equal(t, expected, results, "generated build numbers")
 }
 
-func getPipelines(activities typev1.PipelineActivityInterface) []*v1.PipelineActivity {
-	pipelineList, _ := activities.List(metav1.ListOptions{})
-	pipelines := []*v1.PipelineActivity{}
+func getPipelines(activities typev1.PipelineActivityInterface) ([]*v1.PipelineActivity, error) {
+	pipelineList, err := activities.List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var pipelines []*v1.PipelineActivity
 	for _, pipeline := range pipelineList.Items {
 		copy := pipeline
 		pipelines = append(pipelines, &copy)
 	}
-	return pipelines
+	return pipelines, nil
 }
 
 func TestCreateOrUpdateActivities(t *testing.T) {
@@ -81,13 +85,13 @@ func TestCreateOrUpdateActivities(t *testing.T) {
 		Data: map[string]string{"key1": "value1", "domain": "test-domain", "config.yml": ""},
 	}
 
-	mockKubeClient.CoreV1().ConfigMaps(nsObj.Namespace).Create(ingressConfig)
+	mockKubeClient.CoreV1().ConfigMaps(nsObj.Namespace).Create(context.TODO(), ingressConfig, metav1.CreateOptions{})
 	mockTektonDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: kube.DeploymentTektonController,
 		},
 	}
-	mockKubeClient.AppsV1().Deployments(nsObj.Namespace).Create(mockTektonDeployment)
+	mockKubeClient.AppsV1().Deployments(nsObj.Namespace).Create(context.TODO(), mockTektonDeployment, metav1.CreateOptions{})
 	jxClient := jxfake.NewSimpleClientset()
 
 	const (
@@ -149,7 +153,7 @@ func TestCreateOrUpdateActivities(t *testing.T) {
 	assert.Nil(t, err)
 
 	// lets validate that we added a PromotePullRequest step
-	a, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(expectedName, metav1.GetOptions{})
+	a, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), expectedName, metav1.GetOptions{})
 	assert.NotNil(t, a, "should have a PipelineActivity for %s", expectedName)
 	steps := a.Spec.Steps
 	assert.Equal(t, 2, len(steps), "Should have 2 steps!")
@@ -221,7 +225,7 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 		},
 	}
 
-	_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(&v1.PipelineActivity{
+	_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "PA0",
 			Labels: map[string]string{
@@ -232,11 +236,11 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 		Spec: v1.PipelineActivitySpec{
 			Build: "1",
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
 	// lets create a build PA for the same PR but with a different SHA so we can check we discard it later
-	_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(&v1.PipelineActivity{
+	_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "PA0-2",
 			Labels: map[string]string{
@@ -247,12 +251,12 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 		Spec: v1.PipelineActivitySpec{
 			Build: "5",
 		},
-	})
+	}, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
 	//lets create a few "builds" for PR-2 with the same SHA so we can check if we choose the right one
 	for i := 1; i < 4; i++ {
-		_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(&v1.PipelineActivity{
+		_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("PA%d", i),
 				Labels: map[string]string{
@@ -263,7 +267,7 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 			Spec: v1.PipelineActivitySpec{
 				Build: strconv.Itoa(i),
 			},
-		})
+		}, metav1.CreateOptions{})
 		assert.NoError(t, err)
 	}
 
@@ -274,10 +278,10 @@ func TestCreateOrUpdateActivityForBatchBuild(t *testing.T) {
 	assert.Equal(t, expectedPipeline, spec.Pipeline)
 	assert.Equal(t, expectedBuild, spec.Build)
 
-	pa1, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get("PA0", metav1.GetOptions{})
+	pa1, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA0", metav1.GetOptions{})
 	assert.NoError(t, err)
 
-	pa3, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get("PA3", metav1.GetOptions{})
+	pa3, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA3", metav1.GetOptions{})
 	assert.NoError(t, err)
 
 	assert.Len(t, a.Spec.BatchPipelineActivity.ComprisingPulLRequests, 2, "There should be %d PRs information in the ComprisingPullRequests property", 2)
@@ -333,7 +337,7 @@ func TestCreateOrUpdateActivityForBatchBuildWithoutExistingActivities(t *testing
 
 	//lets create a few "builds" for PR-2 with the same SHA so we can check if we choose the right one
 	for i := 1; i < 4; i++ {
-		_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(&v1.PipelineActivity{
+		_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), &v1.PipelineActivity{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("PA%d", i),
 				Labels: map[string]string{
@@ -344,7 +348,7 @@ func TestCreateOrUpdateActivityForBatchBuildWithoutExistingActivities(t *testing
 			Spec: v1.PipelineActivitySpec{
 				Build: strconv.Itoa(i),
 			},
-		})
+		}, metav1.CreateOptions{})
 		assert.NoError(t, err)
 	}
 
@@ -355,7 +359,7 @@ func TestCreateOrUpdateActivityForBatchBuildWithoutExistingActivities(t *testing
 	assert.Equal(t, expectedPipeline, spec.Pipeline)
 	assert.Equal(t, expectedBuild, spec.Build)
 
-	pa3, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get("PA3", metav1.GetOptions{})
+	pa3, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), "PA3", metav1.GetOptions{})
 	assert.NoError(t, err)
 
 	assert.Len(t, a.Spec.BatchPipelineActivity.ComprisingPulLRequests, 1, "There should be %d PRs information in the ComprisingPullRequests property", 1)
@@ -452,7 +456,7 @@ func TestBatchReconciliationWithTwoPRBuildExecutions(t *testing.T) {
 		},
 	}
 
-	_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(pr1PA)
+	_, err := jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), pr1PA, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
 	batchPAName := fmt.Sprintf("%s-%s-batch-1", expectedOrganisation, expectedName)
@@ -477,7 +481,7 @@ func TestBatchReconciliationWithTwoPRBuildExecutions(t *testing.T) {
 		},
 	}
 
-	_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(batchPA)
+	_, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Create(context.TODO(), batchPA, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
 	expectedPipeline := expectedOrganisation + "/" + expectedName + "/PR-1"
@@ -500,10 +504,10 @@ func TestBatchReconciliationWithTwoPRBuildExecutions(t *testing.T) {
 	assert.Equal(t, expectedBatchBuild, a.Spec.BatchPipelineActivity.BatchBuildNumber, "The batch build in the BatchPipeline of the PR should be 1")
 
 	o := metav1.GetOptions{}
-	batchPA, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(batchPAName, o)
+	batchPA, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), batchPAName, o)
 	assert.Equal(t, expectedBuild, batchPA.Spec.BatchPipelineActivity.ComprisingPulLRequests[0].LastBuildNumberForCommit, "The build number for the comprising PR should be 2")
 
-	pr1PA, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(prPAName, o)
+	pr1PA, err = jxClient.JenkinsV1().PipelineActivities(nsObj.Namespace).Get(context.TODO(), prPAName, o)
 	assert.Empty(t, pr1PA.Spec.BatchPipelineActivity.BatchBuildNumber, "The batch build number for the second PR should be empty")
 
 	assert.Equal(t, expectedBatchBuild, a.Spec.BatchPipelineActivity.BatchBuildNumber, "The batch build number for the second execution of the PR should be 1")
@@ -579,7 +583,7 @@ func TestSortActivities(t *testing.T) {
 	date3 := metav1.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	date4 := metav1.Date(2009, time.December, 10, 23, 0, 0, 0, time.UTC)
 
-	acts := []jenkinsio_v1.PipelineActivity{
+	acts := []v1.PipelineActivity{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "a1",
@@ -628,7 +632,7 @@ func TestSortActivitiesWithPendingCases(t *testing.T) {
 	date2 := metav1.Date(2009, time.October, 10, 23, 0, 0, 0, time.UTC)
 	date3 := metav1.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 
-	acts := []jenkinsio_v1.PipelineActivity{
+	acts := []v1.PipelineActivity{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "a1",

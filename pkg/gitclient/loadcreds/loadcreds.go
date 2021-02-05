@@ -1,17 +1,32 @@
 package loadcreds
 
 import (
+	"context"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/homedir"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"k8s.io/client-go/kubernetes"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/credentialhelper"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/homedir"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
+)
+
+const (
+	BootSecretName    = "jx-boot"
+	OperatorNamespace = "jx-git-operator"
 )
 
 // Credentials the loaded credentials
@@ -66,7 +81,9 @@ func GitCredentialsFile() (string, error) {
 			return path, nil
 		}
 	}
-	return "", nil
+
+	// lets return the default name we think should be used....
+	return filepath.Join(cfgHome, "git", "credentials"), nil
 }
 
 // LoadGitCredentialsFile loads the git credentials from the `git/credentials` file
@@ -74,21 +91,33 @@ func GitCredentialsFile() (string, error) {
 func LoadGitCredential() ([]Credentials, error) {
 	fileName, err := GitCredentialsFile()
 	if err != nil {
-	  return nil, errors.Wrapf(err, "failed to find git credentials file")
+		return nil, errors.Wrapf(err, "failed to find git credentials file")
 	}
 	if fileName == "" {
 		return nil, nil
 	}
-	return LoadGitCredentialsFile(fileName)
+	data, _, err := LoadGitCredentialsFile(fileName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to load credential file")
+	}
+	return data, nil
 }
 
 // loadGitCredentialsAuthFile loads the git credentials file
-func LoadGitCredentialsFile(fileName string) ([]Credentials, error) {
-	log.Logger().Infof("loading git credentails file %s", termcolor.ColorInfo(fileName))
-	
+func LoadGitCredentialsFile(fileName string) ([]Credentials, bool, error) {
+	log.Logger().Debugf("loading git credentials file %s", termcolor.ColorInfo(fileName))
+
+	exists, err := files.FileExists(fileName)
+	if err != nil {
+		return nil, false, errors.Wrapf(err, "failed to check for file %s", fileName)
+	}
+	if !exists {
+		return nil, false, nil
+	}
+
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to load git credentials file %s", fileName)
+		return nil, true, errors.Wrapf(err, "failed to load git credentials file %s", fileName)
 	}
 
 	var answer []Credentials
@@ -122,5 +151,93 @@ func LoadGitCredentialsFile(fileName string) ([]Credentials, error) {
 		config.Password = password
 		answer = append(answer, config)
 	}
-	return answer, nil
+	return answer, true, nil
+}
+
+// FindOperatorCredentials detects the git operator secret so we have default credentials
+func FindOperatorCredentials() (credentialhelper.GitCredential, error) {
+	var client kubernetes.Interface
+	var credential credentialhelper.GitCredential
+	var err error
+	client, ns, err := kube.LazyCreateKubeClientAndNamespace(client, "")
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to create kube client")
+	}
+	secret, err := client.CoreV1().Secrets(ns).Get(context.TODO(), BootSecretName, metav1.GetOptions{})
+	if err != nil && ns != OperatorNamespace {
+		var err2 error
+		secret, err2 = client.CoreV1().Secrets(OperatorNamespace).Get(context.TODO(), BootSecretName, metav1.GetOptions{})
+		if err2 == nil {
+			err = nil
+		}
+	}
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			log.Logger().Warnf("could not find secret %s in namespace %s", BootSecretName, ns)
+			return credential, nil
+		}
+		return credential, errors.Wrapf(err, "failed to find Secret %s in namespace %s", BootSecretName, ns)
+	}
+	data := secret.Data
+	if data == nil {
+		return credential, errors.Wrapf(err, "failed to find data in secret %s", BootSecretName)
+	}
+
+	gitURL := string(data["url"])
+	if gitURL == "" {
+		log.Logger().Warnf("secret %s in namespace %s does not have a url entry", BootSecretName, ns)
+		return credential, nil
+	}
+	// lets convert the git URL into a provider URL
+	gitInfo, err := giturl.ParseGitURL(gitURL)
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to parse git URL %s", gitURL)
+	}
+	gitProviderURL := gitInfo.HostURL()
+	username := string(data["username"])
+	password := string(data["password"])
+	credential, err = credentialhelper.CreateGitCredentialFromURL(gitProviderURL, username, password)
+	if err != nil {
+		return credential, errors.Wrapf(err, "invalid git auth information")
+	}
+	return credential, nil
+}
+
+// FindGitCredentialsFromSecret detects the git secrets using a secret name
+func FindGitCredentialsFromSecret(secretName string) (credentialhelper.GitCredential, error) {
+	var client kubernetes.Interface
+	var credential credentialhelper.GitCredential
+	var err error
+	client, ns, err := kube.LazyCreateKubeClientAndNamespace(client, "")
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to create kube client")
+	}
+	secret, err := client.CoreV1().Secrets(ns).Get(context.TODO(), secretName, metav1.GetOptions{})
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to find Secret %s in namespace %s", BootSecretName, ns)
+	}
+
+	data := secret.Data
+	if data == nil {
+		return credential, errors.Wrapf(err, "failed to find data in secret %s", secretName)
+	}
+
+	gitURL := string(data["url"])
+	if gitURL == "" {
+		log.Logger().Warnf("secret %s in namespace %s does not have a url entry", secretName, ns)
+		return credential, nil
+	}
+	// lets convert the git URL into a provider URL
+	gitInfo, err := giturl.ParseGitURL(gitURL)
+	if err != nil {
+		return credential, errors.Wrapf(err, "failed to parse git URL %s", gitURL)
+	}
+	gitProviderURL := gitInfo.HostURL()
+	username := string(data["username"])
+	password := string(data["password"])
+	credential, err = credentialhelper.CreateGitCredentialFromURL(gitProviderURL, username, password)
+	if err != nil {
+		return credential, errors.Wrapf(err, "invalid git auth information")
+	}
+	return credential, nil
 }

@@ -10,16 +10,16 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/extensions"
-	"github.com/jenkins-x/jx-helpers/pkg/testhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/extensions"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
-	"github.com/jenkins-x/jx-api/pkg/util"
+	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,13 +45,13 @@ func TestEnsurePluginInstalled(t *testing.T) {
 		err = srv.Close()
 		assert.NoError(t, err, "Error getting plugin bin dir for namespace jx-test")
 	}()
-	testPlugin := jenkinsv1.Plugin{
+	testPlugin := jxCore.Plugin{
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: binDirNs,
 		},
-		Spec: jenkinsv1.PluginSpec{
+		Spec: jxCore.PluginSpec{
 			Description: "Test Plugin",
-			Binaries: []jenkinsv1.Binary{
+			Binaries: []jxCore.Binary{
 				{
 					URL:    fmt.Sprintf("http://%s:%d/jx-test", "localhost", port),
 					Goarch: "amd64",

@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/input"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
 )
@@ -51,15 +51,20 @@ func (c *client) PickPassword(message string, help string) (string, error) {
 
 // PickValue gets an answer to a prompt from a user's free-form input
 func (c *client) PickValue(message string, defaultValue string, required bool, help string) (string, error) {
+	validator := survey.Required
+	if !required {
+		validator = nil
+	}
+	return c.PickValidValue(message, defaultValue, validator, help)
+}
+
+// PickValidValue gets an answer to a prompt from a user's free-form input with a given validator
+func (c *client) PickValidValue(message string, defaultValue string, validator func(val interface{}) error, help string) (string, error) {
 	answer := ""
 	prompt := &survey.Input{
 		Message: message,
 		Default: defaultValue,
 		Help:    help,
-	}
-	validator := survey.Required
-	if !required {
-		validator = nil
 	}
 	surveyOpts := survey.WithStdio(c.in, c.out, c.err)
 	err := survey.AskOne(prompt, &answer, validator, surveyOpts)

@@ -1,6 +1,7 @@
 package extensions
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,15 +13,16 @@ import (
 	"strings"
 	"time"
 
-	jenkinsv1client "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/httphelpers"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	jxClient "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/httphelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
-	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/spf13/cobra"
 )
@@ -102,7 +104,7 @@ func isExecutable(fullPath string) (bool, error) {
 }
 
 // FindPluginUrl finds the download URL for the current platform for a plugin
-func FindPluginUrl(plugin jenkinsv1.PluginSpec) (string, error) {
+func FindPluginUrl(plugin jxCore.PluginSpec) (string, error) {
 	u := ""
 	for _, binary := range plugin.Binaries {
 		if strings.ToLower(runtime.GOOS) == strings.ToLower(binary.Goos) && strings.ToLower(runtime.
@@ -119,22 +121,51 @@ func FindPluginUrl(plugin jenkinsv1.PluginSpec) (string, error) {
 
 // EnsurePluginInstalled ensures that the correct version of a plugin is installed locally.
 // It will clean up old versions.
-func EnsurePluginInstalled(plugin jenkinsv1.Plugin, pluginBinDir string) (string, error) {
+func EnsurePluginInstalled(plugin jxCore.Plugin, pluginBinDir string) (string, error) {
 	return EnsurePluginInstalledForAliasFile(plugin, pluginBinDir, "")
+}
+
+// CreateJXPlugin creates a jx plugin
+func CreateJXPlugin(org, name, version string) jxCore.Plugin {
+	binaries := CreateBinaries(func(p Platform) string {
+		return fmt.Sprintf("https://github.com/%s/jx-%s/releases/download/v%s/jx-%s-%s-%s.%s", org, name, version, name, strings.ToLower(p.Goos), strings.ToLower(p.Goarch), p.Extension())
+	})
+
+	plugin := jxCore.Plugin{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: jxCore.PluginSpec{
+			SubCommand:  name,
+			Binaries:    binaries,
+			Description: name + "  binary",
+			Name:        "jx-" + name,
+			Version:     version,
+		},
+	}
+	return plugin
 }
 
 // EnsurePluginInstalledForAliasFile ensures that the correct version of a plugin is installed locally.
 // It will clean up old versions.
-func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir string, aliasFileName string) (string, error) {
+func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string, aliasFileName string) (string, error) {
 	var err error
 	version := plugin.Spec.Version
-	path := filepath.Join(pluginBinDir, fmt.Sprintf("%s-%s", plugin.Spec.Name, version))
+	pluginName := plugin.Spec.Name
+	envName := strings.ToUpper(pluginName)
+	envName = strings.ReplaceAll(envName, "-", "_") + "_VERSION"
+	customVersion := os.Getenv(envName)
+	if customVersion != "" {
+		version = customVersion
+		plugin = CreateJXPlugin("jenkins-x", plugin.Name, version)
+	}
+	path := filepath.Join(pluginBinDir, fmt.Sprintf("%s-%s", pluginName, version))
 	if _, err = os.Stat(path); os.IsNotExist(err) {
 		u, err := FindPluginUrl(plugin.Spec)
 		if err != nil {
 			return "", err
 		}
-		log.Logger().Infof("Installing plugin %s version %s for command %s from %s into %s", termcolor.ColorInfo(plugin.Spec.Name),
+		log.Logger().Infof("Installing plugin %s version %s for command %s from %s into %s", termcolor.ColorInfo(pluginName),
 			termcolor.ColorInfo(version), termcolor.ColorInfo(fmt.Sprintf("jx %s", plugin.Spec.SubCommand)), termcolor.ColorInfo(u), pluginBinDir)
 
 		// Look for other versions to cleanup
@@ -170,7 +201,7 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 			return "", err
 		}
 		filename := filepath.Base(pluginURL.Path)
-		tmpDir, err := ioutil.TempDir("", plugin.Spec.Name)
+		tmpDir, err := ioutil.TempDir("", pluginName)
 		defer func() {
 			err := os.RemoveAll(tmpDir)
 			if err != nil {
@@ -222,14 +253,14 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 			if err != nil {
 				return "", err
 			}
-			oldPath = filepath.Join(tmpDir, plugin.Spec.Name)
+			oldPath = filepath.Join(tmpDir, pluginName)
 		}
 		if strings.HasSuffix(filename, ".zip") || strings.HasSuffix(aliasFileName, ".zip") {
 			err = files.Unzip(downloadFile, tmpDir)
 			if err != nil {
 				return "", err
 			}
-			oldPath = filepath.Join(tmpDir, plugin.Spec.Name)
+			oldPath = filepath.Join(tmpDir, pluginName)
 		}
 
 		err = files.CopyFile(oldPath, path)
@@ -246,17 +277,17 @@ func EnsurePluginInstalledForAliasFile(plugin jenkinsv1.Plugin, pluginBinDir str
 }
 
 // ValidatePlugins tells the user about any problems with plugins installed
-func ValidatePlugins(jxClient jenkinsv1client.Interface, ns string) error {
+func ValidatePlugins(jxClient jxClient.Interface, ns string) error {
 	// TODO needs a test
 	// Validate installed plugins
-	plugins, err := jxClient.JenkinsV1().Plugins(ns).List(metav1.ListOptions{})
+	plugins, err := jxClient.JenkinsV1().Plugins(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
-	seenSubCommands := make(map[string][]jenkinsv1.Plugin, 0)
+	seenSubCommands := make(map[string][]jxCore.Plugin, 0)
 	for _, plugin := range plugins.Items {
 		if _, ok := seenSubCommands[plugin.Spec.SubCommand]; !ok {
-			seenSubCommands[plugin.Spec.SubCommand] = make([]jenkinsv1.Plugin, 0)
+			seenSubCommands[plugin.Spec.SubCommand] = make([]jxCore.Plugin, 0)
 		}
 		seenSubCommands[plugin.Spec.SubCommand] = append(seenSubCommands[plugin.Spec.SubCommand], plugin)
 	}

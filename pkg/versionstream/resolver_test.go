@@ -6,7 +6,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/versionstream"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/versionstream"
 
 	"github.com/stretchr/testify/assert"
 )

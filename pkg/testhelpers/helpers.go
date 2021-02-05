@@ -3,16 +3,22 @@ package testhelpers
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"sigs.k8s.io/yaml"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// IsDebugLog debug log?
+func IsDebugLog() bool {
+	return strings.ToLower(os.Getenv("JX_TEST_DEBUG")) == "true"
+}
 
 // AssertYamlFilesEqual validates YAML file names without worrying about ordering of keys
 func AssertYamlFilesEqual(t *testing.T, expectedFile string, actualFile string, message string, args ...interface{}) {

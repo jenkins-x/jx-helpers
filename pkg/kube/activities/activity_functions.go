@@ -3,7 +3,7 @@ package activities
 import (
 	"time"
 
-	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -58,9 +58,6 @@ func StartPromotionPullRequest(a *v1.PipelineActivity, s *v1.PipelineActivitySte
 			Time: time.Now(),
 		}
 	}
-	if a.Spec.WorkflowStatus != v1.ActivityStatusTypeRunning {
-		a.Spec.WorkflowStatus = v1.ActivityStatusTypeRunning
-	}
 	if a.Spec.Status != v1.ActivityStatusTypeRunning {
 		a.Spec.Status = v1.ActivityStatusTypeRunning
 	}
@@ -86,9 +83,6 @@ func StartPromotionUpdate(a *v1.PipelineActivity, s *v1.PipelineActivityStep, ps
 		p.StartedTimestamp = &metav1.Time{
 			Time: time.Now(),
 		}
-	}
-	if a.Spec.WorkflowStatus != v1.ActivityStatusTypeRunning {
-		a.Spec.WorkflowStatus = v1.ActivityStatusTypeRunning
 	}
 	if a.Spec.Status != v1.ActivityStatusTypeRunning {
 		a.Spec.Status = v1.ActivityStatusTypeRunning

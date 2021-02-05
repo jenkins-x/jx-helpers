@@ -3,8 +3,8 @@ package cmdrunner
 import (
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 )
 
 // CommandRunner represents a command runner so that it can be stubbed out for testing
@@ -24,9 +24,18 @@ func DefaultCommandRunner(c *Command) (string, error) {
 	return result, err
 }
 
-// QuietCommandRunner don't log commands that will be run or the output returned from the command
+// QuietCommandRunner uses debug level logging to output commands executed and results
 func QuietCommandRunner(c *Command) (string, error) {
-	return c.RunWithoutRetry()
+	if c.Dir == "" {
+		log.Logger().Debugf("about to run: %s", termcolor.ColorInfo(CLI(c)))
+	} else {
+		log.Logger().Debugf("about to run: %s in dir %s", termcolor.ColorInfo(CLI(c)), termcolor.ColorInfo(c.Dir))
+	}
+	result, err := c.RunWithoutRetry()
+	if result != "" {
+		log.Logger().Debugf(termcolor.ColorStatus(result))
+	}
+	return result, err
 }
 
 // DryRunCommandRunner output the commands to be run

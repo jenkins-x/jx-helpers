@@ -13,21 +13,21 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
 
 // defaults mirror the default http.Transport values
 var jxDefaultTransport http.RoundTripper = &http.Transport{
 	DialContext: (&net.Dialer{
-		Timeout:   time.Duration(getIntFromEnv("HTTP_DIALER_TIMEOUT", 30)) * time.Second,
+		Timeout:   time.Duration(getIntFromEnv("HTTP_DIALER_TIMEOUT", 5)) * time.Minute,
 		KeepAlive: time.Duration(getIntFromEnv("HTTP_DIALER_KEEP_ALIVE", 30)) * time.Second,
 		DualStack: getBoolFromEnv("HTTP_USE_DUAL_STACK", true),
 	}).DialContext,
 	MaxIdleConns:          getIntFromEnv("HTTP_MAX_IDLE_CONNS", 100),
 	IdleConnTimeout:       time.Duration(getIntFromEnv("HTTP_IDLE_CONN_TIMEOUT", 90)) * time.Second,
 	TLSHandshakeTimeout:   time.Duration(getIntFromEnv("HTTP_TLS_HANDSHAKE_TIMEOUT", 10)) * time.Second,
-	ExpectContinueTimeout: time.Duration(getIntFromEnv("HTTP_EXPECT_CONTINUE_TIMEOUT", 1)) * time.Second,
+	ExpectContinueTimeout: time.Duration(getIntFromEnv("HTTP_EXPECT_CONTINUE_TIMEOUT", 5)) * time.Second,
 	Proxy:                 http.ProxyFromEnvironment,
 }
 

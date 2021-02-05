@@ -6,20 +6,21 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/gitclient/loadcreds"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/loadcreds"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestLoadGitCredentials(t *testing.T) {
 	fileName := filepath.Join("test_data", "git", "credentials")
-	config, err := loadcreds.LoadGitCredentialsFile(fileName)
+	config, exists, err := loadcreds.LoadGitCredentialsFile(fileName)
 	require.NoError(t, err, "should not have failed to load file %s", fileName)
 	assert.NotNil(t, config, "should have returned not nil config for file %s", fileName)
+	assert.True(t, exists, "the git credentials file should exist %s", fileName)
 
 	serverURL := "http://cheese.com"
 	username := "user2"
-	password := "pwd2"
+	password := "pwd2" //NOSONAR
 
 	assertServerUserPassword(t, config, "https://github.com", "user1", "pwd1")
 	assertServerUserPassword(t, config, serverURL, username, password)
