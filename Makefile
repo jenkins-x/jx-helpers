@@ -111,7 +111,9 @@ test-report-html: make-reports-dir get-test-deps test-coverage ## Create the tes
 install: $(GO_DEPENDENCIES) ## Install the binary
 	GOBIN=${GOPATH}/bin $(GO) install $(BUILDFLAGS) $(MAIN_SRC_FILE)
 
-linux: ## Build for Linux
+linux: build
+
+old-linux: ## Build for Linux
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=linux GOARCH=amd64 $(GO) $(BUILD_TARGET) $(BUILDFLAGS) -o build/linux/$(BINARY_NAME) $(MAIN_SRC_FILE)
 	chmod +x build/linux/$(BINARY_NAME)
 
