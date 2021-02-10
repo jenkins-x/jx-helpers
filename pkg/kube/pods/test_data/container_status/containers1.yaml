@@ -1,0 +1,324 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{},"labels":{"gitops.jenkins-x.io/pipeline":"namespaces"},"name":"sbt-build","namespace":"jx"},"spec":{"params":[{"name":"PULL_BASE_SHA"},{"name":"PULL_PULL_SHA"},{"name":"PULL_BASE_REF"},{"name":"BUILD_ID"},{"name":"JOB_NAME"},{"name":"JOB_SPEC"},{"name":"JOB_TYPE"},{"name":"PULL_NUMBER"},{"name":"PULL_PULL_REF"},{"name":"PULL_REFS"},{"name":"REPO_NAME"},{"name":"REPO_OWNER"},{"name":"REPO_URL"},{"name":"TARGETS","type":"array"}],"steps":[{"args":["-Dsbt.log.noformat=true","--supershell=false","clean","$(params.TARGETS[*])"],"env":[{"name":"_JAVA_OPTIONS","value":"-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms128m -Xmx1300m"}],"image":"gcr.io/jenkinsxio/builder-scala:2.1.150-769","name":"build-sbt-assembly","resources":{},"script":"#!/usr/bin/env bash\nsbt \"$@\"\n","workingDir":"$(workspaces.source.path)/source"}],"workspaces":[{"name":"source"}]}}
+    lighthouse.jenkins-x.io/cloneURI: https://github.com/Wunderman-Thompson-COE/momentum.git
+    lighthouse.jenkins-x.io/job: release
+    pipeline.tekton.dev/affinity-assistant: affinity-assistant-a0b6a1d1b7
+    pipeline.tekton.dev/release: v0.19.0
+    tekton.dev/ready: READY
+  creationTimestamp: "2021-02-09T14:55:52Z"
+  labels:
+    app.kubernetes.io/managed-by: tekton-pipelines
+    created-by-lighthouse: "true"
+    gitops.jenkins-x.io/pipeline: namespaces
+    lighthouse.jenkins-x.io/baseSHA: fc4f4b00294ce2971a279bb87dbece9afb38cf59
+    lighthouse.jenkins-x.io/branch: master
+    lighthouse.jenkins-x.io/buildNum: "1612882510842"
+    lighthouse.jenkins-x.io/context: release
+    lighthouse.jenkins-x.io/id: wunderman-thompson-coe-momentum-dh5qw
+    lighthouse.jenkins-x.io/job: release
+    lighthouse.jenkins-x.io/lastCommitSHA: fc4f4b00294ce2971a279bb87dbece9afb38cf59
+    lighthouse.jenkins-x.io/refs.org: wunderman-thompson-coe
+    lighthouse.jenkins-x.io/refs.repo: momentum
+    lighthouse.jenkins-x.io/type: postsubmit
+    tekton.dev/pipeline: release-f849x
+    tekton.dev/pipelineRun: release-f849x
+    tekton.dev/pipelineTask: sbt-build
+    tekton.dev/task: sbt-build
+    tekton.dev/taskRun: release-f849x-sbt-build-q8h65
+  name: release-f849x-sbt-build-q8h65-pod-kbsbl
+  namespace: jx
+  ownerReferences:
+  - apiVersion: tekton.dev/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: TaskRun
+    name: release-f849x-sbt-build-q8h65
+    uid: 0a5d84bb-adb4-4106-981a-a6c97c5d6da9
+  resourceVersion: "28879771"
+  selfLink: /api/v1/namespaces/jx/pods/release-f849x-sbt-build-q8h65-pod-kbsbl
+  uid: 05f6e049-4a13-45ad-af1e-c42c7ba03f78
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: affinity-assistant
+            app.kubernetes.io/instance: affinity-assistant-a0b6a1d1b7
+        topologyKey: kubernetes.io/hostname
+  containers:
+  - args:
+    - -wait_file
+    - /tekton/downward/ready
+    - -wait_file_content
+    - -post_file
+    - /tekton/tools/0
+    - -termination_path
+    - /tekton/termination
+    - -docker-config=tekton-container-registry-auth
+    - -basic-git=tekton-git=https://github.com
+    - -entrypoint
+    - /tekton/scripts/script-0-kwr4t
+    - --
+    - -Dsbt.log.noformat=true
+    - --supershell=false
+    - clean
+    - test
+    - beam/assembly
+    - spark/stage
+    command:
+    - /tekton/tools/entrypoint
+    env:
+    - name: HOME
+      value: /tekton/home
+    - name: _JAVA_OPTIONS
+      value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+        -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+        -XX:AdaptiveSizePolicyWeight=90 -Xms128m -Xmx1300m
+    image: gcr.io/jenkinsxio/builder-scala:2.1.150-769
+    imagePullPolicy: IfNotPresent
+    name: step-build-sbt-assembly
+    resources:
+      requests:
+        cpu: "0"
+        ephemeral-storage: "0"
+        memory: "0"
+    terminationMessagePath: /tekton/termination
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /workspace/source
+      name: ws-zkrcl
+    - mountPath: /tekton/scripts
+      name: tekton-internal-scripts
+    - mountPath: /tekton/tools
+      name: tekton-internal-tools
+    - mountPath: /tekton/downward
+      name: tekton-internal-downward
+    - mountPath: /tekton/creds
+      name: tekton-creds-init-home-cbrhs
+    - mountPath: /workspace
+      name: tekton-internal-workspace
+    - mountPath: /tekton/home
+      name: tekton-internal-home
+    - mountPath: /tekton/results
+      name: tekton-internal-results
+    - mountPath: /tekton/creds-secrets/tekton-container-registry-auth
+      name: tekton-internal-secret-volume-tekton-container-registry-a-4c48s
+    - mountPath: /tekton/creds-secrets/tekton-git
+      name: tekton-internal-secret-volume-tekton-git-r4v9m
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: tekton-bot-token-cjftg
+      readOnly: true
+    workingDir: /workspace/source/source
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - args:
+    - -c
+    - |
+      tmpfile="/tekton/scripts/script-0-kwr4t"
+      touch ${tmpfile} && chmod +x ${tmpfile}
+      cat > ${tmpfile} << 'script-heredoc-randomly-generated-xs4ft'
+      #!/usr/bin/env bash
+      sbt "$@"
+
+      script-heredoc-randomly-generated-xs4ft
+    command:
+    - sh
+    image: gcr.io/distroless/base@sha256:92720b2305d7315b5426aec19f8651e9e04222991f877cae71f40b3141d2f07e
+    imagePullPolicy: IfNotPresent
+    name: place-scripts
+    resources: { }
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /tekton/scripts
+      name: tekton-internal-scripts
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: tekton-bot-token-cjftg
+      readOnly: true
+  - args:
+    - -c
+    - mkdir -p /workspace/source/source
+    command:
+    - sh
+    image: gcr.io/distroless/base@sha256:92720b2305d7315b5426aec19f8651e9e04222991f877cae71f40b3141d2f07e
+    imagePullPolicy: IfNotPresent
+    name: working-dir-initializer
+    resources: { }
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /workspace
+      name: tekton-internal-workspace
+    - mountPath: /tekton/home
+      name: tekton-internal-home
+    - mountPath: /tekton/results
+      name: tekton-internal-results
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: tekton-bot-token-cjftg
+      readOnly: true
+    workingDir: /workspace
+  - command:
+    - /ko-app/entrypoint
+    - cp
+    - /ko-app/entrypoint
+    - /tekton/tools/entrypoint
+    image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.19.0@sha256:67fceb87f3f76baefcfdb35fd04d0ebfc8d91117dccb7f3194056d6727bac636
+    imagePullPolicy: IfNotPresent
+    name: place-tools
+    resources: { }
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /tekton/tools
+      name: tekton-internal-tools
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: tekton-bot-token-cjftg
+      readOnly: true
+  nodeName: gke-dev-cluster-default-pool-98da2765-1p1n
+  priority: 0
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  securityContext: { }
+  serviceAccount: tekton-bot
+  serviceAccountName: tekton-bot
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - emptyDir: { }
+    name: tekton-internal-workspace
+  - emptyDir: { }
+    name: tekton-internal-home
+  - emptyDir: { }
+    name: tekton-internal-results
+  - name: tekton-internal-secret-volume-tekton-container-registry-a-4c48s
+    secret:
+      defaultMode: 420
+      secretName: tekton-container-registry-auth
+  - name: tekton-internal-secret-volume-tekton-git-r4v9m
+    secret:
+      defaultMode: 420
+      secretName: tekton-git
+  - emptyDir: { }
+    name: tekton-internal-scripts
+  - emptyDir: { }
+    name: tekton-internal-tools
+  - downwardAPI:
+      defaultMode: 420
+      items:
+      - fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.annotations['tekton.dev/ready']
+        path: ready
+    name: tekton-internal-downward
+  - emptyDir:
+      medium: Memory
+    name: tekton-creds-init-home-cbrhs
+  - name: ws-zkrcl
+    persistentVolumeClaim:
+      claimName: pvc-a0b6a1d1b7
+  - name: tekton-bot-token-cjftg
+    secret:
+      defaultMode: 420
+      secretName: tekton-bot-token-cjftg
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2021-02-09T14:55:57Z"
+    reason: PodCompleted
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2021-02-09T15:02:41Z"
+    reason: PodCompleted
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2021-02-09T15:02:41Z"
+    reason: PodCompleted
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2021-02-09T14:55:52Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://bb11bfc88d77b43482ac9e2d7a0d1fc79d811b9f826b5a2bac75d1d929408c54
+    image: gcr.io/jenkinsxio/builder-scala:2.1.150-769
+    imageID: docker-pullable://gcr.io/jenkinsxio/builder-scala@sha256:0720daf67d7935870f36fed81b49852bc7a768e29d3bfa6976bca45909ccbdd0
+    lastState: { }
+    name: step-build-sbt-assembly
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        containerID: docker://bb11bfc88d77b43482ac9e2d7a0d1fc79d811b9f826b5a2bac75d1d929408c54
+        exitCode: 0
+        finishedAt: "2021-02-09T15:02:40Z"
+        message: '[{"key":"StartedAt","value":"2021-02-09T14:56:00.736Z","type":"InternalTektonResult"}]'
+        reason: Completed
+        startedAt: "2021-02-09T14:55:57Z"
+  hostIP: 10.0.0.224
+  initContainerStatuses:
+  - containerID: docker://4cb2290b92fd720da199c46e70f64e7c71af3e2db60172b92d8e3f7e3a67db53
+    image: sha256:4dc0ba3700ab0dcc162f67da9481a906f7753f171c08f602db6667fd74151f07
+    imageID: docker-pullable://gcr.io/distroless/base@sha256:92720b2305d7315b5426aec19f8651e9e04222991f877cae71f40b3141d2f07e
+    lastState: { }
+    name: place-scripts
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://4cb2290b92fd720da199c46e70f64e7c71af3e2db60172b92d8e3f7e3a67db53
+        exitCode: 0
+        finishedAt: "2021-02-09T14:55:54Z"
+        reason: Completed
+        startedAt: "2021-02-09T14:55:54Z"
+  - containerID: docker://006a47d88d7f5fb198687bbed5d36c39b5044a981eae1076e8be925df3caa128
+    image: sha256:4dc0ba3700ab0dcc162f67da9481a906f7753f171c08f602db6667fd74151f07
+    imageID: docker-pullable://gcr.io/distroless/base@sha256:92720b2305d7315b5426aec19f8651e9e04222991f877cae71f40b3141d2f07e
+    lastState: { }
+    name: working-dir-initializer
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://006a47d88d7f5fb198687bbed5d36c39b5044a981eae1076e8be925df3caa128
+        exitCode: 0
+        finishedAt: "2021-02-09T14:55:55Z"
+        reason: Completed
+        startedAt: "2021-02-09T14:55:55Z"
+  - containerID: docker://8b5beb64f81449c268a396eff6f87e69e742d7d47bbf29d18de73f930d4e0ca1
+    image: sha256:5d54c55f19bc6fdda7629a4f2015255ec1bed2750a81909817bede45a4d360b5
+    imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint@sha256:67fceb87f3f76baefcfdb35fd04d0ebfc8d91117dccb7f3194056d6727bac636
+    lastState: { }
+    name: place-tools
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://8b5beb64f81449c268a396eff6f87e69e742d7d47bbf29d18de73f930d4e0ca1
+        exitCode: 0
+        finishedAt: "2021-02-09T14:55:56Z"
+        reason: Completed
+        startedAt: "2021-02-09T14:55:56Z"
+  phase: Succeeded
+  podIP: 10.2.1.59
+  podIPs:
+  - ip: 10.2.1.59
+  qosClass: BestEffort
+  startTime: "2021-02-09T14:55:52Z"

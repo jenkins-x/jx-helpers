@@ -364,14 +364,14 @@ func GetPodRestarts(pod *v1.Pod) int32 {
 }
 
 // GetContainersWithStatusAndIsInit gets the containers in the pod, either init containers or non-init depending on whether
-// non-init containers are present, and a flag as to whether this list of containers are init containers or not.
+// non-init containers are present, and a flag as to whether this list of containers are just init containers or not.
 func GetContainersWithStatusAndIsInit(pod *v1.Pod) ([]v1.Container, []v1.ContainerStatus, bool) {
 	isInit := true
 	allContainers := pod.Spec.InitContainers
 	statuses := pod.Status.InitContainerStatuses
 	containers := pod.Spec.Containers
 
-	if len(containers) > 1 && len(pod.Status.ContainerStatuses) == len(containers) {
+	if len(containers) > 0 && len(pod.Status.ContainerStatuses) == len(containers) {
 		isInit = false
 		// Add the non-init containers
 		// If there's a "nop" container at the end, the pod was created with before Tekton 0.5.x, so trim off the no-op container at the end of the list.

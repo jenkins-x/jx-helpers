@@ -435,5 +435,50 @@ func TestWaitForPodSelectorToBeReady(t *testing.T) {
 
 		tester(client)
 	}
+}
 
+func TestGetContainersWithStatusAndIsInit(t *testing.T) {
+	t.Parallel()
+
+	sourceData := filepath.Join("test_data", "container_status")
+
+	testCases := []struct {
+		file               string
+		expectedInit       bool
+		expectedContainers int
+		expectedStatuses   int
+	}{
+		{
+			file:               "containers2.yaml",
+			expectedInit:       false,
+			expectedContainers: 5,
+			expectedStatuses:   5,
+		},
+		{
+			file:               "containers1.yaml",
+			expectedInit:       false,
+			expectedContainers: 4,
+			expectedStatuses:   4,
+		},
+	}
+
+	for _, tc := range testCases {
+		name := tc.file
+		fileName := filepath.Join(sourceData, name)
+		require.FileExists(t, fileName)
+
+		pod := &v1.Pod{}
+		err := yamls.LoadFile(fileName, pod)
+		require.NoError(t, err, "failed to load file %s", fileName)
+
+		containers, statuses, init := pods.GetContainersWithStatusAndIsInit(pod)
+
+		assert.Equal(t, tc.expectedInit, init, "init flag for %s", name)
+		assert.Equal(t, tc.expectedStatuses, len(statuses), "len(containers) for %s", name)
+		require.Equal(t, tc.expectedContainers, len(containers), "len(containers) for %s", name)
+
+		cidx := tc.expectedStatuses - 1
+		flag := pods.HasContainerStarted(pod, cidx)
+		assert.Equal(t, true, flag, "expected container %d started for name %s", cidx, name)
+	}
 }
