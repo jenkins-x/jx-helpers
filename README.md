@@ -36,7 +36,6 @@ Git:
 results, err := gitClient.Command(dir, "commit", "-a", "-m", "my message")
 ```
 
-
 Cobra:
 
 * `cmd/*` => `cobras/*`
