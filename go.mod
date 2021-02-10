@@ -3,7 +3,7 @@ module github.com/jenkins-x/jx-helpers/v3
 require (
 	cloud.google.com/go v0.76.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.17 // indirect
-	github.com/Azure/go-autorest/autorest/adal v0.9.11 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.9.12 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
@@ -20,7 +20,7 @@ require (
 	github.com/google/uuid v1.1.4
 	github.com/googleapis/gnostic v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
-	github.com/jenkins-x/go-scm v1.5.216
+	github.com/jenkins-x/go-scm v1.5.218
 	github.com/jenkins-x/jx-api/v4 v4.0.24
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
