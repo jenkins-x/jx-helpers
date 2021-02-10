@@ -9,7 +9,6 @@
 `jx-helpers` is a small library of helper functions for working with the commands, git and kubernetes
 
 
-
 ## Refactoring notes
 
 If you are refactoring code from jenkins-x/jx out into a separate library/microservice here's some tips on switching code over to `jx-helpers`
