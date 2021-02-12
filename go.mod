@@ -2,8 +2,7 @@ module github.com/jenkins-x/jx-helpers/v3
 
 require (
 	cloud.google.com/go v0.76.0 // indirect
-	github.com/Azure/go-autorest/autorest v0.11.17 // indirect
-	github.com/Azure/go-autorest/autorest/adal v0.9.12 // indirect
+	github.com/Azure/go-autorest/autorest v0.11.18 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
@@ -32,6 +31,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.6.0
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
+	github.com/sethvargo/go-envconfig v0.3.2
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
@@ -53,6 +53,7 @@ require (
 	k8s.io/kubernetes v1.14.7
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.10.5
+	sigs.k8s.io/structured-merge-diff/v4 v4.0.3 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
 
