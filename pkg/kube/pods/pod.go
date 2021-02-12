@@ -247,7 +247,7 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 			if !logFailed {
 				logFailed = true
 			}
-			cmdLine := fmt.Sprintf("kubectl log -n %s %s", namespace, pod.Name)
+			cmdLine := fmt.Sprintf("kubectl logs -n %s %s", namespace, pod.Name)
 			log.Logger().Info()
 			log.Logger().Warnf("the git operator pod has failed but will restart")
 			log.Logger().Infof("to view the log of the failed git operator pod run: %s", termcolor.ColorInfo(cmdLine))
