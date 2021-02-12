@@ -8,7 +8,7 @@ import (
 )
 
 // Evaluate evaluates the go template to create the output text
-func Evaluate(funcMap template.FuncMap, templateData map[string]interface{}, templateText, path, message string) (string, error) {
+func Evaluate(funcMap template.FuncMap, templateData interface{}, templateText, path, message string) (string, error) {
 	tmpl, err := template.New("value.gotmpl").Option("missingkey=error").Funcs(funcMap).Parse(templateText)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse template: %s for %s", path, message)
