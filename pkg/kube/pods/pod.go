@@ -1,12 +1,15 @@
 package pods
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
@@ -17,10 +20,13 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/remotecommand"
 	tools_watch "k8s.io/client-go/tools/watch"
 )
 
@@ -394,4 +400,64 @@ func GetContainersWithStatusAndIsInit(pod *v1.Pod) ([]v1.Container, []v1.Contain
 		}
 	}
 	return allContainers, sortedStatuses, isInit
+}
+
+func GetFirstPodForService(client kubernetes.Interface, svc *v1.Service, namespace string) (v1.Pod, error) {
+	set := labels.Set(svc.Spec.Selector)
+
+	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), listOptions)
+	if err != nil {
+		return v1.Pod{}, errors.Wrap(err, "failed to list pods")
+	}
+	if pods != nil && len(pods.Items) > 0 {
+		// use the first one thats matched
+		return pods.Items[0], nil
+	}
+	return v1.Pod{}, fmt.Errorf("no pods found matching service %s", svc.Name)
+}
+
+// ExecCmd exec command on specific pod and wait the command's output.
+func ExecCmd(client kubernetes.Interface, config *restclient.Config, podName, ns string,
+	command string) (string, string, error) {
+
+	buf := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
+
+	cmd := []string{
+		"sh",
+		"-c",
+		command,
+	}
+
+	req := client.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
+		Namespace(ns).SubResource("exec")
+	option := &v1.PodExecOptions{
+		Command: cmd,
+		Stdin:   true,
+		Stdout:  true,
+		Stderr:  true,
+		TTY:     true,
+	}
+
+	req.VersionedParams(
+		option,
+		scheme.ParameterCodec,
+	)
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return "", "", err
+	}
+
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdout: buf,
+		Stderr: errBuf,
+		Stdin:  os.Stdin,
+	})
+
+	if err != nil {
+		return "", "", errors.Wrapf(err, "failed to execute command %s", command)
+	}
+
+	return buf.String(), errBuf.String(), nil
 }
