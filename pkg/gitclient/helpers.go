@@ -532,6 +532,16 @@ func GetLatestCommitAuthor(g Interface, dir string) (string, error) {
 	return g.Command(dir, "log", "-1", "--pretty=%an")
 }
 
+// GetLatestCommitDate returns the latest git commit date in RFC2822 format
+func GetLatestCommitDate(g Interface, dir string) (string, error) {
+	return g.Command(dir, "log", "-1", "--pretty=%aD")
+}
+
+// GetLatestCommitAuthorEmail returns the latest git commit author email
+func GetLatestCommitAuthorEmail(g Interface, dir string) (string, error) {
+	return g.Command(dir, "log", "-1", "--pretty=%ae")
+}
+
 // Remove removes the given file from a Git repository located at the given directory
 func Remove(g Interface, dir, fileName string) error {
 	_, err := g.Command(dir, "rm", "-r", fileName)
