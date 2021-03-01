@@ -61,7 +61,7 @@ func GetStringField(node *yaml.RNode, path string, fields ...string) string {
 	answer := ""
 	valueNode, err := node.Pipe(yaml.Lookup(fields...))
 	if err != nil {
-		log.Logger().Warnf("failed to read field %s for path %s", JSONPath(fields...), path)
+		log.Logger().Debugf("failed to read field %s for path %s", JSONPath(fields...), path)
 	}
 	if valueNode != nil {
 		var err error
