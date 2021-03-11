@@ -260,7 +260,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 			if err != nil {
 				return "", err
 			}
-			oldPath = filepath.Join(tmpDir, pluginName)
+			oldPath = filepath.Join(tmpDir, pluginName+".exe")
 		}
 
 		err = files.CopyFile(oldPath, path)
