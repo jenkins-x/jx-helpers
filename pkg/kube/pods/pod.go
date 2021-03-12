@@ -288,6 +288,30 @@ func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selec
 	return nil, nil
 }
 
+// GetRunningPodForSelector returns the first pod running for the given selector or nil
+func GetRunningPodForSelector(client kubernetes.Interface, namespace string, selector string) (*corev1.Pod, error) {
+	// lets check if its already ready
+	opts := metav1.ListOptions{
+		LabelSelector: selector,
+	}
+	podList, err := client.CoreV1().Pods(namespace).List(context.TODO(), opts)
+	if err != nil && apierrors.IsNotFound(err) {
+		err = nil
+	}
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to list pods in namespace %s with selector %s", namespace, selector)
+	}
+	if podList != nil {
+		for i := range podList.Items {
+			pod := &podList.Items[i]
+			if pod.Status.Phase == v1.PodRunning {
+				return pod, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
 // WaitForPodNameToBeComplete waits for the pod to complete (succeed or fail) using the pod name
 func WaitForPodNameToBeComplete(client kubernetes.Interface, namespace string, name string,
 	timeout time.Duration) error {
