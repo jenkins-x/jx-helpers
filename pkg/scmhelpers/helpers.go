@@ -40,10 +40,17 @@ func NewScmClient(kind, gitServerURL, token string) (*scm.Client, string, error)
 	if token == "" {
 		return nil, token, errors.Wrapf(err, "failed to load git credentials")
 	}
+	username := serverCreds.Username
+	if username == "" {
+		username = os.Getenv("GIT_USERNAME")
+	}
+	if username == "" {
+		username = os.Getenv("GIT_USER")
+	}
 	if kind == "" || kind == "github" {
 		kind = "github"
 	}
-	client, err := factory.NewClient(kind, gitServerURL, token)
+	client, err := factory.NewClient(kind, gitServerURL, token, factory.SetUsername(username))
 	return client, token, err
 }
 
