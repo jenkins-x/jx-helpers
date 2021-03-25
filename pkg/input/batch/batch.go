@@ -31,7 +31,7 @@ func (f *options) PickValidValue(message string, defaultValue string, validator 
 
 // PickNameWithDefault picks a value
 func (f *options) PickNameWithDefault(names []string, message string, defaultValue string, help string) (string, error) {
-	if defaultValue == "" {
+	if defaultValue == "" && len(names) > 0 {
 		defaultValue = names[0]
 	}
 	return defaultValue, nil
