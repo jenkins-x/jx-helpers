@@ -30,15 +30,21 @@ func GetClusterRequirementsConfig(g gitclient.Interface, jxClient versioned.Inte
 	return GetRequirementsFromGit(g, env.Spec.Source.URL)
 }
 
-// GetRequirementsFromGit gets the requiremnets from the given git URL
+// GetRequirementsFromGit gets the requirements from the given git URL
 func GetRequirementsFromGit(g gitclient.Interface, gitURL string) (*jxcore.RequirementsConfig, error) {
+	req, _, err := GetRequirementsAndGit(g, gitURL)
+	return req, err
+}
+
+// GetRequirementsAndGit gets the requirements from the given git URL and the git contents
+func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.RequirementsConfig, string, error) {
 	// if we have a kubernetes secret with git auth mounted to the filesystem when running in cluster
 	// we need to turn it into a git credentials file see https://git-scm.com/docs/git-credential-store
 	secretMountPath := os.Getenv(credentialhelper.GIT_SECRET_MOUNT_PATH)
 	if secretMountPath != "" {
 		err := credentialhelper.WriteGitCredentialFromSecretMount()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
+			return nil, "", errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
 		}
 	} else {
 		log.Logger().Warnf("no $GIT_SECRET_MOUNT_PATH environment variable set")
@@ -46,18 +52,18 @@ func GetRequirementsFromGit(g gitclient.Interface, gitURL string) (*jxcore.Requi
 	// clone cluster repo to a temp dir and load the requirements
 	dir, err := gitclient.CloneToDir(g, gitURL, "")
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to clone cluster git repo %s", gitURL)
+		return nil, dir, errors.Wrapf(err, "failed to clone cluster git repo %s", gitURL)
 	}
 
 	requirements, _, err := jxcore.LoadRequirementsConfig(dir, false)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find requirements from git clone in directory %s", dir)
+		return nil, dir, errors.Wrapf(err, "failed to find requirements from git clone in directory %s", dir)
 	}
 
 	if &requirements.Spec == nil {
-		return nil, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
+		return nil, dir, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
 	}
-	return &requirements.Spec, nil
+	return &requirements.Spec, dir, nil
 }
 
 // EnvironmentGitURL looks up the environment configuration based on environment name and returns the git URL
