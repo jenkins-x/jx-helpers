@@ -19,7 +19,7 @@ require (
 	github.com/google/uuid v1.1.4
 	github.com/googleapis/gnostic v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/jenkins-x/go-scm v1.6.2
+	github.com/jenkins-x/go-scm v1.6.7
 	github.com/jenkins-x/jx-api/v4 v4.0.25
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
@@ -45,8 +45,8 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/api v0.20.4
-	k8s.io/apimachinery v0.20.4
+	k8s.io/api v0.20.5
+	k8s.io/apimachinery v0.20.5
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/klog/v2 v2.5.0 // indirect
