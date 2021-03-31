@@ -27,11 +27,12 @@ var (
 
 // Factory helper for discovering the git source URL and token
 type Factory struct {
-	GitKind      string
-	GitServerURL string
-	GitUsername  string
-	GitToken     string
-	ScmClient    *scm.Client
+	GitKind            string
+	GitServerURL       string
+	GitUsername        string
+	GitToken           string
+	IgnoreMissingToken bool
+	ScmClient          *scm.Client
 
 	// Input specifies the input to use if we are not using batch mode so that we can lazily populate
 	// the git user and token if it cannot be discovered automatically
@@ -65,7 +66,7 @@ func (o *Factory) Create() (*scm.Client, error) {
 		o.GitKind = giturl.SaasGitKind(o.GitServerURL)
 	}
 
-	scmClient, gitToken, err := NewScmClient(o.GitKind, o.GitServerURL, o.GitToken)
+	scmClient, gitToken, err := NewScmClient(o.GitKind, o.GitServerURL, o.GitToken, o.IgnoreMissingToken)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create ScmClient for server %s", o.GitServerURL)
 	}

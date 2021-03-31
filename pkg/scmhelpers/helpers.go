@@ -19,7 +19,7 @@ import (
 
 // NewScmClient creates a new Scm client for the given git kind, server URL and token.
 // If no token is supplied we default it
-func NewScmClient(kind, gitServerURL, token string) (*scm.Client, string, error) {
+func NewScmClient(kind, gitServerURL, token string, ignoreMissingToken bool) (*scm.Client, string, error) {
 	creds, err := loadcreds.LoadGitCredential()
 	if err != nil {
 		return nil, token, errors.Wrapf(err, "failed to load git credentials")
@@ -38,6 +38,9 @@ func NewScmClient(kind, gitServerURL, token string) (*scm.Client, string, error)
 		token = os.Getenv("GITHUB_TOKEN")
 	}
 	if token == "" {
+		if ignoreMissingToken {
+			return nil, token, nil
+		}
 		return nil, token, errors.Wrapf(err, "failed to load git credentials")
 	}
 	username := serverCreds.Username

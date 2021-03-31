@@ -32,6 +32,7 @@ type Options struct {
 	Namespace          string
 	DiscoverFromGit    bool
 	PreferUpstream     bool
+	IgnoreMissingToken bool
 	JXClient           versioned.Interface
 	GitURL             *giturl.GitRepository
 	GitClient          gitclient.Interface
@@ -69,11 +70,14 @@ func (o *Options) Validate() error {
 				return errors.Wrapf(err, "failed to detect git token from source URL")
 			}
 		}
-		o.ScmClient, o.GitToken, err = NewScmClient(o.GitKind, o.GitServerURL, o.GitToken)
+		o.ScmClient, o.GitToken, err = NewScmClient(o.GitKind, o.GitServerURL, o.GitToken, o.IgnoreMissingToken)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create ScmClient: try supply --git-token")
 		}
 		if o.ScmClient == nil {
+			if o.IgnoreMissingToken {
+				return nil
+			}
 			return errors.Errorf("no ScmClient created for server %s", o.GitServerURL)
 		}
 	}
