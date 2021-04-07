@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stripansi"
 	"io"
 	"unicode/utf8"
 )
@@ -34,7 +35,8 @@ func (t *Table) AddRow(col ...string) {
 func (t *Table) Render() {
 	// lets figure out the max widths of each column
 	for _, row := range t.Rows {
-		for ci, col := range row {
+		for ci, rawCol := range row {
+			col := stripansi.Strip(rawCol)
 			l := utf8.RuneCountInString(col)
 			t.ColumnWidths = ensureArrayCanContain(t.ColumnWidths, ci)
 			if l > t.ColumnWidths[ci] {
@@ -51,6 +53,12 @@ func (t *Table) Render() {
 				fmt.Fprint(out, t.Separator)
 			}
 			l := t.ColumnWidths[ci]
+
+			// lets exclude colors from the length padding/aligning so lets add
+			// the number of color characters to the width
+			plainCol := stripansi.Strip(col)
+			l += len(col) - len(plainCol)
+
 			align := t.GetColumnAlign(ci)
 			if ci >= lastColumn && align != ALIGN_CENTER && align != ALIGN_RIGHT {
 				fmt.Fprint(out, col)

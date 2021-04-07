@@ -19,8 +19,8 @@ require (
 	github.com/google/uuid v1.1.4
 	github.com/googleapis/gnostic v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/jenkins-x/go-scm v1.6.7
-	github.com/jenkins-x/jx-api/v4 v4.0.25
+	github.com/jenkins-x/go-scm v1.6.13
+	github.com/jenkins-x/jx-api/v4 v4.0.28
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
 	github.com/kr/pretty v0.2.1 // indirect
@@ -40,6 +40,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
+	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
