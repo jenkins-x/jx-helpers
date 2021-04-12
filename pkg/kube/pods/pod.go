@@ -152,17 +152,17 @@ func GetCurrentPod(kubeClient kubernetes.Interface, ns string) (*v1.Pod, error) 
 }
 
 // WaitForPod waits for a pod filtered by `optionsModifier` that match `condition`
-func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier func(options metav1.ListOptions), timeout time.Duration, condition PodPredicate) (*v1.Pod, error) {
+func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier func(options *metav1.ListOptions), timeout time.Duration, condition PodPredicate) (*v1.Pod, error) {
 
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
 
 	lw := &cache.ListWatch{
 		ListFunc: func(o metav1.ListOptions) (runtime.Object, error) {
-			optionsModifier(o)
+			optionsModifier(&o)
 			return client.CoreV1().Pods(namespace).List(context.TODO(), o)
 		},
 		WatchFunc: func(o metav1.ListOptions) (watch.Interface, error) {
-			optionsModifier(o)
+			optionsModifier(&o)
 			return client.CoreV1().Pods(namespace).Watch(context.TODO(), o)
 		},
 	}
@@ -181,7 +181,7 @@ func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier f
 }
 
 // ListOptionsString returns a string summary of the list options
-func ListOptionsString(options metav1.ListOptions) string {
+func ListOptionsString(options *metav1.ListOptions) string {
 	var values []string
 	if options.FieldSelector != "" {
 		values = append(values, options.FieldSelector)
@@ -223,7 +223,7 @@ func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name
 
 // WaitforPodNameCondition waits for the given pod name to match the given condition function
 func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name string, timeout time.Duration, condition PodPredicate) error {
-	optionsModifier := func(options metav1.ListOptions) {
+	optionsModifier := func(options *metav1.ListOptions) {
 		// TODO
 		//options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
 		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", name).String()
@@ -238,7 +238,7 @@ func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name
 // * the status of the pod
 func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, selector string, timeout time.Duration) (*corev1.Pod, error) {
 	// lets check if its already ready
-	optionsModifier := func(options metav1.ListOptions) {
+	optionsModifier := func(options *metav1.ListOptions) {
 		options.LabelSelector = selector
 	}
 	statusMap := map[string]string{}
@@ -315,7 +315,7 @@ func GetRunningPodForSelector(client kubernetes.Interface, namespace string, sel
 // WaitForPodNameToBeComplete waits for the pod to complete (succeed or fail) using the pod name
 func WaitForPodNameToBeComplete(client kubernetes.Interface, namespace string, name string,
 	timeout time.Duration) error {
-	optionsModifier := func(options metav1.ListOptions) {
+	optionsModifier := func(options *metav1.ListOptions) {
 		// TODO
 		//options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
 		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", name).String()
