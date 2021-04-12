@@ -1,17 +1,15 @@
 package versionstream
 
 import (
-	"fmt"
-
 	"github.com/jenkins-x/jx-helpers/v3/pkg/errorutil"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 )
 
 // VersionResolver resolves versions of charts, packages or docker images
 type VersionResolver struct {
-	VersionsDir string
+	VersionsDir          string
+	WarnOnMissingVersion bool
 }
 
 // ResolveDockerImage ensures the given docker image has a valid version if there is one in the version stream
@@ -26,7 +24,7 @@ func (v *VersionResolver) StableVersion(kind VersionKind, name string) (*StableV
 
 // StableVersionNumber returns the stable version number of the given kind name
 func (v *VersionResolver) StableVersionNumber(kind VersionKind, name string) (string, error) {
-	return LoadStableVersionNumber(v.VersionsDir, kind, name)
+	return LoadStableVersionNumber(v.VersionsDir, kind, name, v.WarnOnMissingVersion)
 }
 
 // ResolveGitVersion resolves the version to use for the given git repository using the version stream
@@ -35,11 +33,11 @@ func (v *VersionResolver) ResolveGitVersion(gitURL string) (string, error) {
 	if err != nil {
 		return answer, err
 	}
-	if answer == "" {
-		path := GitURLToName(gitURL)
+	if answer == "" && v.WarnOnMissingVersion {
 		log.Logger().Warnf("could not find a stable version for git repository: %s in %s", gitURL, v.VersionsDir)
 		log.Logger().Warn("for background see: https://jenkins-x.io/docs/concepts/version-stream/")
-		log.Logger().Infof("please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k git -n %s -v 1.2.3", path)))
+		//path := GitURLToName(gitURL)
+		//log.Logger().Infof("please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k git -n %s -v 1.2.3", path)))
 	}
 	return answer, nil
 }
@@ -67,7 +65,7 @@ func (v *VersionResolver) VerifyPackage(name string, currentVersion string) erro
 	if err != nil {
 		return err
 	}
-	return data.VerifyPackage(name, currentVersion, v.VersionsDir)
+	return data.VerifyPackage(name, currentVersion, v.VersionsDir, v.WarnOnMissingVersion)
 }
 
 // GetRepositoryPrefixes loads the repository prefixes for the version stream
