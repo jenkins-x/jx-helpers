@@ -351,7 +351,7 @@ func TestWaitForPodSelectorToBeReady(t *testing.T) {
 			assert.NoError(t, err)
 		},
 		func(client kubernetes.Interface) {
-			pod, err := pods.WaitForPod(client, "jx-testing", func(options metav1.ListOptions) {
+			pod, err := pods.WaitForPod(client, "jx-testing", func(options *metav1.ListOptions) {
 				// for this test, select any pod
 			}, time.Second*2, func(pod *v1.Pod) bool {
 				// for this test, match any pod
