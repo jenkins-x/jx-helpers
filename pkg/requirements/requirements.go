@@ -2,6 +2,7 @@ package requirements
 
 import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"os"
@@ -47,8 +48,13 @@ func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.Requir
 			return nil, "", errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
 		}
 	} else {
-		log.Logger().Warnf("no $GIT_SECRET_MOUNT_PATH environment variable set")
+		if kube.IsInCluster() {
+			log.Logger().Warnf("no $GIT_SECRET_MOUNT_PATH environment variable set")
+		} else {
+			log.Logger().Debugf("no $GIT_SECRET_MOUNT_PATH environment variable set")
+		}
 	}
+
 	// clone cluster repo to a temp dir and load the requirements
 	dir, err := gitclient.CloneToDir(g, gitURL, "")
 	if err != nil {
