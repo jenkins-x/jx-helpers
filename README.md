@@ -6,11 +6,11 @@
 [![LICENSE](https://img.shields.io/github/license/jenkins-x/jx-helpers.svg)](https://github.com/jenkins-x/jx-helpers/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
-`jx-helpers` is a small library of helper functions for working with the commands, git and kubernetes
+`jx-helpers` is a small library of helper functions for working with the commands, git, scm and kubernetes
 
 ## Refactoring notes
 
-If you are refactoring code from jenkins-x/jx out into a separate library/microservice here's some tips on switching code over to `jx-helpers`
+If you are refactoring code from the v2 branch of jenkins-x/jx out into a separate library/microservice here's some tips on switching code over to `jx-helpers`
 
 The `util` package has been split up into separate packages:
 
