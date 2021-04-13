@@ -313,6 +313,7 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jenkins-x/go-scm v1.6.13 h1:KSAWADqZ2JHj8ZUXOhV4Ua+1wySP1i4dfAREU1lMF4E=
 github.com/jenkins-x/go-scm v1.6.13/go.mod h1:z7xTO9/VzqW3xEbEMH2z5cpOGrZ8+nOHOWfU1ngFGxs=
+github.com/jenkins-x/go-scm v1.6.14 h1:yJ/HMOGpHGqHF2bwPB5qF6hUZ1xfsUoo6yuq7TfFqGM=
 github.com/jenkins-x/go-scm v1.6.14/go.mod h1:z7xTO9/VzqW3xEbEMH2z5cpOGrZ8+nOHOWfU1ngFGxs=
 github.com/jenkins-x/jx-api/v4 v4.0.28 h1:pbOOWGsGDKdgx24wRGl/ktZujHXZGTSA1C5pnPX3p8c=
 github.com/jenkins-x/jx-api/v4 v4.0.28/go.mod h1:IC88X+24Nmexuj7lRNRgzfrchzlo0qysfwkICpqDmMQ=
