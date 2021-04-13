@@ -27,12 +27,13 @@ var (
 
 // Factory helper for discovering the git source URL and token
 type Factory struct {
-	GitKind            string
-	GitServerURL       string
-	GitUsername        string
-	GitToken           string
-	IgnoreMissingToken bool
-	ScmClient          *scm.Client
+	GitKind                   string
+	GitServerURL              string
+	GitUsername               string
+	GitToken                  string
+	IgnoreMissingToken        bool
+	NoWriteGitCredentialsFile bool
+	ScmClient                 *scm.Client
 
 	// Input specifies the input to use if we are not using batch mode so that we can lazily populate
 	// the git user and token if it cannot be discovered automatically
@@ -138,7 +139,7 @@ func (o *Factory) FindGitToken() error {
 			}
 		}
 
-		if o.GitUsername != "" && o.GitToken != "" {
+		if o.GitUsername != "" && o.GitToken != "" && !o.NoWriteGitCredentialsFile {
 			// lets append the git credential file...
 			text := ""
 			if exists {
