@@ -1,6 +1,6 @@
 // +build unit
 
-package credentialhelper
+package credentialhelper_test
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 
+	. "github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/credentialhelper"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"

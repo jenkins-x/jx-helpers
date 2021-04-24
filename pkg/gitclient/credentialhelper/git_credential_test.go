@@ -1,10 +1,11 @@
-package credentialhelper
+package credentialhelper_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
+	. "github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/credentialhelper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"

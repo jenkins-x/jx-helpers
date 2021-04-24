@@ -11,6 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGitCredentialsFile(t *testing.T) {
+	f, err := loadcreds.GitCredentialsFile()
+	require.NoError(t, err, "failed to run GitCredentialsFile")
+	t.Logf("found git credentials file %s\n", f)
+}
+
 func TestLoadGitCredentials(t *testing.T) {
 	fileName := filepath.Join("test_data", "git", "credentials")
 	config, exists, err := loadcreds.LoadGitCredentialsFile(fileName)
