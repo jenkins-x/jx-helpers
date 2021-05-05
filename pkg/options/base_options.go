@@ -3,6 +3,7 @@ package options
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -27,6 +28,7 @@ type BaseOptions struct {
 	LogLevel  string
 	Ctx       context.Context
 	Command   *cobra.Command
+	Out       io.Writer
 }
 
 // AddBaseFlags adds the base flags for all commands
@@ -59,8 +61,11 @@ func (o *BaseOptions) Validate() error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to set debug level")
 		}
-
 	}
+	if o.Out == nil {
+		o.Out = os.Stdout
+	}
+	log.SetOutput(o.Out)
 	return nil
 }
 
