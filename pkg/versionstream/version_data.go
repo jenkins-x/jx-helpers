@@ -79,11 +79,11 @@ type StableVersion struct {
 
 // VerifyPackage verifies the current version of the package is valid
 func (data *StableVersion) VerifyPackage(name string, currentVersion string, workDir string, warnOnMissing bool) error {
-	currentVersion = convertToVersion(currentVersion)
+	currentVersion = ConvertToVersion(currentVersion)
 	if currentVersion == "" {
 		return nil
 	}
-	version := convertToVersion(data.Version)
+	version := ConvertToVersion(data.Version)
 	if version == "" && warnOnMissing {
 		log.Logger().Warnf("could not find a stable package version for %s from %s\nFor background see: https://jenkins-x.io/docs/concepts/version-stream/", name, workDir)
 		//log.Logger().Infof("Please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k package -n %s", name)))
@@ -100,7 +100,7 @@ func (data *StableVersion) VerifyPackage(name string, currentVersion string, wor
 		return errors.Wrapf(err, "failed to parse required semantic version %s for package %s", version, name)
 	}
 
-	upperLimitText := convertToVersion(data.UpperLimit)
+	upperLimitText := ConvertToVersion(data.UpperLimit)
 	if upperLimitText == "" {
 		if minSem.Equals(currentSem) {
 			return nil
@@ -135,9 +135,9 @@ func verifyError(name string, err error) error {
 	return err
 }
 
-// convertToVersion extracts a semantic version from the specified string.
+// ConvertToVersion extracts a semantic version from the specified string.
 // If no semantic version is contained in the specified string the string is returned unmodified.
-func convertToVersion(text string) string {
+func ConvertToVersion(text string) string {
 	// Some apps might not exactly follow semver, like for example Git for Windows: 2.23.0.windows.1
 	// we're trimming everything after a semver from the answer
 	// to avoid error described in issue #6825

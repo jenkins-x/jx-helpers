@@ -1,6 +1,6 @@
 // +build unit
 
-package versionstream
+package versionstream_test
 
 import (
 	"fmt"
@@ -8,11 +8,10 @@ import (
 	"os"
 	"testing"
 
+	. "github.com/jenkins-x/jx-helpers/v3/pkg/versionstream"
 	"github.com/sirupsen/logrus"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -110,7 +109,7 @@ func TestResolveDockerImage(t *testing.T) {
 	}
 
 	logrus.SetOutput(ioutil.Discard)
-	defer logrus.SetOutput(os.Stderr)
+	defer logrus.SetOutput(os.Stdin)
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("test_resolve_%s", testCase.resolveImage), func(t *testing.T) {
@@ -153,7 +152,7 @@ func TestConvertToVersion(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.text, func(t *testing.T) {
-			actualVersion := convertToVersion(testCase.text)
+			actualVersion := ConvertToVersion(testCase.text)
 			assert.Equal(t, testCase.expectedVersion, actualVersion, "Unexpected version")
 		})
 	}
