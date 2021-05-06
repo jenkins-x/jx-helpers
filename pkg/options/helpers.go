@@ -151,3 +151,27 @@ func ld(s, t string, ignoreCase bool) int {
 	}
 	return d[len(s)][len(t)]
 }
+
+// ArgumentsOptionValue returns the argument
+func ArgumentsOptionValue(args []string, flag string, option string) string {
+	flags := []string{"--" + option, "-" + flag}
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		for _, f := range flags {
+			feq := f + "="
+			if strings.HasPrefix(arg, feq) {
+				return arg[len(feq):]
+			}
+
+			if arg == f {
+				j := i + 1
+				if j < len(args) {
+					return args[j]
+				}
+				return ""
+			}
+		}
+	}
+	return ""
+}
