@@ -1,6 +1,7 @@
 package gitclient
 
 import (
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"os"
 	"os/user"
 
@@ -9,6 +10,10 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
+)
+
+var (
+	info = termcolor.ColorInfo
 )
 
 // EnsureUserAndEmailSetup returns the user name and email for the gitter
@@ -102,6 +107,7 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 	if err != nil {
 		return userName, userEmail, errors.Wrapf(err, "Failed to set the git email to %s", userEmail)
 	}
+	log.Logger().Infof("setup git user %s email %s", info(userName), info(userEmail))
 	return userName, userEmail, nil
 }
 
