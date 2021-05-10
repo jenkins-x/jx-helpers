@@ -14,6 +14,8 @@ func TestUrlJoin(t *testing.T) {
 	t.Parallel()
 	assert.Equal(t, "http://foo.bar/whatnot/thingy", stringhelpers.UrlJoin("http://foo.bar", "whatnot", "thingy"))
 	assert.Equal(t, "http://foo.bar/whatnot/thingy/", stringhelpers.UrlJoin("http://foo.bar/", "/whatnot/", "/thingy/"))
+	assert.Equal(t, "http://foo.bar/whatnot/thingy/?foo=bar", stringhelpers.UrlJoin("http://foo.bar/?foo=bar", "/whatnot/", "/thingy/"))
+	assert.Equal(t, "http://foo.bar/whatnot/thingy/?foo=bar&cheese=edam", stringhelpers.UrlJoin("http://foo.bar/?foo=bar", "/whatnot/?cheese=edam", "/thingy/"))
 }
 
 func TestUrlHostNameWithoutPort(t *testing.T) {

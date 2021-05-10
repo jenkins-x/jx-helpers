@@ -12,8 +12,12 @@ import (
 func UrlJoin(paths ...string) string {
 	var buffer bytes.Buffer
 	last := len(paths) - 1
+	query := ""
 	for i, path := range paths {
-		p := path
+		p, q := trimQuery(path)
+		if q != "" {
+			query = combineQuery(query, q)
+		}
 		if i > 0 {
 			buffer.WriteString("/")
 			p = strings.TrimPrefix(p, "/")
@@ -23,7 +27,29 @@ func UrlJoin(paths ...string) string {
 		}
 		buffer.WriteString(p)
 	}
-	return buffer.String()
+	answer := buffer.String()
+	if query == "" {
+		return answer
+	}
+	return answer + "?" + query
+}
+
+func trimQuery(path string) (string, string) {
+	idx := strings.Index(path, "?")
+	if idx < 0 {
+		return path, ""
+	}
+	return path[0:idx], path[idx+1:]
+}
+
+func combineQuery(q1 string, q2 string) string {
+	if q1 == "" {
+		return q2
+	}
+	if q2 == "" {
+		return q1
+	}
+	return q1 + "&" + q2
 }
 
 // UrlHostNameWithoutPort returns the host name without any port of the given URL like string
