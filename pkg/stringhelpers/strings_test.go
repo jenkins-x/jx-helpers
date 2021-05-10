@@ -46,6 +46,14 @@ func TestRemoveStringFromSlice(t *testing.T) {
 	assert.Equal(t, 3, len(betterBeatles))
 }
 
+func TestRemoveStringFromSliceAtEnd(t *testing.T) {
+	beatles := []string{"paul", "john", "ringo", "george"}
+	betterBeatles := stringhelpers.RemoveStringFromSlice(beatles, "george")
+
+	assert.NotContains(t, betterBeatles, "george", "George shouldn't be in the beatles")
+	assert.Equal(t, 3, len(betterBeatles))
+}
+
 func TestRemoveStringFromSlice_NotAMember(t *testing.T) {
 	beatles := []string{"paul", "john", "ringo", "george"}
 	betterBeatles := stringhelpers.RemoveStringFromSlice(beatles, "Freddy")
