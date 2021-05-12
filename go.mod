@@ -19,7 +19,7 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jenkins-x/go-scm v1.8.2
-	github.com/jenkins-x/jx-api/v4 v4.0.29
+	github.com/jenkins-x/jx-api/v4 v4.0.33
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/json-iterator/go v1.1.11 // indirect
