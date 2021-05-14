@@ -2,9 +2,10 @@ package table
 
 import (
 	"fmt"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/stripansi"
 	"io"
 	"unicode/utf8"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stripansi"
 )
 
 type Table struct {

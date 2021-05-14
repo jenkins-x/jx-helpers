@@ -1,10 +1,11 @@
 package requirements_test
 
 import (
+	"testing"
+
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/requirements"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestEnvironmentGitURL(t *testing.T) {

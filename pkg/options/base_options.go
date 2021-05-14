@@ -23,9 +23,9 @@ const (
 
 // BaseOptions a few common options we tend to use in command line tools
 type BaseOptions struct {
-	BatchMode bool
-	Verbose   bool
-	LogLevel  string
+	BatchMode bool   `env:"JX_BATCH_MODE"`
+	Verbose   bool   `env:"JX_VERBOSE"`
+	LogLevel  string `env:"JX_LOG_LEVEL"`
 	Ctx       context.Context
 	Command   *cobra.Command
 	Out       io.Writer
