@@ -3,14 +3,15 @@ package credentialhelper
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 

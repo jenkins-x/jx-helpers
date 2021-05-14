@@ -1,11 +1,12 @@
 package requirements_test
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/requirements"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"path/filepath"
-	"testing"
 )
 
 func TestLoadSettings(t *testing.T) {
