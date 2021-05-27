@@ -45,7 +45,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	helm.sh/helm/v3 v3.5.4
 	k8s.io/api v0.20.7
-	k8s.io/apimachinery v0.20.7
+	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kubernetes v1.14.7
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
