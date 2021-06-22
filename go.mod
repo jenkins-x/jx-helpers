@@ -2,7 +2,8 @@ module github.com/jenkins-x/jx-helpers/v3
 
 require (
 	cloud.google.com/go v0.76.0 // indirect
-	github.com/Azure/go-autorest/autorest v0.11.18 // indirect
+	github.com/Azure/go-autorest/autorest v0.11.19 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.9.14 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
 	github.com/blang/semver v3.5.1+incompatible
@@ -44,8 +45,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	helm.sh/helm/v3 v3.5.4
-	k8s.io/api v0.20.7
-	k8s.io/apimachinery v0.20.7
+	k8s.io/api v0.20.8
+	k8s.io/apimachinery v0.20.8
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kubernetes v1.14.7
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
