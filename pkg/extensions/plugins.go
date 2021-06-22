@@ -294,13 +294,6 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 					}
 				}
 			}
-
-			switch runtime.GOOS {
-			case "windows":
-				oldPath = filepath.Join(tmpDir, pluginName+".exe")
-			default:
-				oldPath = filepath.Join(tmpDir, pluginName)
-			}
 		}
 
 		err = files.CopyFile(oldPath, path)
