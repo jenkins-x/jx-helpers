@@ -270,7 +270,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 			oldPath = filepath.Join(tmpDir, oldFile)
 			exists, err := files.FileExists(oldPath)
 			if err != nil {
-				return "", errors.Wrapf(err, "failed to check if file exists")
+				return "", errors.Wrapf(err, "failed to check if file %s exists", oldPath)
 			}
 			if !exists {
 				// lets look in sub dirs...
@@ -284,9 +284,9 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 						continue
 					}
 					oldPath2 := filepath.Join(tmpDir, n, oldFile)
-					exists, err = files.FileExists(oldPath)
+					exists, err = files.FileExists(oldPath2)
 					if err != nil {
-						return "", errors.Wrapf(err, "failed to check if file exists")
+						return "", errors.Wrapf(err, "failed to check if file %s exists", oldPath2)
 					}
 					if exists {
 						oldPath = oldPath2
