@@ -3,6 +3,7 @@ package extensions
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -261,11 +262,37 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 				return "", err
 			}
 
-			switch runtime.GOOS {
-			case "windows":
-				oldPath = filepath.Join(tmpDir, pluginName+".exe")
-			default:
-				oldPath = filepath.Join(tmpDir, pluginName)
+			oldFile := pluginName
+			if runtime.GOOS == "windows" {
+				oldFile = pluginName + ".exe"
+			}
+
+			oldPath = filepath.Join(tmpDir, oldFile)
+			exists, err := files.FileExists(oldPath)
+			if err != nil {
+				return "", errors.Wrapf(err, "failed to check if file exists")
+			}
+			if !exists {
+				// lets look in sub dirs...
+				fs, err := ioutil.ReadDir(tmpDir)
+				if err != nil {
+					return "", errors.Wrapf(err, "failed to read dir %s", tmpDir)
+				}
+				for _, f := range fs {
+					n := f.Name()
+					if !f.IsDir() || strings.HasPrefix(n, ".") {
+						continue
+					}
+					oldPath2 := filepath.Join(tmpDir, n, oldFile)
+					exists, err = files.FileExists(oldPath)
+					if err != nil {
+						return "", errors.Wrapf(err, "failed to check if file exists")
+					}
+					if exists {
+						oldPath = oldPath2
+						break
+					}
+				}
 			}
 		}
 
