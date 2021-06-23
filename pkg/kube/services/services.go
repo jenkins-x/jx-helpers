@@ -14,7 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	nv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -113,7 +113,7 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 	log.Logger().Debugf("Couldn't find service url, attempting to look up via ingress")
 
 	// lets try find the service via Ingress
-	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+	ing, err := client.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}
@@ -134,7 +134,7 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 func FindIngressURL(client kubernetes.Interface, namespace string, name string) (string, error) {
 	log.Logger().Debugf("Finding ingress url for %s in namespace %s", name, namespace)
 	// lets try find the service via Ingress
-	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+	ing, err := client.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		log.Logger().Debugf("Error finding ingress for %s in namespace %s - err %s", name, namespace, err)
 		return "", nil
@@ -148,7 +148,7 @@ func FindIngressURL(client kubernetes.Interface, namespace string, name string) 
 }
 
 // IngressURL returns the URL for the ingres
-func IngressURL(ing *v1beta1.Ingress) string {
+func IngressURL(ing *nv1.Ingress) string {
 	if ing != nil {
 		if len(ing.Spec.Rules) > 0 {
 			rule := ing.Spec.Rules[0]
@@ -185,7 +185,7 @@ func IngressURL(ing *v1beta1.Ingress) string {
 }
 
 // IngressHost returns the host for the ingres
-func IngressHost(ing *v1beta1.Ingress) string {
+func IngressHost(ing *nv1.Ingress) string {
 	if ing != nil {
 		if len(ing.Spec.Rules) > 0 {
 			rule := ing.Spec.Rules[0]
@@ -206,7 +206,7 @@ func IngressHost(ing *v1beta1.Ingress) string {
 }
 
 // IngressProtocol returns the scheme (https / http) for the Ingress
-func IngressProtocol(ing *v1beta1.Ingress) string {
+func IngressProtocol(ing *nv1.Ingress) string {
 	if ing != nil && len(ing.Spec.TLS) == 0 {
 		return "http"
 	}
@@ -215,7 +215,7 @@ func IngressProtocol(ing *v1beta1.Ingress) string {
 
 func FindServiceHostname(client kubernetes.Interface, namespace string, name string) (string, error) {
 	// lets try find the service via Ingress
-	ing, err := client.ExtensionsV1beta1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+	ing, err := client.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if ing != nil && err == nil {
 		if len(ing.Spec.Rules) > 0 {
 			rule := ing.Spec.Rules[0]
