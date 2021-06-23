@@ -9,9 +9,8 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/services"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	nv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestExtractServiceSchemePortDefault(t *testing.T) {
@@ -300,30 +299,32 @@ func TestFindURLFromIngress(t *testing.T) {
 	type testData struct {
 		Name        string
 		ExpectedURL string
-		Ingress     *v1beta1.Ingress
+		Ingress     *nv1.Ingress
 	}
 
 	testCases := []testData{
 		{
 			Name:        "http-LoadBalancer",
 			ExpectedURL: "http://hook-jx.1.2.3.4.nip.io",
-			Ingress: &v1beta1.Ingress{
+			Ingress: &nv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "hook",
 				},
-				Spec: v1beta1.IngressSpec{
-					Rules: []v1beta1.IngressRule{
+				Spec: nv1.IngressSpec{
+					Rules: []nv1.IngressRule{
 						{
 							Host: "hook-jx.1.2.3.4.nip.io",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{
-									Paths: []v1beta1.HTTPIngressPath{
+							IngressRuleValue: nv1.IngressRuleValue{
+								HTTP: &nv1.HTTPIngressRuleValue{
+									Paths: []nv1.HTTPIngressPath{
 										{
 											Path: "",
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "hook",
-												ServicePort: intstr.IntOrString{
-													IntVal: 80,
+											Backend: nv1.IngressBackend{
+												Service: &nv1.IngressServiceBackend{
+													Name: "hook",
+													Port: nv1.ServiceBackendPort{
+														Number: 80,
+													},
 												},
 											},
 										},
@@ -338,23 +339,25 @@ func TestFindURLFromIngress(t *testing.T) {
 		{
 			Name:        "https-LoadBalancer",
 			ExpectedURL: "https://hook-jx.1.2.3.4.nip.io",
-			Ingress: &v1beta1.Ingress{
+			Ingress: &nv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "hook",
 				},
-				Spec: v1beta1.IngressSpec{
-					Rules: []v1beta1.IngressRule{
+				Spec: nv1.IngressSpec{
+					Rules: []nv1.IngressRule{
 						{
 							Host: "hook-jx.1.2.3.4.nip.io",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{
-									Paths: []v1beta1.HTTPIngressPath{
+							IngressRuleValue: nv1.IngressRuleValue{
+								HTTP: &nv1.HTTPIngressRuleValue{
+									Paths: []nv1.HTTPIngressPath{
 										{
 											Path: "",
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "hook",
-												ServicePort: intstr.IntOrString{
-													IntVal: 80,
+											Backend: nv1.IngressBackend{
+												Service: &nv1.IngressServiceBackend{
+													Name: "hook",
+													Port: nv1.ServiceBackendPort{
+														Number: 80,
+													},
 												},
 											},
 										},
@@ -363,7 +366,7 @@ func TestFindURLFromIngress(t *testing.T) {
 							},
 						},
 					},
-					TLS: []v1beta1.IngressTLS{
+					TLS: []nv1.IngressTLS{
 						{
 							Hosts:      []string{"hook-jx.1.2.3.4.nip.io"},
 							SecretName: "",
@@ -375,25 +378,27 @@ func TestFindURLFromIngress(t *testing.T) {
 		{
 			Name:        "http-NodePort",
 			ExpectedURL: "http://1.2.3.4:4567/jx/hook",
-			Ingress: &v1beta1.Ingress{
+			Ingress: &nv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "hook",
 					Annotations: map[string]string{
 						kube.AnnotationHost: "1.2.3.4:4567",
 					},
 				},
-				Spec: v1beta1.IngressSpec{
-					Rules: []v1beta1.IngressRule{
+				Spec: nv1.IngressSpec{
+					Rules: []nv1.IngressRule{
 						{
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{
-									Paths: []v1beta1.HTTPIngressPath{
+							IngressRuleValue: nv1.IngressRuleValue{
+								HTTP: &nv1.HTTPIngressRuleValue{
+									Paths: []nv1.HTTPIngressPath{
 										{
 											Path: "/jx/hook",
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "hook",
-												ServicePort: intstr.IntOrString{
-													IntVal: 80,
+											Backend: nv1.IngressBackend{
+												Service: &nv1.IngressServiceBackend{
+													Name: "hook",
+													Port: nv1.ServiceBackendPort{
+														Number: 80,
+													},
 												},
 											},
 										},
