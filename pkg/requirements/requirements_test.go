@@ -1,7 +1,10 @@
 package requirements_test
 
 import (
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/requirements"
@@ -107,4 +110,12 @@ func TestEnvironmentGitURL(t *testing.T) {
 		actual := requirements.EnvironmentGitURL(tc.req, tc.env)
 		assert.Equal(t, tc.expected, actual, "for environment %s", tc.env)
 	}
+}
+
+func TestAddUserPasswordToURLFromDir(t *testing.T) {
+	dir := filepath.Join("test_data", "add_pwd")
+	got, err := requirements.AddUserPasswordToURLFromDir("https://github.com/jstrachan/myrepo.git", dir)
+	require.NoError(t, err, "failed to run AddUserPasswordToURLFromDir at %s", dir)
+	t.Logf("got URL %s\n", got)
+	assert.Equal(t, "https://myuser:mypassword@github.com/jstrachan/myrepo.git", got, "resulting URL")
 }
