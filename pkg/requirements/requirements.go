@@ -1,11 +1,12 @@
 package requirements
 
 import (
-	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"

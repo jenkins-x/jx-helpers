@@ -3,7 +3,6 @@ package extensions
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 
 	jxClient "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 
