@@ -1,7 +1,11 @@
 package requirements
 
 import (
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
@@ -48,6 +52,11 @@ func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.Requir
 		if err != nil {
 			return nil, "", errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
 		}
+
+		gitURL, err = AddUserPasswordToURLFromDir(gitURL, secretMountPath)
+		if err != nil {
+			return nil, "", errors.Wrapf(err, "failed to add username and password to git URL")
+		}
 	} else {
 		if kube.IsInCluster() {
 			log.Logger().Warnf("no $GIT_SECRET_MOUNT_PATH environment variable set")
@@ -71,6 +80,37 @@ func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.Requir
 		return nil, dir, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
 	}
 	return &requirements.Spec, dir, nil
+}
+
+// AddUserPasswordToURLFromDir loads the username and password files from the given directory and adds them to the URL if they are found
+func AddUserPasswordToURLFromDir(gitURL, path string) (string, error) {
+	username, err := loadFile(filepath.Join(path, "username"))
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to load git username")
+	}
+	password, err := loadFile(filepath.Join(path, "password"))
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to load git password")
+	}
+	if username != "" && password != "" {
+		return stringhelpers.URLSetUserPassword(gitURL, username, password)
+	}
+	return gitURL, nil
+}
+
+func loadFile(path string) (string, error) {
+	exists, err := files.FileExists(path)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to check for file %s", path)
+	}
+	if !exists {
+		return "", nil
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read file %s", path)
+	}
+	return strings.TrimSpace(string(data)), nil
 }
 
 // EnvironmentGitURL looks up the environment configuration based on environment name and returns the git URL
