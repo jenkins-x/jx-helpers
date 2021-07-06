@@ -16,11 +16,10 @@ require (
 	github.com/google/uuid v1.1.4
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/jenkins-x/go-scm v1.8.2
+	github.com/jenkins-x/go-scm v1.10.5
 	github.com/jenkins-x/jx-api/v4 v4.0.33
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
-	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/magiconair/properties v1.8.5
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -30,25 +29,23 @@ require (
 	github.com/russross/blackfriday v1.6.0
 	github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5
 	github.com/sethvargo/go-envconfig v0.3.2
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	helm.sh/helm/v3 v3.5.4
-	k8s.io/api v0.20.8
-	k8s.io/apimachinery v0.20.8
+	helm.sh/helm/v3 v3.6.2
+	k8s.io/api v0.21.0
+	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kubernetes v1.14.7
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.10.5
+	sigs.k8s.io/kustomize/kyaml v0.10.15
 	sigs.k8s.io/yaml v1.2.0
 )
 
