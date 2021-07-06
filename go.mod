@@ -11,7 +11,7 @@ require (
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/google/go-cmp v0.5.5
+	github.com/google/go-cmp v0.5.6
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.1.4
 	github.com/googleapis/gnostic v0.5.5 // indirect
