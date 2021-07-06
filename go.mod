@@ -40,7 +40,7 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.6.2
-	k8s.io/api v0.21.0
+	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kubernetes v1.14.7
