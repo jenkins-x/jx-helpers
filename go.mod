@@ -13,7 +13,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.5
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.1.4
+	github.com/google/uuid v1.3.0
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jenkins-x/go-scm v1.10.10
