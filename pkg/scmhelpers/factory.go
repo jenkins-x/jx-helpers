@@ -67,6 +67,8 @@ func (o *Factory) Create() (*scm.Client, error) {
 		o.GitKind = giturl.SaasGitKind(o.GitServerURL)
 	}
 
+	log.Logger().Debugf("using git kind %s server %s and user %s", info(o.GitKind), info(o.GitServerURL), info(o.GitUsername))
+
 	scmClient, gitToken, err := NewScmClient(o.GitKind, o.GitServerURL, o.GitToken, o.IgnoreMissingToken)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create ScmClient for server %s", o.GitServerURL)
