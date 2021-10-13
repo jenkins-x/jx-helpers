@@ -45,18 +45,35 @@ func GetRequirementsFromGit(g gitclient.Interface, gitURL string) (*jxcore.Requi
 
 // GetRequirementsAndGit gets the requirements from the given git URL and the git contents
 func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.RequirementsConfig, string, error) {
+	dir, err := CloneClusterRepo(g, gitURL)
+	if err != nil {
+		return nil, "", err
+	}
+
+	requirements, _, err := jxcore.LoadRequirementsConfig(dir, false)
+	if err != nil {
+		return nil, dir, errors.Wrapf(err, "failed to find requirements from git clone in directory %s", dir)
+	}
+
+	if &requirements.Spec == nil {
+		return nil, dir, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
+	}
+	return &requirements.Spec, dir, nil
+}
+
+func CloneClusterRepo(g gitclient.Interface, gitURL string) (string, error) {
 	// if we have a kubernetes secret with git auth mounted to the filesystem when running in cluster
 	// we need to turn it into a git credentials file see https://git-scm.com/docs/git-credential-store
 	secretMountPath := os.Getenv(credentialhelper.GIT_SECRET_MOUNT_PATH)
 	if secretMountPath != "" {
 		err := credentialhelper.WriteGitCredentialFromSecretMount()
 		if err != nil {
-			return nil, "", errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
+			return "", errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
 		}
 
 		gitURL, err = AddUserPasswordToURLFromDir(gitURL, secretMountPath)
 		if err != nil {
-			return nil, "", errors.Wrapf(err, "failed to add username and password to git URL")
+			return "", errors.Wrapf(err, "failed to add username and password to git URL")
 		}
 	} else {
 		if kube.IsInCluster() {
@@ -69,18 +86,9 @@ func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.Requir
 	// clone cluster repo to a temp dir and load the requirements
 	dir, err := gitclient.CloneToDir(g, gitURL, "")
 	if err != nil {
-		return nil, dir, errors.Wrapf(err, "failed to clone cluster git repo %s", gitURL)
+		return "", errors.Wrapf(err, "failed to clone cluster git repo %s", gitURL)
 	}
-
-	requirements, _, err := jxcore.LoadRequirementsConfig(dir, false)
-	if err != nil {
-		return nil, dir, errors.Wrapf(err, "failed to find requirements from git clone in directory %s", dir)
-	}
-
-	if &requirements.Spec == nil {
-		return nil, dir, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
-	}
-	return &requirements.Spec, dir, nil
+	return dir, nil
 }
 
 // AddUserPasswordToURLFromDir loads the username and password files from the given directory and adds them to the URL if they are found
