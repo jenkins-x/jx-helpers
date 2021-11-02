@@ -13,14 +13,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	info = termcolor.ColorInfo
-)
+var info = termcolor.ColorInfo
 
 // EnsureUserAndEmailSetup returns the user name and email for the gitter
 // lazily setting them if they are blank either from the given values or if they are empty
 // using environment variables `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` or using default values
-func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, gitUserEmail string) (string, string, error) {
+func EnsureUserAndEmailSetup(gitter Interface, dir, gitUserName, gitUserEmail string) (string, string, error) {
 	userName, _ := gitter.Command(dir, "config", "--get", "user.name")
 	userEmail, _ := gitter.Command(dir, "config", "--get", "user.email")
 	if userName == "" {
@@ -60,7 +58,7 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 
 // SetUserAndEmail sets the user and email if they have not been set
 // Uses environment variables `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL`
-func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEmail string, assumeInCluster bool) (string, string, error) {
+func SetUserAndEmail(gitter Interface, dir, gitUserName, gitUserEmail string, assumeInCluster bool) (string, string, error) {
 	userName := ""
 	userEmail := ""
 	if assumeInCluster || kube.IsInCluster() {

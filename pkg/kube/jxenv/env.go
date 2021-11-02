@@ -20,8 +20,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-var useForkForEnvGitRepo = false
-
 // ResolveChartMuseumURLFn used to resolve the chart repository URL if using remote environments
 type ResolveChartMuseumURLFn func() (string, error)
 
@@ -60,7 +58,8 @@ func GetEnvironmentNames(jxClient versioned.Interface, ns string) ([]string, err
 		return envNames, err
 	}
 	SortEnvironments(envs.Items)
-	for _, env := range envs.Items {
+	for k := range envs.Items {
+		env := envs.Items[k]
 		n := env.Name
 		if n != "" {
 			envNames = append(envNames, n)
@@ -82,8 +81,8 @@ func GetFilteredEnvironmentNames(jxClient versioned.Interface, ns string, fn fun
 		return envNames, err
 	}
 	SortEnvironments(envs.Items)
-	for _, e := range envs.Items {
-		env := e
+	for k := range envs.Items {
+		env := envs.Items[k]
 		n := env.Name
 		if n != "" && fn(&env) {
 			envNames = append(envNames, n)
@@ -103,7 +102,8 @@ func GetOrderedEnvironments(jxClient versioned.Interface, ns string) (map[string
 		return m, envNames, err
 	}
 	SortEnvironments(envs.Items)
-	for _, env := range envs.Items {
+	for k := range envs.Items {
+		env := envs.Items[k]
 		n := env.Name
 		c := env
 		m[n] = &c
@@ -123,7 +123,8 @@ func GetEnvironments(jxClient versioned.Interface, ns string) (map[string]*v1.En
 	if err != nil {
 		return m, envNames, err
 	}
-	for _, env := range envs.Items {
+	for k := range envs.Items {
+		env := envs.Items[k]
 		n := env.Name
 		c := env
 		m[n] = &c
@@ -136,12 +137,13 @@ func GetEnvironments(jxClient versioned.Interface, ns string) (map[string]*v1.En
 }
 
 // GetEnvironment find an environment by name
-func GetEnvironment(jxClient versioned.Interface, ns string, name string) (*v1.Environment, error) {
+func GetEnvironment(jxClient versioned.Interface, ns, name string) (*v1.Environment, error) {
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
-	for _, env := range envs.Items {
+	for k := range envs.Items {
+		env := envs.Items[k]
 		if env.GetName() == name {
 			return &env, nil
 		}
@@ -150,12 +152,13 @@ func GetEnvironment(jxClient versioned.Interface, ns string, name string) (*v1.E
 }
 
 // GetEnvironmentsByPrURL find an environment by a pull request URL
-func GetEnvironmentsByPrURL(jxClient versioned.Interface, ns string, prURL string) (*v1.Environment, error) {
+func GetEnvironmentsByPrURL(jxClient versioned.Interface, ns, prURL string) (*v1.Environment, error) {
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
-	for _, env := range envs.Items {
+	for k := range envs.Items {
+		env := envs.Items[k]
 		if env.Spec.PullRequestURL == prURL {
 			return &env, nil
 		}
@@ -185,7 +188,8 @@ func GetEditEnvironmentNamespace(jxClient versioned.Interface, ns string) (strin
 	if err != nil {
 		return "", err
 	}
-	for _, env := range envs.Items {
+	for k := range envs.Items {
+		env := envs.Items[k]
 		if env.Spec.Kind == v1.EnvironmentKindTypeEdit && env.Spec.PreviewGitSpec.User.Username == u.Username {
 			return env.Spec.Namespace, nil
 		}
@@ -222,7 +226,8 @@ func GetTeams(kubeClient kubernetes.Interface) ([]*corev1.Namespace, []string, e
 	if err != nil {
 		return answer, names, err
 	}
-	for idx, namespace := range namespaceList.Items {
+	for idx := range namespaceList.Items {
+		namespace := namespaceList.Items[idx]
 		if namespace.Labels[kube.LabelEnvironment] == kube.LabelValueDevEnvironment {
 			answer = append(answer, &namespaceList.Items[idx])
 			names = append(names, namespace.Name)
@@ -293,7 +298,7 @@ func NewPermanentEnvironment(name string) *v1.Environment {
 }
 
 // NewPermanentEnvironment creates a new permanent environment for testing
-func NewPermanentEnvironmentWithGit(name string, gitUrl string) *v1.Environment {
+func NewPermanentEnvironmentWithGit(name, gitUrl string) *v1.Environment {
 	env := NewPermanentEnvironment(name)
 	env.Spec.Source.URL = gitUrl
 	env.Spec.Source.Ref = "master"
@@ -320,7 +325,7 @@ func NewPreviewEnvironment(name string) *v1.Environment {
 // If the Dev Environment cannot be found, returns nil Environment (rather than an error). A non-nil error is only
 // returned if there is an error fetching the Dev Environment.
 func GetDevEnvironment(jxClient versioned.Interface, ns string) (*v1.Environment, error) {
-	//Find the settings for the team
+	// Find the settings for the team
 	environmentInterface := jxClient.JenkinsV1().Environments(ns)
 	name := kube.LabelValueDevEnvironment
 	answer, err := environmentInterface.Get(context.TODO(), name, metav1.GetOptions{})

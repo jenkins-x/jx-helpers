@@ -34,7 +34,7 @@ func NewInputFrom(in terminal.FileReader, out terminal.FileWriter, err io.Writer
 }
 
 // PickPassword gets a password (via hidden input) from a user's free-form input
-func (c *client) PickPassword(message string, help string) (string, error) {
+func (c *client) PickPassword(message, help string) (string, error) {
 	answer := ""
 	prompt := &survey.Password{
 		Message: message,
@@ -50,7 +50,7 @@ func (c *client) PickPassword(message string, help string) (string, error) {
 }
 
 // PickValue gets an answer to a prompt from a user's free-form input
-func (c *client) PickValue(message string, defaultValue string, required bool, help string) (string, error) {
+func (c *client) PickValue(message, defaultValue string, required bool, help string) (string, error) {
 	validator := survey.Required
 	if !required {
 		validator = nil
@@ -59,7 +59,7 @@ func (c *client) PickValue(message string, defaultValue string, required bool, h
 }
 
 // PickValidValue gets an answer to a prompt from a user's free-form input with a given validator
-func (c *client) PickValidValue(message string, defaultValue string, validator func(val interface{}) error, help string) (string, error) {
+func (c *client) PickValidValue(message, defaultValue string, validator func(val interface{}) error, help string) (string, error) {
 	answer := ""
 	prompt := &survey.Input{
 		Message: message,
@@ -75,7 +75,7 @@ func (c *client) PickValidValue(message string, defaultValue string, validator f
 }
 
 // PickNameWithDefault gets the user to pick an option from a list of options, with a default option specified
-func (c *client) PickNameWithDefault(names []string, message string, defaultValue string, help string) (string, error) {
+func (c *client) PickNameWithDefault(names []string, message, defaultValue, help string) (string, error) {
 	name := ""
 	if len(names) == 0 {
 		return "", nil
@@ -97,15 +97,15 @@ func (c *client) PickNameWithDefault(names []string, message string, defaultValu
 }
 
 // SelectNamesWithFilter selects from a list of names with a given filter. Optionally selecting them all
-func (c *client) SelectNamesWithFilter(names []string, message string, selectAll bool, filter string, help string) ([]string, error) {
+func (c *client) SelectNamesWithFilter(names []string, message string, selectAll bool, filter, help string) ([]string, error) {
 	var filtered []string
 	for _, name := range names {
-		if filter == "" || strings.Index(name, filter) >= 0 {
+		if filter == "" || strings.Contains(name, filter) {
 			filtered = append(filtered, name)
 		}
 	}
 	if len(filtered) == 0 {
-		return nil, fmt.Errorf("No names match filter: %s", filter)
+		return nil, fmt.Errorf("no names match filter: %s", filter)
 	}
 	return c.SelectNames(filtered, message, selectAll, help)
 }
@@ -114,7 +114,7 @@ func (c *client) SelectNamesWithFilter(names []string, message string, selectAll
 func (c *client) SelectNames(names []string, message string, selectAll bool, help string) ([]string, error) {
 	var answer []string
 	if len(names) == 0 {
-		return answer, fmt.Errorf("No names to choose from")
+		return answer, fmt.Errorf("no names to choose from")
 	}
 	sort.Strings(names)
 

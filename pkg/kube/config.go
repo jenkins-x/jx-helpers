@@ -87,7 +87,7 @@ func CertificateAuthorityData(config *api.Config, context *api.Context) []byte {
 }
 
 // UpdateConfig defines new config entries for jx
-func UpdateConfig(namespace string, server string, caData string, user string, token string) error {
+func UpdateConfig(namespace, server, caData, user, token string) error {
 	config, po, err := LoadConfig()
 	if err != nil {
 		return errors.Wrap(err, "loading existing config")
@@ -119,7 +119,7 @@ func UpdateConfig(namespace string, server string, caData string, user string, t
 }
 
 // AddUserToConfig adds the given user to the config
-func AddUserToConfig(user string, token string, config *api.Config) (*api.Config, error) {
+func AddUserToConfig(user, token string, config *api.Config) (*api.Config, error) {
 	currentClusterName, currentCluster := CurrentCluster(config)
 	if currentCluster == nil || currentClusterName == "" {
 		return config, errors.New("no cluster found in config")
@@ -152,11 +152,11 @@ func AddUserToConfig(user string, token string, config *api.Config) (*api.Config
 func LoadConfig() (*api.Config, *clientcmd.PathOptions, error) {
 	po := clientcmd.NewDefaultPathOptions()
 	if po == nil {
-		return nil, po, fmt.Errorf("Could not find any default path options for the kubeconfig file usually found at ~/.kube/config")
+		return nil, po, fmt.Errorf("could not find any default path options for the kubeconfig file usually found at ~/.kube/config")
 	}
 	config, err := po.GetStartingConfig()
 	if err != nil {
-		return nil, po, fmt.Errorf("Could not load the kube config file %s due to %s", po.GetDefaultFilename(), err)
+		return nil, po, fmt.Errorf("could not load the kube config file %s due to %s", po.GetDefaultFilename(), err)
 	}
 	return config, po, err
 }

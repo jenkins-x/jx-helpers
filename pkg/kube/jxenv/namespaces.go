@@ -101,14 +101,15 @@ func GetEnrichedDevEnvironment(kubeClient kubernetes.Interface, jxClient version
 }
 
 // EnsureEditEnvironmentSetup ensures that the Environment is created in the given namespace
-func EnsureEditEnvironmentSetup(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, username string) (*v1.Environment, error) {
+func EnsureEditEnvironmentSetup(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns, username string) (*v1.Environment, error) {
 	// lets ensure there is a dev Environment setup so that we can easily switch between all the environments
 	envList, err := jxClient.JenkinsV1().Environments(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	if envList != nil {
-		for _, e := range envList.Items {
+		for k := range envList.Items {
+			e := envList.Items[k]
 			if e.Spec.Kind == v1.EnvironmentKindTypeEdit && e.Spec.PreviewGitSpec.User.Username == username {
 				return &e, nil
 			}
@@ -181,7 +182,7 @@ func EnsureEditEnvironmentSetup(kubeClient kubernetes.Interface, jxClient versio
 }
 
 // Ensure that the namespace exists for the given name
-func EnsureNamespaceCreated(kubeClient kubernetes.Interface, name string, labels map[string]string, annotations map[string]string) error {
+func EnsureNamespaceCreated(kubeClient kubernetes.Interface, name string, labels, annotations map[string]string) error {
 	n, err := kubeClient.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
 	if err == nil {
 		// lets check if we have the labels setup
@@ -192,26 +193,25 @@ func EnsureNamespaceCreated(kubeClient kubernetes.Interface, name string, labels
 			n.Labels = map[string]string{}
 		}
 		changed := false
-		if labels != nil {
-			for k, v := range labels {
-				if n.Labels[k] != v {
-					n.Labels[k] = v
-					changed = true
-				}
+
+		for k, v := range labels {
+			if n.Labels[k] != v {
+				n.Labels[k] = v
+				changed = true
 			}
 		}
-		if annotations != nil {
-			for k, v := range annotations {
-				if n.Annotations[k] != v {
-					n.Annotations[k] = v
-					changed = true
-				}
+
+		for k, v := range annotations {
+			if n.Annotations[k] != v {
+				n.Annotations[k] = v
+				changed = true
 			}
 		}
+
 		if changed {
 			_, err = kubeClient.CoreV1().Namespaces().Update(context.TODO(), n, metav1.UpdateOptions{})
 			if err != nil {
-				return fmt.Errorf("Failed to label Namespace %s %s", name, err)
+				return fmt.Errorf("failed to label Namespace %s %s", name, err)
 			}
 		}
 		return nil

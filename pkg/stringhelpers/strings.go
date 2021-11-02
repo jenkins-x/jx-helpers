@@ -12,11 +12,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-//DisallowedLabelCharacters regex of chars not allowed in lables
+// DisallowedLabelCharacters regex of chars not allowed in lables
 var DisallowedLabelCharacters = regexp.MustCompile("[^a-z0-9-]")
 
 // RegexpSplit splits a string into an array using the regexSep as a separator
-func RegexpSplit(text string, regexSeperator string) []string {
+func RegexpSplit(text, regexSeperator string) []string {
 	reg := regexp.MustCompile(regexSeperator)
 	indexes := reg.FindAllStringIndex(text, -1)
 	lastIdx := 0
@@ -30,7 +30,7 @@ func RegexpSplit(text string, regexSeperator string) []string {
 }
 
 // StringIndexes returns all the indices where the value occurs in the given string
-func StringIndexes(text string, value string) []int {
+func StringIndexes(text, value string) []int {
 	answer := []int{}
 	t := text
 	valueLen := len(value)
@@ -68,7 +68,7 @@ func StringArrayHasPrefixIndex(array []string, prefix string) int {
 }
 
 // StringArraysEqual returns true if the two string slices are equal
-func StringArraysEqual(a1 []string, a2 []string) bool {
+func StringArraysEqual(a1, a2 []string) bool {
 	if len(a1) != len(a2) {
 		return false
 	}
@@ -82,13 +82,12 @@ func StringArraysEqual(a1 []string, a2 []string) bool {
 
 // FirstNotEmptyString returns the first non empty string or the empty string if none can be found
 func FirstNotEmptyString(values ...string) string {
-	if values != nil {
-		for _, v := range values {
-			if v != "" {
-				return v
-			}
+	for _, v := range values {
+		if v != "" {
+			return v
 		}
 	}
+
 	return ""
 }
 
@@ -118,9 +117,9 @@ func StringArrayToLower(values []string) []string {
 }
 
 // StringContainsAny returns true if the given text contains the includes/excludes lists
-func StringContainsAny(text string, includes []string, excludes []string) bool {
+func StringContainsAny(text string, includes, excludes []string) bool {
 	for _, x := range excludes {
-		if strings.Index(text, x) >= 0 {
+		if strings.Contains(text, x) {
 			return false
 		}
 	}
@@ -128,7 +127,7 @@ func StringContainsAny(text string, includes []string, excludes []string) bool {
 		return true
 	}
 	for _, inc := range includes {
-		if strings.Index(text, inc) >= 0 {
+		if strings.Contains(text, inc) {
 			return true
 		}
 	}
@@ -136,7 +135,7 @@ func StringContainsAny(text string, includes []string, excludes []string) bool {
 }
 
 // StringMatchesAny returns true if the given text matches the includes/excludes lists
-func StringMatchesAny(text string, includes []string, excludes []string) bool {
+func StringMatchesAny(text string, includes, excludes []string) bool {
 	for _, x := range excludes {
 		if StringMatchesPattern(text, x) {
 			return false
@@ -154,7 +153,7 @@ func StringMatchesAny(text string, includes []string, excludes []string) bool {
 }
 
 // StringMatchesPattern returns true if the given text matches the includes/excludes lists
-func StringMatchesPattern(text string, pattern string) bool {
+func StringMatchesPattern(text, pattern string) bool {
 	if pattern == "*" {
 		return true
 	}
@@ -193,7 +192,7 @@ func RandStringBytesMaskImprSrc(n int) (string, error) {
 
 // DiffSlices compares the two slices and returns an array of items to delete from the old slice and a slice of
 // new values to add to
-func DiffSlices(oldSlice []string, newSlice []string) ([]string, []string) {
+func DiffSlices(oldSlice, newSlice []string) ([]string, []string) {
 	toDelete := []string{}
 	toInsert := []string{}
 

@@ -55,7 +55,7 @@ func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.Requir
 		return nil, dir, errors.Wrapf(err, "failed to find requirements from git clone in directory %s", dir)
 	}
 
-	if &requirements.Spec == nil {
+	if requirements.Spec.IsEmpty() {
 		return nil, dir, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
 	}
 	return &requirements.Spec, dir, nil
@@ -125,7 +125,8 @@ func loadFile(path string) (string, error) {
 // EnvironmentGitURL looks up the environment configuration based on environment name and returns the git URL
 // or an empty string if the environment does not have an owner or repository configured
 func EnvironmentGitURL(c *jxcore.RequirementsConfig, name string) string {
-	for _, env := range c.Environments {
+	for k := range c.Environments {
+		env := c.Environments[k]
 		if env.Key == name {
 			if env.GitURL != "" {
 				return env.GitURL

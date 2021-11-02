@@ -154,5 +154,5 @@ func HttpCloneURL(repo *GitRepository, kind string) string {
 		return stringhelpers.UrlJoin(host, "scm", repo.Organisation, repo.Name) + ".git"
 
 	}
-	return repo.HttpsURL() + ".git"
+	return repo.HTTPSURL() + ".git"
 }

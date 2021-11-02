@@ -65,8 +65,10 @@ type PromoteStepActivityKey struct {
 	ApplicationURL string
 }
 
-type PromotePullRequestFn func(*v1.PipelineActivity, *v1.PipelineActivityStep, *v1.PromoteActivityStep, *v1.PromotePullRequestStep) error
-type PromoteUpdateFn func(*v1.PipelineActivity, *v1.PipelineActivityStep, *v1.PromoteActivityStep, *v1.PromoteUpdateStep) error
+type (
+	PromotePullRequestFn func(*v1.PipelineActivity, *v1.PipelineActivityStep, *v1.PromoteActivityStep, *v1.PromotePullRequestStep) error
+	PromoteUpdateFn      func(*v1.PipelineActivity, *v1.PipelineActivityStep, *v1.PromoteActivityStep, *v1.PromoteUpdateStep) error
+)
 
 type PipelineDetails struct {
 	GitOwner      string
@@ -93,16 +95,16 @@ func NewPipelineIDFromString(id string) PipelineID {
 	sanitisedName = strings.Replace(sanitisedName, "_", "-", -1)
 	pID := PipelineID{
 		ID: id,
-		//TODO: disabling the encoding of the name, as it doesn't work for some upper case values. Upshot is conflicts on org/repo/branch that differ only in case.
-		//See https://github.com/jenkins-x/jx/issues/2551
-		//Name: util.EncodeKubernetesName(strings.Replace(id, "/", "-", -1)),
+		// TODO: disabling the encoding of the name, as it doesn't work for some upper case values. Upshot is conflicts on org/repo/branch that differ only in case.
+		// See https://github.com/jenkins-x/jx/issues/2551
+		// Name: util.EncodeKubernetesName(strings.Replace(id, "/", "-", -1)),
 		Name: sanitisedName,
 	}
 	return pID
 }
 
 // NewPipelineID creates a new PipelineID for a given owner, repository, and branch.
-func NewPipelineID(owner string, repository string, branch string) PipelineID {
+func NewPipelineID(owner, repository, branch string) PipelineID {
 	return NewPipelineIDFromString(fmt.Sprintf("%s/%s/%s", owner, repository, branch))
 }
 
@@ -215,7 +217,7 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 	}
 
 	if k.isBatchBuild() {
-		//If it's bigger than 1, it can only be a batch build
+		// If it's bigger than 1, it can only be a batch build
 		err = k.addBatchBuildData(activitiesClient, a)
 		if err != nil {
 			return defaultActivity, create, errors.Wrap(err, "there was a problem adding batch build data")
@@ -267,12 +269,13 @@ func (k *PipelineActivityKey) reconcileBatchBuildIndividualPR(activitiesClient t
 		return errors.Wrapf(err, "error parsing the current build number for PipelineActivity %s", currentActivity.Name)
 	}
 
-	//It only makes sense to look for the build before this one
+	// It only makes sense to look for the build before this one
 	previousBuildNumber := currentBuildNumber - 1
-	for _, v := range activities.Items {
+	for k := range activities.Items {
+		v := activities.Items[k]
 		if v.Spec.BatchPipelineActivity.BatchBuildNumber != "" {
 			if buildNumber, err := strconv.Atoi(v.Spec.Build); err == nil {
-				//Check if it's the previous build, then we can update the PRs and the batch build
+				// Check if it's the previous build, then we can update the PRs and the batch build
 				if previousBuildNumber == buildNumber {
 					log.Logger().Infof("Found an earlier PipelineActivity for %s and equal lastCommitSha with batch information", currentActivity.Labels[v1.LabelBranch])
 					currentActivity.Spec.BatchPipelineActivity.BatchBuildNumber = v.Spec.BatchPipelineActivity.BatchBuildNumber
@@ -286,7 +289,7 @@ func (k *PipelineActivityKey) reconcileBatchBuildIndividualPR(activitiesClient t
 }
 
 func (k *PipelineActivityKey) findMatchingPipelineActivitiesWithSameCommitSHA(activitiesClient typev1.PipelineActivityInterface, currentActivity *v1.PipelineActivity) (*v1.PipelineActivityList, error) {
-	//Create a selector for other runs of this PR with the same last commit SHA
+	// Create a selector for other runs of this PR with the same last commit SHA
 	lastCommitSHARequirement, err := labels.NewRequirement("lastCommitSha", selection.In, []string{currentActivity.Labels[v1.LabelLastCommitSha]})
 	if err != nil {
 		return nil, err
@@ -346,7 +349,7 @@ func updateBatchBuildComprisingPRs(activitiesClient typev1.PipelineActivityInter
 func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.PipelineActivityInterface, currentActivity *v1.PipelineActivity) error {
 	var prInfos []v1.PullRequestInfo
 	for prNumber, sha := range k.PullRefs {
-		//Get the build number of the PR based on the SHA
+		// Get the build number of the PR based on the SHA
 		listOptions := metav1.ListOptions{}
 		selector := fmt.Sprintf("lastCommitSha in (%s), branch in (PR-%s)", sha, prNumber)
 		listOptions.LabelSelector = selector
@@ -358,10 +361,11 @@ func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.Pipeline
 		// Only proceed if there are existing PipelineActivitys for this commit/branch - it's entirely possible they've
 		// all been GCed since they last ran. If there are none, just continue to the next commit/branch.
 		if len(list.Items) > 0 {
-			//Select the first one as the latest build for this SHA, then iterate the rest
+			// Select the first one as the latest build for this SHA, then iterate the rest
 			selectedPipeline := list.Items[0]
 			list.Items = list.Items[1:]
-			for _, i := range list.Items {
+			for k := range list.Items {
+				i := list.Items[k]
 				if i.Spec.Build != "" && selectedPipeline.Spec.Build != "" {
 					ib, err := strconv.Atoi(i.Spec.Build)
 					if err != nil {
@@ -377,7 +381,7 @@ func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.Pipeline
 				}
 			}
 
-			//Update the selected PR's PipelineActivity with the batch info
+			// Update the selected PR's PipelineActivity with the batch info
 			selectedPipeline.Spec.BatchPipelineActivity = v1.BatchPipelineActivity{
 				BatchBranchName:  currentActivity.Labels[v1.LabelBranch],
 				BatchBuildNumber: k.Build,
@@ -387,7 +391,7 @@ func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.Pipeline
 			if err != nil {
 				return errors.Wrap(err, "there was a problem updating the PR's PipelineActivity")
 			}
-			//Add this PR's PipelineActivity info to the pull requests array of the batch build's PipelineActivity
+			// Add this PR's PipelineActivity info to the pull requests array of the batch build's PipelineActivity
 			prInfos = append(prInfos, v1.PullRequestInfo{
 				PullRequestNumber:        selectedPipeline.Labels[v1.LabelBranch],
 				LastBuildNumberForCommit: selectedPipeline.Spec.Build,
@@ -721,7 +725,7 @@ func (k *PromoteStepActivityKey) GetOrCreatePromoteUpdate(jxClient versioned.Int
 	return a, s, p, p.Update, created, err
 }
 
-//OnPromotePullRequest updates activities on a Promote PR
+// OnPromotePullRequest updates activities on a Promote PR
 func (k *PromoteStepActivityKey) OnPromotePullRequest(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, fn PromotePullRequestFn) error {
 	if !k.IsValid() {
 		return nil
@@ -752,7 +756,7 @@ func (k *PromoteStepActivityKey) OnPromotePullRequest(kubeClient kubernetes.Inte
 	return err
 }
 
-//OnPromoteUpdate updates activities on a Promote Update
+// OnPromoteUpdate updates activities on a Promote Update
 func (k *PromoteStepActivityKey) OnPromoteUpdate(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, fn PromoteUpdateFn) error {
 	if !k.IsValid() {
 		return nil
@@ -810,7 +814,8 @@ func ListSelectedPipelineActivities(activitiesClient typev1.PipelineActivityInte
 	}
 
 	var matchedItems []v1.PipelineActivity
-	for _, pipelineActivity := range pipelineActivityList.Items {
+	for k := range pipelineActivityList.Items {
+		pipelineActivity := pipelineActivityList.Items[k]
 		fieldMap, err := newFieldMap(pipelineActivity)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to convert struct to map")

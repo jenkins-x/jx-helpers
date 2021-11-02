@@ -125,7 +125,7 @@ func (a DepSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a DepSorter) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
 // SetAppVersion sets the version of the app to use
-func (r *Requirements) SetAppVersion(app string, version string, repository string, alias string) {
+func (r *Requirements) SetAppVersion(app, version, repository, alias string) {
 	if r.Dependencies == nil {
 		r.Dependencies = []*Dependency{}
 	}
@@ -180,9 +180,9 @@ func FindValuesFileName(dir string) (string, error) {
 }
 
 // FindValuesFileNameForChart returns the values.yaml file name for a given chart within the environment or the default if the chart name is empty
-func FindValuesFileNameForChart(dir string, chartName string) (string, error) {
-	//Chart name and file name are joined here to avoid hard coding the environment
-	//The chart name is ignored in the path if it's empty
+func FindValuesFileNameForChart(dir, chartName string) (string, error) {
+	// Chart name and file name are joined here to avoid hard coding the environment
+	// The chart name is ignored in the path if it's empty
 	return findFileName(dir, filepath.Join(chartName, ValuesFileName))
 }
 
@@ -191,7 +191,7 @@ func FindTemplatesDirName(dir string) (string, error) {
 	return findFileName(dir, TemplatesDirName)
 }
 
-func findFileName(dir string, fileName string) (string, error) {
+func findFileName(dir, fileName string) (string, error) {
 	names := []string{
 		filepath.Join(dir, DefaultEnvironmentChartDir, fileName),
 		filepath.Join(dir, fileName),
@@ -331,7 +331,7 @@ func LoadChart(data []byte) (*chart.Metadata, error) {
 // LoadValues loads the values from some data
 func LoadValues(data []byte) (map[string]interface{}, error) {
 	r := map[string]interface{}{}
-	if data == nil || len(data) == 0 {
+	if len(data) == 0 {
 		return r, nil
 	}
 	return r, yaml.Unmarshal(data, &r)
@@ -384,7 +384,7 @@ func ModifyChart(chartFile string, fn func(chart *chart.Metadata) error) error {
 }
 
 // SetChartVersion modifies the given chart file to update the version
-func SetChartVersion(chartFile string, version string) error {
+func SetChartVersion(chartFile, version string) error {
 	callback := func(chart *chart.Metadata) error {
 		chart.Version = version
 		return nil
@@ -772,7 +772,6 @@ func unknownZeroValue(value string) string {
 		return "unknown"
 	}
 	return value
-
 }
 
 // SetValuesToMap converts the set of values of the form "foo.bar=123" into a helm values.yaml map structure
@@ -787,7 +786,6 @@ func SetValuesToMap(setValues []string) map[string]interface{} {
 			// lets assume false is a boolean
 			if value == "false" {
 				maps.SetMapValueViaPath(answer, path, false)
-
 			} else {
 				maps.SetMapValueViaPath(answer, path, value)
 			}
@@ -884,7 +882,7 @@ func RenderReleasesAsTable(releases map[string]ReleaseSummary, sortedKeys []stri
 }
 
 // UpdateRequirementsToNewVersion update dependencies with name to newVersion, returning the oldVersions
-func UpdateRequirementsToNewVersion(requirements *Requirements, name string, newVersion string) []string {
+func UpdateRequirementsToNewVersion(requirements *Requirements, name, newVersion string) []string {
 	answer := make([]string, 0)
 	for _, dependency := range requirements.Dependencies {
 		if dependency.Name == name {
@@ -897,7 +895,7 @@ func UpdateRequirementsToNewVersion(requirements *Requirements, name string, new
 
 // UpdateImagesInValuesToNewVersion update a (values) file, replacing that start with "Image: <name>:" to "Image: <name>:<newVersion>",
 // returning the oldVersions
-func UpdateImagesInValuesToNewVersion(data []byte, name string, newVersion string) ([]byte, []string) {
+func UpdateImagesInValuesToNewVersion(data []byte, name, newVersion string) ([]byte, []string) {
 	oldVersions := make([]string, 0)
 	var answer strings.Builder
 	linePrefix := fmt.Sprintf("Image: %s:", name)

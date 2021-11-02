@@ -66,7 +66,7 @@ const (
 	ChartVaultOperator              = "jenkins-x/vault-operator"
 	DefaultVaultOperatorReleaseName = "vault-operator"
 
-	//ChartExternalDNS the default chart for external-dns
+	// ChartExternalDNS the default chart for external-dns
 	ChartOwnerExternalDNS         = "bitnami"
 	ChartURLExternalDNS           = "https://charts.bitnami.com/bitnami"
 	ChartExternalDNS              = "bitnami/external-dns"
@@ -277,7 +277,7 @@ const (
 	AnnotationIngress = "fabric8.io/ingress.annotations"
 
 	// AnnotationExposePort indicates to the exposecontroller which service port to expose
-	//in case a service has multiple prots
+	// in case a service has multiple prots
 	AnnotationExposePort = "fabric8.io/exposePort"
 
 	// AnnotationName indicates a service/server's textual name (can be mixed case, contain spaces unlike Kubernetes resources)

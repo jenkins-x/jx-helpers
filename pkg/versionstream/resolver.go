@@ -36,8 +36,8 @@ func (v *VersionResolver) ResolveGitVersion(gitURL string) (string, error) {
 	if answer == "" && v.WarnOnMissingVersion {
 		log.Logger().Warnf("could not find a stable version for git repository: %s in %s", gitURL, v.VersionsDir)
 		log.Logger().Warn("for background see: https://jenkins-x.io/docs/concepts/version-stream/")
-		//path := GitURLToName(gitURL)
-		//log.Logger().Infof("please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k git -n %s -v 1.2.3", path)))
+		// path := GitURLToName(gitURL)
+		// log.Logger().Infof("please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k git -n %s -v 1.2.3", path)))
 	}
 	return answer, nil
 }
@@ -60,7 +60,7 @@ func (v *VersionResolver) VerifyPackages(packages map[string]string) error {
 }
 
 // VerifyPackage verifies the package is of a sufficient version
-func (v *VersionResolver) VerifyPackage(name string, currentVersion string) error {
+func (v *VersionResolver) VerifyPackage(name, currentVersion string) error {
 	data, err := LoadStableVersion(v.VersionsDir, KindPackage, name)
 	if err != nil {
 		return err

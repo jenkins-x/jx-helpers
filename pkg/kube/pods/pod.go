@@ -65,10 +65,7 @@ func IsPodCompleted(pod *v1.Pod) bool {
 // IsPodSucceeded returns true if a pod is succeeded
 func IsPodSucceeded(pod *v1.Pod) bool {
 	phase := pod.Status.Phase
-	if phase == v1.PodSucceeded {
-		return true
-	}
-	return false
+	return phase == v1.PodSucceeded
 }
 
 // IsPodFailed returns true if a pod is failed
@@ -79,7 +76,8 @@ func IsPodFailed(pod *v1.Pod) bool {
 	case v1.PodFailed:
 		return true
 	case v1.PodRunning:
-		for _, c := range pod.Status.ContainerStatuses {
+		for k := range pod.Status.ContainerStatuses {
+			c := pod.Status.ContainerStatuses[k]
 			if c.State.Running != nil {
 				continue
 			}
@@ -153,7 +151,6 @@ func GetCurrentPod(kubeClient kubernetes.Interface, ns string) (*v1.Pod, error) 
 
 // WaitForPod waits for a pod filtered by `optionsModifier` that match `condition`
 func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier func(options *metav1.ListOptions), timeout time.Duration, condition PodPredicate) (*v1.Pod, error) {
-
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
 
 	lw := &cache.ListWatch{
@@ -212,20 +209,20 @@ func HasContainerStarted(pod *v1.Pod, idx int) bool {
 }
 
 // WaitForPodNameToBeRunning waits for the pod with the given name to be running
-func WaitForPodNameToBeRunning(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
+func WaitForPodNameToBeRunning(client kubernetes.Interface, namespace, name string, timeout time.Duration) error {
 	return WaitforPodNameCondition(client, namespace, name, timeout, IsPodRunning)
 }
 
 // WaitForPodNameToBeReady waits for the pod with the given name to become ready
-func WaitForPodNameToBeReady(client kubernetes.Interface, namespace string, name string, timeout time.Duration) error {
+func WaitForPodNameToBeReady(client kubernetes.Interface, namespace, name string, timeout time.Duration) error {
 	return WaitforPodNameCondition(client, namespace, name, timeout, IsPodReady)
 }
 
 // WaitforPodNameCondition waits for the given pod name to match the given condition function
-func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name string, timeout time.Duration, condition PodPredicate) error {
+func WaitforPodNameCondition(client kubernetes.Interface, namespace, name string, timeout time.Duration, condition PodPredicate) error {
 	optionsModifier := func(options *metav1.ListOptions) {
 		// TODO
-		//options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
+		// options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
 		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", name).String()
 	}
 	_, err := WaitForPod(client, namespace, optionsModifier, timeout, condition)
@@ -236,7 +233,7 @@ func WaitforPodNameCondition(client kubernetes.Interface, namespace string, name
 // it also has the side effect of logging the following
 // * the logs of a pod that is detected as failed
 // * the status of the pod
-func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, selector string, timeout time.Duration) (*corev1.Pod, error) {
+func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace, selector string, timeout time.Duration) (*corev1.Pod, error) {
 	// lets check if its already ready
 	optionsModifier := func(options *metav1.ListOptions) {
 		options.LabelSelector = selector
@@ -265,7 +262,7 @@ func WaitForPodSelectorToBeReady(client kubernetes.Interface, namespace string, 
 }
 
 // GetReadyPodForSelector returns the first ready pod for the given selector or nil
-func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selector string) (*corev1.Pod, error) {
+func GetReadyPodForSelector(client kubernetes.Interface, namespace, selector string) (*corev1.Pod, error) {
 	// lets check if its already ready
 	opts := metav1.ListOptions{
 		LabelSelector: selector,
@@ -289,7 +286,7 @@ func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selec
 }
 
 // GetRunningPodForSelector returns the first pod running for the given selector or nil
-func GetRunningPodForSelector(client kubernetes.Interface, namespace string, selector string) (*corev1.Pod, error) {
+func GetRunningPodForSelector(client kubernetes.Interface, namespace, selector string) (*corev1.Pod, error) {
 	// lets check if its already ready
 	opts := metav1.ListOptions{
 		LabelSelector: selector,
@@ -317,21 +314,21 @@ func WaitForPodNameToBeComplete(client kubernetes.Interface, namespace string, n
 	timeout time.Duration) error {
 	optionsModifier := func(options *metav1.ListOptions) {
 		// TODO
-		//options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
+		// options.FieldSelector = fields.OneTermEqualSelector(api.ObjectNameField, name).String()
 		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", name).String()
 	}
 	_, err := WaitForPod(client, namespace, optionsModifier, timeout, IsPodCompleted)
 	return err
 }
 
-func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]string, error) {
+func GetPodNames(client kubernetes.Interface, ns, filter string) ([]string, error) {
 	var names []string
 	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return names, fmt.Errorf("Failed to load Pods %s", err)
+		return names, fmt.Errorf("failed to load Pods %s", err)
 	}
-	for _, d := range list.Items {
-		name := d.Name
+	for k := range list.Items {
+		name := list.Items[k].Name
 		if filter == "" || strings.Contains(name, filter) {
 			names = append(names, name)
 		}
@@ -340,17 +337,17 @@ func GetPodNames(client kubernetes.Interface, ns string, filter string) ([]strin
 	return names, nil
 }
 
-func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, map[string]*v1.Pod, error) {
+func GetPods(client kubernetes.Interface, ns, filter string) ([]string, map[string]*v1.Pod, error) {
 	var names []string
 	m := map[string]*v1.Pod{}
 	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return names, m, fmt.Errorf("Failed to load Pods %s", err)
+		return names, m, fmt.Errorf("failed to load Pods %s", err)
 	}
-	for _, d := range list.Items {
-		c := d
+	for k := range list.Items {
+		d := list.Items[k]
 		name := d.Name
-		m[name] = &c
+		m[name] = &d
 		if filter == "" || strings.Contains(name, filter) && d.DeletionTimestamp == nil {
 			names = append(names, name)
 		}
@@ -359,19 +356,19 @@ func GetPods(client kubernetes.Interface, ns string, filter string) ([]string, m
 	return names, m, nil
 }
 
-func GetPodsWithLabels(client kubernetes.Interface, ns string, selector string) ([]string, map[string]*v1.Pod, error) {
+func GetPodsWithLabels(client kubernetes.Interface, ns, selector string) ([]string, map[string]*v1.Pod, error) {
 	var names []string
 	m := map[string]*v1.Pod{}
 	list, err := client.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: selector,
 	})
 	if err != nil {
-		return names, m, fmt.Errorf("Failed to load Pods %s", err)
+		return names, m, fmt.Errorf("failed to load Pods %s", err)
 	}
-	for _, d := range list.Items {
-		c := d
+	for k := range list.Items {
+		d := list.Items[k]
 		name := d.Name
-		m[name] = &c
+		m[name] = &d
 		if d.DeletionTimestamp == nil {
 			names = append(names, name)
 		}
@@ -387,8 +384,8 @@ func GetPodRestarts(pod *v1.Pod) int32 {
 	if len(statuses) == 0 {
 		return restarts
 	}
-	for _, status := range statuses {
-		restarts += status.RestartCount
+	for k := range statuses {
+		restarts += statuses[k].RestartCount
 	}
 	return restarts
 }
@@ -415,10 +412,10 @@ func GetContainersWithStatusAndIsInit(pod *v1.Pod) ([]v1.Container, []v1.Contain
 	}
 
 	var sortedStatuses []v1.ContainerStatus
-	for _, c := range allContainers {
-		for _, cs := range statuses {
-			if cs.Name == c.Name {
-				sortedStatuses = append(sortedStatuses, cs)
+	for k := range allContainers {
+		for i := range statuses {
+			if statuses[i].Name == allContainers[k].Name {
+				sortedStatuses = append(sortedStatuses, statuses[i])
 				break
 			}
 		}

@@ -27,7 +27,7 @@ type Command struct {
 }
 
 // NewCommand helper to create a new command
-func NewCommand(dir string, name string, args ...string) *Command {
+func NewCommand(dir, name string, args ...string) *Command {
 	return &Command{
 		Dir:  dir,
 		Name: name,
@@ -113,7 +113,7 @@ func (c *Command) CurrentEnv() map[string]string {
 }
 
 // SetEnvVariable sets an environment variable into the environment
-func (c *Command) SetEnvVariable(name string, value string) {
+func (c *Command) SetEnvVariable(name, value string) {
 	if c.Env == nil {
 		c.Env = map[string]string{}
 	}
@@ -127,18 +127,12 @@ func (c *Command) Attempts() int {
 
 // DidError returns a boolean if any error occurred in any execution of the command
 func (c *Command) DidError() bool {
-	if len(c.Errors) > 0 {
-		return true
-	}
-	return false
+	return len(c.Errors) > 0
 }
 
 // DidFail returns a boolean if the command could not complete (errored on every attempt)
 func (c *Command) DidFail() bool {
-	if len(c.Errors) == c.attempts {
-		return true
-	}
-	return false
+	return len(c.Errors) == c.attempts
 }
 
 // Error returns the last error

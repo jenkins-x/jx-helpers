@@ -12,7 +12,7 @@ const (
 	ALIGN_RIGHT  = 2
 )
 
-func Pad(s, pad string, width int, align int) string {
+func Pad(s, pad string, width, align int) string {
 	switch align {
 	case ALIGN_CENTER:
 		return PadCenter(s, pad, width)

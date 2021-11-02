@@ -11,16 +11,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/httphelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 )
 
-var githubClient *scm.Client
-
 // Download a file from the given URL
-func DownloadFile(url string, filepath string, verbose bool) error {
+func DownloadFile(url, filepath string, verbose bool) error {
 	if verbose {
 		log.Logger().Infof("Downloading %s to %s...", termcolor.ColorInfo(url), termcolor.ColorInfo(filepath))
 	}
@@ -121,7 +118,7 @@ func UnTargzAll(tarball, target string) error {
 	reader, err := gzip.NewReader(zreader)
 	defer reader.Close()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	tarReader := tar.NewReader(reader)

@@ -47,10 +47,10 @@ func GetServices(client kubernetes.Interface, ns string) (map[string]*v1.Service
 	if err != nil {
 		return answer, fmt.Errorf("failed to load Services %s", err)
 	}
-	for _, r := range list.Items {
+	for k := range list.Items {
+		r := list.Items[k]
 		name := r.Name
-		c := r
-		answer[name] = &c
+		answer[name] = &r
 	}
 	return answer, nil
 }
@@ -62,7 +62,8 @@ func GetServicesByName(client kubernetes.Interface, ns string, services []string
 	if err != nil {
 		return answer, errors.Wrapf(err, "listing the services in namespace %q", ns)
 	}
-	for _, s := range svcList.Items {
+	for k := range svcList.Items {
+		s := svcList.Items[k]
 		i := stringhelpers.StringArrayIndex(services, s.GetName())
 		if i > 0 {
 			c := s
@@ -72,14 +73,14 @@ func GetServicesByName(client kubernetes.Interface, ns string, services []string
 	return answer, nil
 }
 
-func GetServiceNames(client kubernetes.Interface, ns string, filter string) ([]string, error) {
+func GetServiceNames(client kubernetes.Interface, ns, filter string) ([]string, error) {
 	var names []string
 	list, err := client.CoreV1().Services(ns).List(context.TODO(), meta_v1.ListOptions{})
 	if err != nil {
 		return names, fmt.Errorf("failed to load Services %s", err)
 	}
-	for _, r := range list.Items {
-		name := r.Name
+	for k := range list.Items {
+		name := list.Items[k].Name
 		if filter == "" || strings.Contains(name, filter) {
 			names = append(names, name)
 		}
@@ -92,7 +93,7 @@ func GetServiceURLFromMap(services map[string]*v1.Service, name string) string {
 	return GetServiceURL(services[name])
 }
 
-func FindServiceURL(client kubernetes.Interface, namespace string, name string) (string, error) {
+func FindServiceURL(client kubernetes.Interface, namespace, name string) (string, error) {
 	log.Logger().Debugf("Finding service url for %s in namespace %s", name, namespace)
 	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
@@ -131,7 +132,7 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 	return url, nil
 }
 
-func FindIngressURL(client kubernetes.Interface, namespace string, name string) (string, error) {
+func FindIngressURL(client kubernetes.Interface, namespace, name string) (string, error) {
 	log.Logger().Debugf("Finding ingress url for %s in namespace %s", name, namespace)
 	// lets try find the service via Ingress
 	ing, err := client.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
@@ -220,7 +221,7 @@ func IngressProtocol(ing *nv1.Ingress) string {
 	return "https"
 }
 
-func FindServiceHostname(client kubernetes.Interface, namespace string, name string) (string, error) {
+func FindServiceHostname(client kubernetes.Interface, namespace, name string) (string, error) {
 	// lets try find the service via Ingress
 	ing, err := client.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if ing != nil && err == nil {
@@ -248,13 +249,13 @@ func FindService(client kubernetes.Interface, name string) (*v1.Service, error) 
 	if err != nil {
 		return nil, err
 	}
-	for _, ns := range nsl.Items {
-		svc, err := client.CoreV1().Services(ns.GetName()).Get(context.TODO(), name, meta_v1.GetOptions{})
+	for k := range nsl.Items {
+		svc, err := client.CoreV1().Services(nsl.Items[k].GetName()).Get(context.TODO(), name, meta_v1.GetOptions{})
 		if err == nil {
 			return svc, nil
 		}
 	}
-	return nil, errors.New("Service not found!")
+	return nil, errors.New("service not found")
 }
 
 // GetServiceURL returns the
@@ -290,7 +291,7 @@ func GetServiceURL(svc *v1.Service) string {
 }
 
 // FindServiceSchemePort parses the service definition and interprets http scheme in the absence of an external ingress
-func FindServiceSchemePort(client kubernetes.Interface, namespace string, name string) (string, string, error) {
+func FindServiceSchemePort(client kubernetes.Interface, namespace, name string) (string, string, error) {
 	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
 		return "", "", errors.Wrapf(err, "failed to find service %s in namespace %s", name, namespace)
@@ -309,7 +310,8 @@ func FindServiceURLs(client kubernetes.Interface, namespace string) ([]ServiceUR
 	if err != nil {
 		return urls, err
 	}
-	for _, svc := range svcs.Items {
+	for k := range svcs.Items {
+		svc := svcs.Items[k]
 		url := GetServiceURL(&svc)
 		if url == "" {
 			url, _ = FindServiceURL(client, namespace, svc.Name)
@@ -408,7 +410,7 @@ func CreateServiceLink(client kubernetes.Interface, currentNamespace, targetName
 	return nil
 }
 
-func DeleteService(client *kubernetes.Clientset, namespace string, serviceName string) error {
+func DeleteService(client *kubernetes.Clientset, namespace, serviceName string) error {
 	return client.CoreV1().Services(namespace).Delete(context.TODO(), serviceName, meta_v1.DeleteOptions{})
 }
 
@@ -483,10 +485,10 @@ func AnnotateServicesWithCertManagerIssuer(c kubernetes.Interface, ns, issuer st
 			}
 		}
 		if s.Annotations[ExposeAnnotation] == "true" && s.Annotations[JenkinsXSkipTLSAnnotation] != "true" {
-			existingAnnotations, _ := s.Annotations[ExposeIngressAnnotation]
+			existingAnnotations := s.Annotations[ExposeIngressAnnotation]
 			// if no existing `fabric8.io/ingress.annotations` initialise and add else update with ClusterIssuer
 			certManagerAnnotation := CertManagerAnnotation
-			if clusterIssuer == true {
+			if clusterIssuer {
 				certManagerAnnotation = CertManagerClusterAnnotation
 			}
 			if len(existingAnnotations) > 0 {

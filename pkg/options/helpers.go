@@ -23,7 +23,7 @@ var (
 	ErrExit = fmt.Errorf("exit")
 )
 
-func InvalidOption(name string, value string, values []string) error {
+func InvalidOption(name, value string, values []string) error {
 	suggestions := SuggestionsFor(value, values, DefaultSuggestionsMinimumDistance)
 	if len(suggestions) > 0 {
 		if len(suggestions) == 1 {
@@ -51,7 +51,7 @@ func InvalidArgError(value string, err error) error {
 	return InvalidArgf(value, "%s", err)
 }
 
-func InvalidArgf(value string, message string, a ...interface{}) error {
+func InvalidArgf(value, message string, a ...interface{}) error {
 	text := fmt.Sprintf(message, a...)
 	return fmt.Errorf("Invalid argument: %s\n%s", termcolor.ColorInfo(value), text)
 }
@@ -147,13 +147,12 @@ func ld(s, t string, ignoreCase bool) int {
 				d[i][j] = min + 1
 			}
 		}
-
 	}
 	return d[len(s)][len(t)]
 }
 
 // ArgumentsOptionValue returns the argument
-func ArgumentsOptionValue(args []string, flag string, option string) string {
+func ArgumentsOptionValue(args []string, flag, option string) string {
 	flags := []string{"--" + option, "-" + flag}
 	for i := 0; i < len(args); i++ {
 		arg := args[i]

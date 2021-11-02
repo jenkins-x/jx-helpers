@@ -21,7 +21,7 @@ func IsDebugLog() bool {
 }
 
 // AssertYamlFilesEqual validates YAML file names without worrying about ordering of keys
-func AssertYamlFilesEqual(t *testing.T, expectedFile string, actualFile string, message string, args ...interface{}) {
+func AssertYamlFilesEqual(t *testing.T, expectedFile, actualFile, message string, args ...interface{}) {
 	suffix := fmt.Sprintf(message, args...)
 
 	require.FileExists(t, expectedFile, "expected file for %s", suffix)
@@ -37,7 +37,7 @@ func AssertYamlFilesEqual(t *testing.T, expectedFile string, actualFile string, 
 }
 
 // AssertYamlEqual validates YAML without worrying about ordering of keys
-func AssertYamlEqual(t *testing.T, expected string, actual string, message string, args ...interface{}) {
+func AssertYamlEqual(t *testing.T, expected, actual, message string, args ...interface{}) {
 	expectedMap := map[string]interface{}{}
 	actualMap := map[string]interface{}{}
 
@@ -53,7 +53,7 @@ func AssertYamlEqual(t *testing.T, expected string, actual string, message strin
 }
 
 // AssertTextFilesEqual asserts that the expected file matches the actual file contents
-func AssertTextFilesEqual(t *testing.T, expected string, actual string, message string) {
+func AssertTextFilesEqual(t *testing.T, expected, actual, message string) {
 	require.FileExists(t, expected, "expected file for %s", message)
 	require.FileExists(t, actual, "actual file for %s", message)
 

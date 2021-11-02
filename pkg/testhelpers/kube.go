@@ -14,7 +14,7 @@ import (
 )
 
 // AssertLabel asserts the object has the given label value
-func AssertLabel(t *testing.T, label string, expected string, objectMeta metav1.ObjectMeta, kindMessage string) {
+func AssertLabel(t *testing.T, label, expected string, objectMeta metav1.ObjectMeta, kindMessage string) {
 	message := ObjectNameMessage(objectMeta, kindMessage)
 	labels := objectMeta.Labels
 	require.NotNil(t, labels, "no labels for %s", message)
@@ -63,7 +63,7 @@ func RequireSecretExists(t *testing.T, client kubernetes.Interface, ns, name str
 }
 
 // AssertSecretEntryEquals asserts the Secret resource has the given value
-func AssertSecretEntryEquals(t *testing.T, secret *corev1.Secret, key string, expected string, kindMessage string) string {
+func AssertSecretEntryEquals(t *testing.T, secret *corev1.Secret, key, expected, kindMessage string) string {
 	require.NotNil(t, secret, "Secret is nil for %s", kindMessage)
 	name := secret.Name
 	require.NotEmpty(t, secret.Data, "Data is empty in Secret %s for %s", name, kindMessage)
@@ -77,7 +77,7 @@ func AssertSecretEntryEquals(t *testing.T, secret *corev1.Secret, key string, ex
 }
 
 // AssertConfigMapEntryEquals asserts the ConfigMap resource has the given data value
-func AssertConfigMapEntryEquals(t *testing.T, resource *corev1.ConfigMap, key string, expected string, kindMessage string) string {
+func AssertConfigMapEntryEquals(t *testing.T, resource *corev1.ConfigMap, key, expected, kindMessage string) string {
 	require.NotNil(t, resource, "ConfigMap is nil for %s", kindMessage)
 	name := resource.Name
 	require.NotEmpty(t, resource.Data, "Data is empty in ConfigMap %s for %s", name, kindMessage)
@@ -89,7 +89,7 @@ func AssertConfigMapEntryEquals(t *testing.T, resource *corev1.ConfigMap, key st
 }
 
 // AssertConfigMapData asserts the ConfigMap resource has the given data value
-func AssertConfigMapHasEntry(t *testing.T, resource *corev1.ConfigMap, key string, kindMessage string) string {
+func AssertConfigMapHasEntry(t *testing.T, resource *corev1.ConfigMap, key, kindMessage string) string {
 	require.NotNil(t, resource, "ConfigMap is nil for %s", kindMessage)
 	name := resource.Name
 	require.NotEmpty(t, resource.Data, "Data is empty in ConfigMap %s for %s", name, kindMessage)

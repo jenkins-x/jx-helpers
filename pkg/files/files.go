@@ -88,7 +88,7 @@ func IsEmpty(name string) (bool, error) {
 
 // CreateUniqueDirectory creates a new directory but if the combination of dir and name exists
 // then append a number until a unique name is found
-func CreateUniqueDirectory(dir string, name string, maximumAttempts int) (string, error) {
+func CreateUniqueDirectory(dir, name string, maximumAttempts int) (string, error) {
 	for i := 0; i < maximumAttempts; i++ {
 		n := name
 		if i > 0 {
@@ -107,10 +107,10 @@ func CreateUniqueDirectory(dir string, name string, maximumAttempts int) (string
 			return p, nil
 		}
 	}
-	return "", fmt.Errorf("Could not create a unique file in %s starting with %s after %d attempts", dir, name, maximumAttempts)
+	return "", fmt.Errorf("could not create a unique file in %s starting with %s after %d attempts", dir, name, maximumAttempts)
 }
 
-func RenameDir(src string, dst string, force bool) (err error) {
+func RenameDir(src, dst string, force bool) (err error) {
 	err = CopyDir(src, dst, force)
 	if err != nil {
 		return errors.Wrapf(err, "failed to copy source dir %s to %s", src, dst)
@@ -122,7 +122,7 @@ func RenameDir(src string, dst string, force bool) (err error) {
 	return nil
 }
 
-func RenameFile(src string, dst string) (err error) {
+func RenameFile(src, dst string) (err error) {
 	if src == dst {
 		return nil
 	}
@@ -138,7 +138,7 @@ func RenameFile(src string, dst string) (err error) {
 }
 
 // CopyFileOrDir copies the source file or directory to the given destination
-func CopyFileOrDir(src string, dst string, force bool) (err error) {
+func CopyFileOrDir(src, dst string, force bool) (err error) {
 	fi, err := os.Stat(src)
 	if err != nil {
 		return errors.Wrapf(err, "getting details of file '%s'", src)
@@ -150,7 +150,7 @@ func CopyFileOrDir(src string, dst string, force bool) (err error) {
 }
 
 // credit https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
-func CopyDir(src string, dst string, force bool) (err error) {
+func CopyDir(src, dst string, force bool) (err error) {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
@@ -250,7 +250,7 @@ func CopyFile(src, dst string) (err error) {
 }
 
 // CopyDirPreserve copies from the src dir to the dst dir if the file does NOT already exist in dst
-func CopyDirPreserve(src string, dst string) error {
+func CopyDirPreserve(src, dst string) error {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
@@ -305,7 +305,7 @@ func CopyDirPreserve(src string, dst string) error {
 }
 
 // CopyDirOverwrite copies from the source dir to the destination dir overwriting files along the way
-func CopyDirOverwrite(src string, dst string) (err error) {
+func CopyDirOverwrite(src, dst string) (err error) {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
@@ -425,7 +425,7 @@ func DeleteDirContents(dir string) error {
 	return nil
 }
 
-func DeleteDirContentsExcept(dir string, exceptDir string) error {
+func DeleteDirContentsExcept(dir, exceptDir string) error {
 	files, err := filepath.Glob(filepath.Join(dir, "*"))
 	if err != nil {
 		return err
@@ -518,12 +518,11 @@ func ListDirectory(root string, recurse bool) error {
 		log.Logger().Infof("%v %d %s %s", info.Mode().String(), info.Size(), info.ModTime().Format(time.RFC822), info.Name())
 		return nil
 	})
-
 }
 
 // GlobAllFiles performs a glob on the pattern and then processes all the files found.
 // if a folder matches the glob its treated as another glob to recurse into the directory
-func GlobAllFiles(basedir string, pattern string, fn func(string) error) error {
+func GlobAllFiles(basedir, pattern string, fn func(string) error) error {
 	names, err := filepath.Glob(pattern)
 	if err != nil {
 		return errors.Wrapf(err, "failed to evaluate glob pattern '%s'", pattern)

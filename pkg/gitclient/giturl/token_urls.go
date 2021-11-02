@@ -10,15 +10,15 @@ import (
 )
 
 // PrintCreateRepositoryGenerateAccessToken prints the access token URL of a Git repository
-func PrintCreateRepositoryGenerateAccessToken(kind string, serverURL string, username string, o io.Writer) {
-	tokenUrl := ProviderAccessTokenURL(kind, serverURL, username)
+func PrintCreateRepositoryGenerateAccessToken(kind, serverURL, username string, o io.Writer) {
+	tokenURL := ProviderAccessTokenURL(kind, serverURL, username)
 
 	fmt.Fprintf(o, "To work with git provider %s we need an API Token\n", serverURL)
-	fmt.Fprintf(o, "Please click this URL and generate a token \n%s\n\n", termcolor.ColorInfo(tokenUrl))
+	fmt.Fprintf(o, "Please click this URL and generate a token \n%s\n\n", termcolor.ColorInfo(tokenURL))
 	fmt.Fprint(o, "Then COPY the token and enter it below:\n\n")
 }
 
-func ProviderAccessTokenURL(kind string, url string, username string) string {
+func ProviderAccessTokenURL(kind, url, username string) string {
 	switch kind {
 	case KindBitBucketCloud:
 		// TODO pass in the username
@@ -34,7 +34,7 @@ func ProviderAccessTokenURL(kind string, url string, username string) string {
 	}
 }
 
-func BitBucketCloudAccessTokenURL(url string, username string) string {
+func BitBucketCloudAccessTokenURL(url, username string) string {
 	// TODO with github we can default the scopes/flags we need on a token via adding
 	// ?scopes=repo,read:user,user:email,write:repo_hook
 	//
@@ -62,9 +62,8 @@ func GitlabAccessTokenURL(url string) string {
 }
 
 func GitHubAccessTokenURL(url string) string {
-	if strings.Index(url, "://") < 0 {
+	if strings.Contains(url, "://") {
 		url = "https://" + url
 	}
 	return stringhelpers.UrlJoin(url, "/settings/tokens/new?scopes=repo,read:user,read:org,user:email,admin:repo_hook,delete_repo,write:packages,read:packages,write:discussion,workflow")
-
 }

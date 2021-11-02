@@ -17,9 +17,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	splitDescribeRegex = regexp.MustCompile(`(?:~|\^|-g)`)
-)
+var splitDescribeRegex = regexp.MustCompile(`(?:~|\^|-g)`)
 
 // Init inits a git repository into the given directory
 func Init(g Interface, dir string) error {
@@ -77,7 +75,7 @@ func CreateBranch(gitter Interface, dir string) (string, error) {
 }
 
 // CreateBranchFrom creates a new branch called branchName from startPoint
-func CreateBranchFrom(g Interface, dir string, branchName string, startPoint string) error {
+func CreateBranchFrom(g Interface, dir, branchName, startPoint string) error {
 	_, err := g.Command(dir, "branch", branchName, startPoint)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create branch %s from %s", branchName, startPoint)
@@ -86,7 +84,7 @@ func CreateBranchFrom(g Interface, dir string, branchName string, startPoint str
 }
 
 // SetUpstreamTo will set the given branch to track the origin branch with the same name
-func SetUpstreamTo(g Interface, dir string, branch string) error {
+func SetUpstreamTo(g Interface, dir, branch string) error {
 	upstream := fmt.Sprintf("origin/%s", branch)
 	_, err := g.Command(dir, "branch", "--set-upstream-to", upstream, branch)
 	if err != nil {
@@ -96,7 +94,7 @@ func SetUpstreamTo(g Interface, dir string, branch string) error {
 }
 
 // RefIsBranch looks for remove branches in ORIGIN for the provided directory and returns true if ref is found
-func RefIsBranch(gitter Interface, dir string, ref string) (bool, error) {
+func RefIsBranch(gitter Interface, dir, ref string) (bool, error) {
 	remoteBranches, err := RemoteBranches(gitter, dir)
 	if err != nil {
 		return false, errors.Wrapf(err, "error getting remote branches to find provided ref %s", ref)
@@ -130,7 +128,7 @@ func RemoteBranches(gitter Interface, dir string) ([]string, error) {
 }
 
 // ShallowCloneBranch clones a single branch of the given git URL into the given directory
-func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) error {
+func ShallowCloneBranch(g Interface, gitURL, branch, dir string) error {
 	remoteName := "origin"
 	_, err := g.Command(dir, "init")
 	if err != nil {
@@ -181,7 +179,7 @@ func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) e
 }
 
 // AddRemote adds a remote repository at the given URL and with the given name
-func AddRemote(g Interface, dir string, name string, url string) error {
+func AddRemote(g Interface, dir, name, url string) error {
 	_, err := g.Command(dir, "remote", "add", name, url)
 	if err != nil {
 		_, err = g.Command(dir, "remote", "set-url", name, url)
@@ -193,7 +191,7 @@ func AddRemote(g Interface, dir string, name string, url string) error {
 }
 
 // Describe does a git describe of commitish, optionally adding the abbrev arg if not empty, falling back to just the commit ref if it's untagged
-func Describe(g Interface, dir string, contains bool, commitish string, abbrev string, fallback bool) (string, string, error) {
+func Describe(g Interface, dir string, contains bool, commitish, abbrev string, fallback bool) (string, string, error) {
 	args := []string{"describe", commitish}
 	if abbrev != "" {
 		args = append(args, fmt.Sprintf("--abbrev=%s", abbrev))
@@ -231,7 +229,7 @@ func HasChanges(g Interface, dir string) (bool, error) {
 }
 
 // HasFileChanged indicates if there are any changes to a file in the repository from the given directory
-func HasFileChanged(g Interface, dir string, fileName string) (bool, error) {
+func HasFileChanged(g Interface, dir, fileName string) (bool, error) {
 	text, err := g.Command(dir, "status", "-s", fileName)
 	if err != nil {
 		return false, err
@@ -241,7 +239,7 @@ func HasFileChanged(g Interface, dir string, fileName string) (bool, error) {
 }
 
 // CommiIfChanges does a commit if there are any changes in the repository at the given directory
-func CommitIfChanges(g Interface, dir string, message string) error {
+func CommitIfChanges(g Interface, dir, message string) error {
 	changed, err := HasChanges(g, dir)
 	if err != nil {
 		return err
@@ -358,13 +356,13 @@ func GetLatestCommitSha(g Interface, dir string) (string, error) {
 }
 
 // ForcePushBranch does a force push of the local branch into the remote branch of the repository at the given directory
-func ForcePushBranch(g Interface, dir string, localBranch string, remoteBranch string) error {
+func ForcePushBranch(g Interface, dir, localBranch, remoteBranch string) error {
 	fullBranch := fmt.Sprintf("%s:%s", localBranch, remoteBranch)
 	return Push(g, dir, "origin", true, fullBranch)
 }
 
 // Push pushes the changes from the repository at the given directory
-func Push(g Interface, dir string, remote string, force bool, refspec ...string) error {
+func Push(g Interface, dir, remote string, force bool, refspec ...string) error {
 	args := []string{"push", remote}
 	if force {
 		args = append(args, "--force")
@@ -383,7 +381,7 @@ func Branch(g Interface, dir string) (string, error) {
 }
 
 // CloneOrPull performs a clone if the directory is empty otherwise a pull
-func CloneOrPull(g Interface, url string, dir string) error {
+func CloneOrPull(g Interface, url, dir string) error {
 	empty, err := files.IsEmpty(dir)
 	if err != nil {
 		return err
@@ -397,7 +395,6 @@ func CloneOrPull(g Interface, url string, dir string) error {
 		return errors.Wrapf(err, "failed to clone %s to %s", url, dir)
 	}
 	return nil
-
 }
 
 // Pull performs a git pull
@@ -419,7 +416,7 @@ func FetchTags(g Interface, dir string) error {
 }
 
 // FetchRemoteTags fetches all the tags from a remote repository
-func FetchRemoteTags(g Interface, dir string, repo string) error {
+func FetchRemoteTags(g Interface, dir, repo string) error {
 	_, err := g.Command(dir, "fetch", repo, "--tags")
 	if err != nil {
 		return errors.Wrapf(err, "failed to fetch remote tags")
@@ -433,7 +430,7 @@ func Tags(g Interface, dir string) ([]string, error) {
 }
 
 // FilterTags returns all tags from the repository at the given directory that match the filter
-func FilterTags(g Interface, dir string, filter string) ([]string, error) {
+func FilterTags(g Interface, dir, filter string) ([]string, error) {
 	args := []string{"tag"}
 	if filter != "" {
 		args = append(args, "--list", filter)
@@ -452,12 +449,12 @@ func FilterTags(g Interface, dir string, filter string) ([]string, error) {
 }
 
 // FetchBranch fetches the refspecs from the repo
-func FetchBranch(g Interface, dir string, repo string, refspecs ...string) error {
+func FetchBranch(g Interface, dir, repo string, refspecs ...string) error {
 	return fetchBranch(g, dir, repo, false, false, false, refspecs...)
 }
 
 // FetchBranch fetches the refspecs from the repo
-func fetchBranch(g Interface, dir string, repo string, unshallow bool, shallow bool,
+func fetchBranch(g Interface, dir, repo string, unshallow bool, shallow bool,
 	verbose bool, refspecs ...string) error {
 	args := []string{"fetch", repo}
 	if shallow && unshallow {
@@ -469,9 +466,9 @@ func fetchBranch(g Interface, dir string, repo string, unshallow bool, shallow b
 	if unshallow {
 		args = append(args, "--unshallow")
 	}
-	for _, refspec := range refspecs {
-		args = append(args, refspec)
-	}
+
+	args = append(args, refspecs...)
+
 	_, err := g.Command(dir, args...)
 	if err != nil {
 		return errors.WithStack(err)
@@ -484,13 +481,12 @@ func fetchBranch(g Interface, dir string, repo string, unshallow bool, shallow b
 		} else {
 			log.Logger().Infof("ran git fetch %s --depth=1 %s in dir %s", repo, strings.Join(refspecs, " "), dir)
 		}
-
 	}
 	return nil
 }
 
 // Checkout checks out the given branch
-func Checkout(g Interface, dir string, branch string) error {
+func Checkout(g Interface, dir, branch string) error {
 	_, err := g.Command(dir, "checkout", branch)
 	if err != nil {
 		return errors.Wrapf(err, "failed to checkout %s", branch)
@@ -499,7 +495,7 @@ func Checkout(g Interface, dir string, branch string) error {
 }
 
 // CheckoutRemoteBranch checks out the given remote tracking branch
-func CheckoutRemoteBranch(g Interface, dir string, branch string) error {
+func CheckoutRemoteBranch(g Interface, dir, branch string) error {
 	remoteBranch := "origin/" + branch
 	remoteBranches, err := RemoteBranches(g, dir)
 	if err != nil {
@@ -557,7 +553,7 @@ func Status(g Interface, dir string) (string, error) {
 }
 
 // Merge merges the commitish into the current branch
-func Merge(g Interface, dir string, commitish string) error {
+func Merge(g Interface, dir, commitish string) error {
 	_, err := g.Command(dir, "merge", commitish)
 	if err != nil {
 		return errors.Wrapf(err, "failed to merge %s", commitish)

@@ -42,7 +42,7 @@ func trimQuery(path string) (string, string) {
 	return path[0:idx], path[idx+1:]
 }
 
-func combineQuery(q1 string, q2 string) string {
+func combineQuery(q1, q2 string) string {
 	if q1 == "" {
 		return q2
 	}

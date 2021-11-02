@@ -28,8 +28,7 @@ import (
 func TestGetPodConditionPodReady(t *testing.T) {
 	t.Parallel()
 
-	var condition v1.PodConditionType
-	condition = v1.PodReady
+	condition := v1.PodReady
 
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
@@ -118,8 +117,7 @@ func TestPodNotFailed(t *testing.T) {
 func TestGetPodConditionFailures(t *testing.T) {
 	t.Parallel()
 
-	var condition v1.PodConditionType
-	condition = v1.PodReady
+	condition := v1.PodReady
 
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
@@ -375,7 +373,6 @@ func TestWaitForPodSelectorToBeReady(t *testing.T) {
 		var lists uint64
 
 		client.PrependReactor("list", "*", func(action clienttesting.Action) (handled bool, ret runtime.Object, err error) {
-
 			l := lists
 			atomic.AddUint64(&lists, 1)
 
@@ -392,8 +389,7 @@ func TestWaitForPodSelectorToBeReady(t *testing.T) {
 		})
 
 		go func() {
-
-			// wait until the pod list has succeded
+			// wait until the pod list has succeeded
 			wg.Wait()
 
 			// create the pod that the tester is expecting
