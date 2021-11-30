@@ -111,13 +111,22 @@ func TestParseGitURL(t *testing.T) {
 			"git@github.com:bar/overview", "github.com", "bar", "overview",
 		},
 		{
-			"git@gitlab.com:bar/subgroup/foo", "gitlab.com", "bar", "foo",
+			"git@gitlab.com:bar/subgroup/foo", "gitlab.com", "bar", "subgroup/foo",
 		},
 		{
-			"https://gitlab.com/bar/subgroup/foo", "gitlab.com", "bar", "foo",
+			"git@gitlab.jx.com:bar/subgroup/foo", "gitlab.jx.com", "bar", "subgroup/foo",
 		},
 		{
-			"https://gitlab.com/bar/subgroup/overview", "gitlab.com", "bar", "overview",
+			"git@gitlab.jx.com:bar/baz/subgroup/foo", "gitlab.jx.com", "bar", "baz/subgroup/foo",
+		},
+		{
+			"https://gitlab.com/bar/subgroup/foo", "gitlab.com", "bar", "subgroup/foo",
+		},
+		{
+			"https://gitlab.com/bar/baz/subgroup/foo", "gitlab.com", "bar", "baz/subgroup/foo",
+		},
+		{
+			"https://gitlab.com/bar/subgroup/overview", "gitlab.com", "bar", "subgroup/overview",
 		},
 		{
 			"bar/foo", "github.com", "bar", "foo",
