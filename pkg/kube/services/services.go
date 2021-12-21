@@ -122,9 +122,9 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 		return "", errors.Wrapf(err, "getting ingress for service %q in namespace %s", name, namespace)
 	}
 	url := ""
-	if ing != nil {
-		url = IngressURL(ing)
-	}
+
+	url = IngressURL(ing)
+
 	if url == "" {
 		log.Logger().Debugf("Unable to find service url via ingress for %s in namespace %s", name, namespace)
 	}
@@ -149,39 +149,46 @@ func FindIngressURL(client kubernetes.Interface, namespace string, name string) 
 
 // IngressURL returns the URL for the ingres
 func IngressURL(ing *nv1.Ingress) string {
-	if ing != nil {
-		if len(ing.Spec.Rules) > 0 {
-			rule := ing.Spec.Rules[0]
-			hostname := rule.Host
-			for _, tls := range ing.Spec.TLS {
-				for _, h := range tls.Hosts {
-					if h != "" {
-						url := "https://" + h
-						log.Logger().Debugf("found service url %s", url)
-						return url
-					}
-				}
-			}
-			ann := ing.Annotations
-			if hostname == "" && ann != nil {
-				hostname = ann[kube.AnnotationHost]
-			}
-			if hostname != "" {
-				url := "http://" + hostname
-				if rule.HTTP != nil {
-					if len(rule.HTTP.Paths) > 0 {
-						p := rule.HTTP.Paths[0].Path
-						if p != "" {
-							url += p
-						}
-					}
-				}
+	if ing == nil {
+		log.Logger().Debug("Ingress is nil, returning empty string for url")
+		return ""
+	}
+	if len(ing.Spec.Rules) == 0 {
+		log.Logger().Debug("Ingress spec has no rules, returning empty string for url")
+		return ""
+	}
+
+	rule := ing.Spec.Rules[0]
+	for _, tls := range ing.Spec.TLS {
+		for _, h := range tls.Hosts {
+			if h != "" {
+				url := "https://" + h
 				log.Logger().Debugf("found service url %s", url)
 				return url
 			}
 		}
 	}
-	return ""
+	ann := ing.Annotations
+	hostname := rule.Host
+	if hostname == "" && ann != nil {
+		hostname = ann[kube.AnnotationHost]
+	}
+	if hostname == "" {
+		log.Logger().Debug("Could not find hostname from rule or ingress annotation")
+		return ""
+	}
+
+	url := "http://" + hostname
+	if rule.HTTP != nil {
+		if len(rule.HTTP.Paths) > 0 {
+			p := rule.HTTP.Paths[0].Path
+			if p != "" {
+				url += p
+			}
+		}
+	}
+	log.Logger().Debugf("found service url %s", url)
+	return url
 }
 
 // IngressHost returns the host for the ingres
@@ -319,13 +326,11 @@ func FindServiceURLs(client kubernetes.Interface, namespace string) ([]ServiceUR
 
 // WaitForExternalIP waits for the pods of a deployment to become ready
 func WaitForExternalIP(client kubernetes.Interface, name, namespace string, timeout time.Duration) error {
-
 	options := meta_v1.ListOptions{
 		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
 	}
 
 	w, err := client.CoreV1().Services(namespace).Watch(context.TODO(), options)
-
 	if err != nil {
 		return err
 	}
