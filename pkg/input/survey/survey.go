@@ -40,9 +40,8 @@ func (c *client) PickPassword(message string, help string) (string, error) {
 		Message: message,
 		Help:    help,
 	}
-	validator := survey.Required
 	surveyOpts := survey.WithStdio(c.in, c.out, c.err)
-	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
+	err := survey.AskOne(prompt, &answer, survey.WithValidator(survey.Required), surveyOpts)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +66,7 @@ func (c *client) PickValidValue(message string, defaultValue string, validator f
 		Help:    help,
 	}
 	surveyOpts := survey.WithStdio(c.in, c.out, c.err)
-	err := survey.AskOne(prompt, &answer, validator, surveyOpts)
+	err := survey.AskOne(prompt, &answer, survey.WithValidator(validator), surveyOpts)
 	if err != nil {
 		return "", err
 	}
