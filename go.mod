@@ -1,6 +1,7 @@
 module github.com/jenkins-x/jx-helpers/v3
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Azure/go-autorest/autorest v0.11.19 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.14 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0
@@ -22,7 +23,8 @@ require (
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/magiconair/properties v1.8.5
-	github.com/mattn/go-colorable v0.1.7 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.7.0
 	github.com/pkg/errors v0.9.1
@@ -33,7 +35,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
