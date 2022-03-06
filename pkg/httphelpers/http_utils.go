@@ -74,13 +74,16 @@ func getBoolFromEnv(key string, fallback bool) bool {
 }
 
 // CallWithExponentialBackOff make a http call with exponential backoff retry
-func CallWithExponentialBackOff(url string, auth string, httpMethod string, reqBody []byte, reqParams url.Values) ([]byte, error) {
+func CallWithExponentialBackOff(url, auth, httpMethod string, reqBody []byte, reqParams url.Values) ([]byte, error) {
 	log.Logger().Debugf("%sing %s to %s", httpMethod, reqBody, url)
 	var respBody []byte
 	resp := &http.Response{}
 	if url != "" && httpMethod != "" {
 		f := func() error {
 			req, err := http.NewRequest(httpMethod, url, bytes.NewBuffer(reqBody))
+			if err != nil {
+				return err
+			}
 			req.Header.Set("Content-Type", "application/json")
 			if !strings.Contains(url, "localhost") || !strings.Contains(url, "127.0.0.1") {
 				if strings.Count(auth, ":") == 1 {
@@ -104,7 +107,6 @@ func CallWithExponentialBackOff(url string, auth string, httpMethod string, reqB
 			if err != nil {
 				return backoff.Permanent(errors.Wrap(err, "parsing response body"))
 			}
-			resp.Body.Close()
 			return nil
 		}
 		exponentialBackOff := backoff.NewExponentialBackOff()

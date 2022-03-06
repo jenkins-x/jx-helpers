@@ -133,7 +133,7 @@ func ToValidValue(name string) string {
 	return answer
 }
 
-//EmailToK8sID converts the provided email address to a valid Kubernetes resource name, converting the @ to a .
+// EmailToK8sID converts the provided email address to a valid Kubernetes resource name, converting the @ to a .
 func EmailToK8sID(email string) string {
 	return ToValidNameWithDots(strings.Replace(email, "@", ".", -1))
 }

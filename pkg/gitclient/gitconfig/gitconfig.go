@@ -41,7 +41,7 @@ func GetRemoteUrl(config *gitcfg.Config, name string) string {
 func firstRemoteUrl(remote *gitcfg.RemoteConfig) string {
 	if remote != nil {
 		urls := remote.URLs
-		if urls != nil && len(urls) > 0 {
+		if len(urls) > 0 {
 			return urls[0]
 		}
 	}

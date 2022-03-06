@@ -16,16 +16,16 @@ func Marshal(value interface{}, out io.Writer, format string) error {
 		if err != nil {
 			return err
 		}
-		_, e := fmt.Fprintf(out, string(data))
+		_, e := fmt.Fprint(out, string(data))
 		return e
 	case "yaml":
 		data, err := yaml.Marshal(value)
 		if err != nil {
 			return err
 		}
-		_, e := fmt.Fprintf(out, string(data))
+		_, e := fmt.Fprint(out, string(data))
 		return e
 	default:
-		return fmt.Errorf("Unsupported output format: %s", format)
+		return fmt.Errorf("unsupported output format: %s", format)
 	}
 }

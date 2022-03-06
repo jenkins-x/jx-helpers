@@ -22,8 +22,8 @@ import (
 const (
 	XDG_CONFIG_HOME         = "XDG_CONFIG_HOME"
 	GIT_SECRET_MOUNT_PATH   = "GIT_SECRET_MOUNT_PATH"
-	GIT_SECRET_KEY_USER     = "GIT_SECRET_KEY_USER"
-	GIT_SECRET_KEY_PASSWORD = "GIT_SECRET_KEY_PASSWORD"
+	GIT_SECRET_KEY_USER     = "GIT_SECRET_KEY_USER"     //nolint:gosec
+	GIT_SECRET_KEY_PASSWORD = "GIT_SECRET_KEY_PASSWORD" //nolint:gosec
 	GIT_SECRET_SERVER       = "GIT_SECRET_SERVER"
 )
 
@@ -65,7 +65,7 @@ func CreateGitCredential(lines []string) (GitCredential, error) {
 }
 
 // CreateGitCredentialFromURL creates a CreateGitCredential instance from a URL and optional username and password.
-func CreateGitCredentialFromURL(gitURL string, username string, password string) (GitCredential, error) {
+func CreateGitCredentialFromURL(gitURL, username, password string) (GitCredential, error) {
 	var credential GitCredential
 
 	if gitURL == "" {
@@ -110,10 +110,10 @@ func (g *GitCredential) String() string {
 
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
-		answer = answer + fmt.Sprintf("%s=%v\n", strings.ToLower(typeOfT.Field(i).Name), field.Interface())
+		answer += fmt.Sprintf("%s=%v\n", strings.ToLower(typeOfT.Field(i).Name), field.Interface())
 	}
 
-	answer = answer + "\n"
+	answer += "\n"
 
 	return answer
 }
@@ -253,7 +253,6 @@ func getCredentialsFilename(xdgCongifHome string) (string, error) {
 }
 
 func parseGitSecretServerUrl(s string) (*url.URL, error) {
-
 	if s == "" {
 		return url.Parse("https://github.com")
 	}

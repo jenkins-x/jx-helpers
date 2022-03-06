@@ -169,7 +169,7 @@ func (t *templater) cmdGroupsString(c *cobra.Command) string {
 		for _, cmd := range cmdGroup.Commands {
 			if cmd.Runnable() {
 				path := t.groupPath(cmd)
-				//cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
+				// cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
 				cmds = append(cmds, "  "+table.PadRight(termcolor.ColorInfo(path), " ", maxLen)+" "+cmd.Short)
 			}
 		}
@@ -178,7 +178,7 @@ func (t *templater) cmdGroupsString(c *cobra.Command) string {
 	for _, cmdGroup := range pluginCommandGroups {
 		cmds := []string{cmdGroup.Message}
 		for _, cmd := range cmdGroup.Commands {
-			//cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
+			// cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
 			cmds = append(cmds, "  "+table.PadRight(termcolor.ColorInfo(cmd.SubCommand), " ", maxLen)+" "+fmt.Sprintf("%s (from plugin)", cmd.Description))
 		}
 		groups = append(groups, strings.Join(cmds, "\n"))
@@ -273,7 +273,7 @@ func appendIfNotPresent(s, stringToAppend string) string {
 	return s + " " + stringToAppend
 }
 
-func flagsNotIntersected(l *flag.FlagSet, r *flag.FlagSet) *flag.FlagSet {
+func flagsNotIntersected(l, r *flag.FlagSet) *flag.FlagSet {
 	f := flag.NewFlagSet("notIntersected", flag.ContinueOnError)
 	f.AddFlagSet(l)
 	r.VisitAll(func(flag *flag.Flag) {

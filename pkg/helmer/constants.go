@@ -24,7 +24,7 @@ const (
 	// DefaultEnvironmentChartDir is the default environment path where charts are stored
 	DefaultEnvironmentChartDir = "env"
 
-	//RepoVaultPath is the path to the repo credentials in Vault
+	// RepoVaultPath is the path to the repo credentials in Vault
 	RepoVaultPath = "helm/repos"
 
 	// JX3ChartRepository the default charts repo for the jx3 charts
@@ -51,15 +51,9 @@ const (
 	LabelAppName = "jenkins.io/app-name"
 	// LabelAppVersion stores the chart's app version
 	LabelAppVersion = "jenkins.io/app-version"
-
-	hookFailed    = "hook-failed"
-	hookSucceeded = "hook-succeeded"
-
-	// resourcesSeparator is used to separate multiple objects stored in the same YAML file
-	resourcesSeparator = "---"
 )
 
-//DefaultValuesTreeIgnores is the default set of ignored files for collapsing the values tree which are used if
+// DefaultValuesTreeIgnores is the default set of ignored files for collapsing the values tree which are used if
 // ignores is nil
 var DefaultValuesTreeIgnores = []string{
 	"templates/*",

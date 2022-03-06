@@ -2,7 +2,12 @@ package versionstream
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/blang/semver"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
@@ -11,12 +16,6 @@ import (
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
-
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 // Callback a callback function for processing version information. Return true to continue processing
@@ -78,7 +77,7 @@ type StableVersion struct {
 }
 
 // VerifyPackage verifies the current version of the package is valid
-func (data *StableVersion) VerifyPackage(name string, currentVersion string, workDir string, warnOnMissing bool) error {
+func (data *StableVersion) VerifyPackage(name, currentVersion, workDir string, warnOnMissing bool) error {
 	currentVersion = ConvertToVersion(currentVersion)
 	if currentVersion == "" {
 		return nil
@@ -86,7 +85,7 @@ func (data *StableVersion) VerifyPackage(name string, currentVersion string, wor
 	version := ConvertToVersion(data.Version)
 	if version == "" && warnOnMissing {
 		log.Logger().Warnf("could not find a stable package version for %s from %s\nFor background see: https://jenkins-x.io/docs/concepts/version-stream/", name, workDir)
-		//log.Logger().Infof("Please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k package -n %s", name)))
+		// log.Logger().Infof("Please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k package -n %s", name)))
 		return nil
 	}
 
@@ -226,7 +225,7 @@ func LoadStableVersionNumber(wrkDir string, kind VersionKind, name string, warnO
 		}
 		if warnOnMissing {
 			log.Logger().Warnf("could not find a stable version from %s of %s from %s\nFor background see: https://jenkins-x.io/docs/concepts/version-stream/", string(kind), name, wrkDir)
-			//log.Logger().Infof("Please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k %s -n %s", string(kind), name)))
+			// log.Logger().Infof("Please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k %s -n %s", string(kind), name)))
 		}
 	}
 	return version, err
@@ -284,7 +283,7 @@ func ResolveDockerImage(versionsDir, image string) (string, error) {
 	if info.Version == "" {
 		log.Logger().Warnf("could not find a stable version for Docker image: %s in %s", image, versionsDir)
 		log.Logger().Warn("for background see: https://jenkins-x.io/docs/concepts/version-stream/")
-		//log.Logger().Infof("please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k docker -n %s -v 1.2.3", image)))
+		// log.Logger().Infof("please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k docker -n %s -v 1.2.3", image)))
 		return image, nil
 	}
 	prefix := strings.TrimSuffix(strings.TrimSpace(image), ":")
@@ -292,7 +291,7 @@ func ResolveDockerImage(versionsDir, image string) (string, error) {
 }
 
 // UpdateStableVersionFiles applies an update to the stable version files matched by globPattern, updating to version
-func UpdateStableVersionFiles(globPattern string, version string, excludeFiles ...string) ([]string, error) {
+func UpdateStableVersionFiles(globPattern, version string, excludeFiles ...string) ([]string, error) {
 	matchingFiles, err := filepath.Glob(globPattern)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create glob from pattern %s", globPattern)
@@ -322,7 +321,7 @@ func UpdateStableVersionFiles(globPattern string, version string, excludeFiles .
 }
 
 // UpdateStableVersion applies an update to the stable version file in dir/kindStr/name.yml, updating to version
-func UpdateStableVersion(dir string, kindStr string, name string, version string) ([]string, error) {
+func UpdateStableVersion(dir, kindStr, name, version string) ([]string, error) {
 	answer := make([]string, 0)
 	kind := VersionKind(kindStr)
 	data, err := LoadStableVersion(dir, kind, name)
@@ -507,7 +506,7 @@ func (p *RepositoryPrefixes) URLsForPrefix(prefix string) []string {
 }
 
 // NameFromPath converts a path into a name for use with stable versions
-func NameFromPath(basepath string, path string) (string, error) {
+func NameFromPath(basepath, path string) (string, error) {
 	name, err := filepath.Rel(basepath, path)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to extract base path from %s", path)

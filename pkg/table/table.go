@@ -83,7 +83,7 @@ func (t *Table) GetColumnAlign(i int) int {
 }
 
 // SetColumnAlign sets the column alignment for the given column index
-func (t *Table) SetColumnAlign(i int, align int) {
+func (t *Table) SetColumnAlign(i, align int) {
 	t.ColumnAlign = ensureArrayCanContain(t.ColumnAlign, i)
 	t.ColumnAlign[i] = align
 }

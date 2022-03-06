@@ -22,7 +22,7 @@ type FakeInput struct {
 var _ input.Interface = &FakeInput{}
 
 // PickPassword gets a password (via hidden input) from a user's free-form input
-func (f *FakeInput) PickPassword(message string, help string) (string, error) {
+func (f *FakeInput) PickPassword(message, help string) (string, error) {
 	value := f.getValue(message)
 	if value == "" {
 		return "", errors.Errorf("missing fake value for message: %s", message)
@@ -31,7 +31,7 @@ func (f *FakeInput) PickPassword(message string, help string) (string, error) {
 }
 
 // PickValue picks a value
-func (f *FakeInput) PickValue(message string, defaultValue string, required bool, help string) (string, error) {
+func (f *FakeInput) PickValue(message, defaultValue string, required bool, help string) (string, error) {
 	value := f.getValue(message)
 	if value == "" {
 		value = defaultValue
@@ -40,12 +40,12 @@ func (f *FakeInput) PickValue(message string, defaultValue string, required bool
 }
 
 // PickValidValue gets an answer to a prompt from a user's free-form input with a given validator
-func (f *FakeInput) PickValidValue(message string, defaultValue string, validator func(val interface{}) error, help string) (string, error) {
+func (f *FakeInput) PickValidValue(message, defaultValue string, validator func(val interface{}) error, help string) (string, error) {
 	return f.PickValue(message, defaultValue, false, help)
 }
 
 // PickNameWithDefault picks a value
-func (f *FakeInput) PickNameWithDefault(names []string, message string, defaultValue string, help string) (string, error) {
+func (f *FakeInput) PickNameWithDefault(names []string, message, defaultValue, help string) (string, error) {
 	value := f.getValue(message)
 	if value == "" {
 		value = defaultValue
@@ -53,7 +53,7 @@ func (f *FakeInput) PickNameWithDefault(names []string, message string, defaultV
 	return value, nil
 }
 
-func (f *FakeInput) SelectNamesWithFilter(names []string, message string, selectAll bool, filter string, help string) ([]string, error) {
+func (f *FakeInput) SelectNamesWithFilter(names []string, message string, selectAll bool, filter, help string) ([]string, error) {
 	return f.SelectNames(names, message, false, help)
 }
 

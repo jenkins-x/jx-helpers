@@ -40,7 +40,7 @@ func (i *GitRepository) PullRequestURL(prName string) string {
 }
 
 // HttpURL returns the URL to browse this repository in a web browser
-func (i *GitRepository) HttpURL() string {
+func (i *GitRepository) HTTPURL() string {
 	host := i.Host
 	if !strings.Contains(host, ":/") {
 		host = "http://" + host
@@ -49,7 +49,7 @@ func (i *GitRepository) HttpURL() string {
 }
 
 // HttpsURL returns the URL to browse this repository in a web browser
-func (i *GitRepository) HttpsURL() string {
+func (i *GitRepository) HTTPSURL() string {
 	host := i.Host
 	if !strings.Contains(host, ":/") {
 		host = "https://" + host

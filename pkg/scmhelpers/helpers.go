@@ -82,14 +82,14 @@ func DiscoverGitKind(jxClient versioned.Interface, namespace, gitServerURL strin
 	if err != nil && apierrors.IsNotFound(err) {
 		return gitKind, errors.Wrapf(err, "failed to list SourceRepository resources in namespace %s", namespace)
 	}
-	for _, sr := range resources.Items {
-		ss := &sr.Spec
+	for k := range resources.Items {
+		ss := &resources.Items[k].Spec
 		if strings.TrimSuffix(ss.Provider, "/") == gitServerURL {
 			if ss.ProviderKind != "" {
 				gitKind = ss.ProviderKind
 				return gitKind, nil
 			}
-			log.Logger().Warnf("no gitKind for SourceRepository %s", sr.Name)
+			log.Logger().Warnf("no gitKind for SourceRepository %s", resources.Items[k].Name)
 		}
 	}
 	log.Logger().Warnf("no gitKind could be found for provider %s", gitServerURL)

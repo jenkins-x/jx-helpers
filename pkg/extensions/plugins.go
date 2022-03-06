@@ -318,8 +318,9 @@ func ValidatePlugins(jxClient jxClient.Interface, ns string) error {
 	if err != nil {
 		return err
 	}
-	seenSubCommands := make(map[string][]jxCore.Plugin, 0)
-	for _, plugin := range plugins.Items {
+	seenSubCommands := make(map[string][]jxCore.Plugin)
+	for k := range plugins.Items {
+		plugin := plugins.Items[k]
 		if _, ok := seenSubCommands[plugin.Spec.SubCommand]; !ok {
 			seenSubCommands[plugin.Spec.SubCommand] = make([]jxCore.Plugin, 0)
 		}
@@ -328,8 +329,8 @@ func ValidatePlugins(jxClient jxClient.Interface, ns string) error {
 	for subCommand, ps := range seenSubCommands {
 		if len(ps) > 1 {
 			log.Logger().Warnf("More than one extension has installed a plugin which will be called for jx %s. These extensions are:", termcolor.ColorWarning(subCommand))
-			for _, p := range ps {
-				for _, o := range p.ObjectMeta.OwnerReferences {
+			for k := range ps {
+				for _, o := range ps[k].ObjectMeta.OwnerReferences {
 					if o.Kind == "Extension" {
 						log.Logger().Warnf("  %s", termcolor.ColorWarning(o.Name))
 					}
@@ -337,7 +338,6 @@ func ValidatePlugins(jxClient jxClient.Interface, ns string) error {
 			}
 			log.Logger().Warnf("\nUnpredictable behavior will occur. Contact the extension authors and ask them to resolve the conflict.")
 		}
-
 	}
 	return nil
 }

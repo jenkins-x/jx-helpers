@@ -38,10 +38,9 @@ func (o *retryOptions) run(command *cobra.Command, fn func(error) bool) {
 	}
 }
 
-//RetryOnErrorCommand accepts an existing cobra Command with an optional function to determine which errors constitute
-//ones which will cause the command to be reattempted
+// RetryOnErrorCommand accepts an existing cobra Command with an optional function to determine which errors constitute
+// ones which will cause the command to be reattempted
 func RetryOnErrorCommand(command *cobra.Command, fn func(error) bool) *cobra.Command {
-
 	o := retryOptions{}
 	cmd := &cobra.Command{
 		Use:     command.Use,
@@ -62,8 +61,8 @@ func RetryOnErrorCommand(command *cobra.Command, fn func(error) bool) *cobra.Com
 	return cmd
 }
 
-//RegexRetryFunction uses a list of supplied regexes and returns a function that will accept an error and return true if
-//if the error matches against any supplied regexes
+// RegexRetryFunction uses a list of supplied regexes and returns a function that will accept an error and return true if
+// if the error matches against any supplied regexes
 func RegexRetryFunction(retryErrorRegexes []string) func(error) bool {
 	return func(e error) bool {
 		for _, retriableErr := range retryErrorRegexes {

@@ -79,7 +79,7 @@ func (h *GitCredentialsHelper) Get() error {
 
 	answer := h.Fill(gitCredential)
 
-	_, err = fmt.Fprintf(h.out, answer.String())
+	_, err = fmt.Fprint(h.out, answer.String())
 	if err != nil {
 		return errors.Wrap(err, "unable to write response to stdin")
 	}

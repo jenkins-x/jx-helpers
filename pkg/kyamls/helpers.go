@@ -56,7 +56,7 @@ func GetLabels(node *yaml.RNode, path string) (map[string]string, error) {
 	return m, nil
 }
 
-/// GetStringField returns the given field from the node or returns a blank string if the field cannot be found
+// GetStringField returns the given field from the node or returns a blank string if the field cannot be found
 func GetStringField(node *yaml.RNode, path string, fields ...string) string {
 	answer := ""
 	valueNode, err := node.Pipe(yaml.Lookup(fields...))

@@ -29,11 +29,10 @@ type Options struct {
 
 // GetPluginCommandGroups returns the plugin groups
 func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, localPlugins []jxCore.Plugin) (PluginCommandGroups, error) {
-
 	otherCommands := PluginCommandGroup{
 		Message: "Other Commands",
 	}
-	groups := make(map[string]PluginCommandGroup, 0)
+	groups := make(map[string]PluginCommandGroup)
 
 	o.addPlugins(localPlugins, otherCommands, groups)
 
@@ -77,9 +76,7 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 			}
 			pathCommands.Commands = append(pathCommands.Commands, pc)
 			if errs := verifier.Verify(filepath.Join(dir, f.Name())); len(errs) != 0 {
-				for _, err := range errs {
-					pc.Errors = append(pc.Errors, err)
-				}
+				pc.Errors = append(pc.Errors, errs...)
 			}
 		}
 	}
@@ -118,7 +115,8 @@ func (o *Options) addManagedPlugins(otherCommands PluginCommandGroup, groups map
 }
 
 func (o *Options) addPlugins(pluginSlice []jxCore.Plugin, otherCommands PluginCommandGroup, groups map[string]PluginCommandGroup) {
-	for _, plugin := range pluginSlice {
+	for k := range pluginSlice {
+		plugin := pluginSlice[k]
 		pluginCommand := &PluginCommand{
 			PluginSpec: plugin.Spec,
 		}

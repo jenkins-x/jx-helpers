@@ -129,15 +129,15 @@ func (r *ASCIIRenderer) TocHeaderWithAnchor(text []byte, level int, anchor strin
 func (r *ASCIIRenderer) TocHeader(text []byte, level int)                          {}
 func (r *ASCIIRenderer) TocFinalize()                                              {}
 
-func (r *ASCIIRenderer) Table(out *bytes.Buffer, header []byte, body []byte, columnData []int) {
+func (r *ASCIIRenderer) Table(out *bytes.Buffer, header, body []byte, columnData []int) {
 	r.fw(out, header, body)
 }
 
-func (r *ASCIIRenderer) Link(out *bytes.Buffer, link []byte, title []byte, content []byte) {
+func (r *ASCIIRenderer) Link(out *bytes.Buffer, link, title, content []byte) {
 	r.fw(out, link)
 }
 
-func (r *ASCIIRenderer) Image(out *bytes.Buffer, link []byte, title []byte, alt []byte) {
+func (r *ASCIIRenderer) Image(out *bytes.Buffer, link, title, alt []byte) {
 	r.fw(out, link)
 }
 

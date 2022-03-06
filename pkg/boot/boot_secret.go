@@ -52,7 +52,7 @@ func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secr
 	return answer, nil
 }
 
-func getBootSecret(kubeClient kubernetes.Interface, ns string, operatorNamespace string, secretName string) (*corev1.Secret, error) {
+func getBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secretName string) (*corev1.Secret, error) {
 	secret, err := kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
 		// lets try either the namespace: jx-git-operator or jx whichever is different

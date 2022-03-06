@@ -14,7 +14,7 @@ import (
 
 // TailLogs will tail the logs for the pod in ns with containerName,
 // returning when the logs are complete. It writes to errOut and out.
-func TailLogs(ns string, pod string, containerName string, errOut io.Writer, out io.Writer) error {
+func TailLogs(ns, pod, containerName string, errOut, out io.Writer) error {
 	args := []string{"logs", "-n", ns, "-f"}
 	if containerName != "" {
 		args = append(args, "-c", containerName)
