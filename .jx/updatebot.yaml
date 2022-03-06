@@ -16,6 +16,7 @@ spec:
                 - jx-project
                 - jx-pipeline
                 - jx-admin
+                - jx-preview
             package: github.com/jenkins-x/jx-helpers
             upgradePackages:
               include:
