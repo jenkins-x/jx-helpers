@@ -30,11 +30,10 @@ func GetNamespace(node *yaml.RNode, path string) string {
 	return GetStringField(node, path, "metadata", "namespace")
 }
 
-// GetLabels returns the labels for the given file
-func GetLabels(node *yaml.RNode, path string) (map[string]string, error) {
-	labels, err := node.Pipe(yaml.Lookup("metadata", "labels"))
+func getMetadataMap(node *yaml.RNode, path string, mapName string) (map[string]string, error) {
+	labels, err := node.Pipe(yaml.Lookup("metadata", mapName))
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get labels")
+		return nil, errors.Wrapf(err, "failed to get %s", mapName)
 	}
 	m := map[string]string{}
 	if labels == nil {
@@ -44,11 +43,11 @@ func GetLabels(node *yaml.RNode, path string) (map[string]string, error) {
 		v := ""
 		k, err := node.Key.String()
 		if err != nil {
-			return errors.Wrapf(err, "failed to find label key for path %s", path)
+			return errors.Wrapf(err, "failed to find %s key for path %s", mapName, path)
 		}
 		v, err = node.Value.String()
 		if err != nil {
-			return errors.Wrapf(err, "failed to find label %s value for path %s", k, path)
+			return errors.Wrapf(err, "failed to find %s %s value for path %s", mapName, k, path)
 		}
 		m[strings.TrimSpace(k)] = strings.TrimSpace(v)
 		return nil
@@ -56,7 +55,17 @@ func GetLabels(node *yaml.RNode, path string) (map[string]string, error) {
 	return m, nil
 }
 
-/// GetStringField returns the given field from the node or returns a blank string if the field cannot be found
+// GetLabels returns the labels for the given file
+func GetLabels(node *yaml.RNode, path string) (map[string]string, error) {
+	return getMetadataMap(node, path, "labels")
+}
+
+// GetAnnotations returns the annotations for the given file
+func GetAnnotations(node *yaml.RNode, path string) (map[string]string, error) {
+	return getMetadataMap(node, path, "annotations")
+}
+
+// GetStringField returns the given field from the node or returns a blank string if the field cannot be found
 func GetStringField(node *yaml.RNode, path string, fields ...string) string {
 	answer := ""
 	valueNode, err := node.Pipe(yaml.Lookup(fields...))
