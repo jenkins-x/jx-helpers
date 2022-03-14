@@ -31,15 +31,15 @@ func GetNamespace(node *yaml.RNode, path string) string {
 }
 
 func getMetadataMap(node *yaml.RNode, path string, mapName string) (map[string]string, error) {
-	labels, err := node.Pipe(yaml.Lookup("metadata", mapName))
+	metadata, err := node.Pipe(yaml.Lookup("metadata", mapName))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get %s", mapName)
 	}
 	m := map[string]string{}
-	if labels == nil {
+	if metadata == nil {
 		return m, nil
 	}
-	err = labels.VisitFields(func(node *yaml.MapNode) error {
+	err = metadata.VisitFields(func(node *yaml.MapNode) error {
 		v := ""
 		k, err := node.Key.String()
 		if err != nil {
