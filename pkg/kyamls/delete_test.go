@@ -11,7 +11,7 @@ import (
 
 func TestDeleteFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	err := files.CopyDir("test_data", tmpDir, true)
+	err := files.CopyDir("test_data/copy_delete_filter_test", tmpDir, true)
 	assert.NoError(t, err)
 
 	err = DeleteFiles(tmpDir, func(node *yaml.RNode, path string) (bool, error) {
@@ -27,7 +27,7 @@ func TestDeleteFiles(t *testing.T) {
 
 func TestDeleteFilesWithDeleteFn(t *testing.T) {
 	tmpDir := t.TempDir()
-	err := files.CopyDir("test_data", tmpDir, true)
+	err := files.CopyDir("test_data/copy_delete_filter_test", tmpDir, true)
 	assert.NoError(t, err)
 
 	deleteFn := func(node *yaml.RNode, path string) (bool, error) {

@@ -1,6 +1,7 @@
-package kyamls
+package kyamls_test
 
 import (
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kyamls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -12,7 +13,7 @@ func TestGetLabels(t *testing.T) {
 	rNode, readErr := yaml.ReadFile(path)
 	require.NoError(t, readErr)
 
-	labels, err := GetLabels(rNode, path)
+	labels, err := kyamls.GetLabels(rNode, path)
 	require.NoError(t, err)
 
 	value, _ := labels["gitops/type"]
@@ -24,7 +25,7 @@ func TestGetAnnotations(t *testing.T) {
 	rNode, readErr := yaml.ReadFile(path)
 	require.NoError(t, readErr)
 
-	annotations, err := GetAnnotations(rNode, path)
+	annotations, err := kyamls.GetAnnotations(rNode, path)
 	require.NoError(t, err)
 
 	value, _ := annotations["size"]
@@ -56,8 +57,8 @@ func TestGetMetadataMap(t *testing.T) {
 
 	for _, test := range tests {
 		rNode, _ := yaml.ReadFile(test.path)
-		_, annotationsErr := GetAnnotations(rNode, test.path)
-		_, labelsErr := GetLabels(rNode, test.path)
+		_, annotationsErr := kyamls.GetAnnotations(rNode, test.path)
+		_, labelsErr := kyamls.GetLabels(rNode, test.path)
 
 		if test.expectedAnnotationsErrMsg != "" {
 			assert.Equal(t, test.expectedAnnotationsErrMsg, annotationsErr.Error())

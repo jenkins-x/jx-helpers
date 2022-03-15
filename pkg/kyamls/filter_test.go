@@ -245,7 +245,7 @@ func TestFilter(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		file := filepath.Join("test_data", tc.file)
+		file := filepath.Join("test_data/copy_delete_filter_test", tc.file)
 		filter := tc.filter
 		node, err := yaml.ReadFile(file)
 		require.NoError(t, err, "reading file %s", file)
