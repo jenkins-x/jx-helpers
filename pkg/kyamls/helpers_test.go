@@ -37,21 +37,21 @@ func TestGetAnnotations(t *testing.T) {
 
 func TestGetMetadataMap(t *testing.T) {
 	type test struct {
-		path                      string
-		expectedAnnotationsErrMsg string
-		expectedLabelsErrMsg      string
+		path                   string
+		expectedAnnotationsErr bool
+		expectedLabelsErr      bool
 	}
 
 	tests := []test{
 		{
-			path:                      "test_data/helpers/empty-file.yaml",
-			expectedAnnotationsErrMsg: "failed to get annotations: wrong Node Kind for  expected: MappingNode was : value: {null}",
-			expectedLabelsErrMsg:      "failed to get labels: wrong Node Kind for  expected: MappingNode was : value: {null}",
+			path:                   "test_data/helpers/empty-file.yaml",
+			expectedAnnotationsErr: true,
+			expectedLabelsErr:      true,
 		},
 		{
-			path:                      "test_data/helpers/invalid-value-type.yaml",
-			expectedAnnotationsErrMsg: "failed to get annotations: wrong Node Kind for metadata expected: MappingNode was ScalarNode: value: {\"hello\"}",
-			expectedLabelsErrMsg:      "failed to get labels: wrong Node Kind for metadata expected: MappingNode was ScalarNode: value: {\"hello\"}",
+			path:                   "test_data/helpers/invalid-value-type.yaml",
+			expectedAnnotationsErr: true,
+			expectedLabelsErr:      true,
 		},
 	}
 
@@ -60,11 +60,11 @@ func TestGetMetadataMap(t *testing.T) {
 		_, annotationsErr := kyamls.GetAnnotations(rNode, test.path)
 		_, labelsErr := kyamls.GetLabels(rNode, test.path)
 
-		if test.expectedAnnotationsErrMsg != "" {
-			assert.Equal(t, test.expectedAnnotationsErrMsg, annotationsErr.Error())
+		if test.expectedAnnotationsErr {
+			assert.NotNil(t, labelsErr)
 		}
-		if test.expectedAnnotationsErrMsg != "" {
-			assert.Equal(t, test.expectedLabelsErrMsg, labelsErr.Error())
+		if test.expectedAnnotationsErr {
+			assert.NotNil(t, annotationsErr)
 		}
 	}
 }
