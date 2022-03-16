@@ -12,7 +12,7 @@ import (
 
 func TestCopyFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	err := files.CopyDir("test_data", tmpDir, true)
+	err := files.CopyDir("test_data/copy_delete_filter_test", tmpDir, true)
 	assert.NoError(t, err)
 
 	err = CopyFiles(tmpDir, Filter{}, ".bak", map[string]string{
