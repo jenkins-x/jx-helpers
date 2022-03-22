@@ -11,7 +11,6 @@ import (
 func UpdateStatus(activity *v1.PipelineActivity, containersTerminated bool, onCompleteCallback func(activity *v1.PipelineActivity)) {
 	spec := &activity.Spec
 	var biggestFinishedAt metav1.Time
-
 	var stageSteps []v1.CoreActivityStep
 	for i := range spec.Steps {
 		step := &spec.Steps[i]
@@ -77,6 +76,7 @@ func UpdateStepsStatus(status v1.ActivityStatusType, steps []v1.CoreActivityStep
 	allCompleted := true
 	failed := false
 	running := false
+	timedOut := false
 	for _, s := range steps {
 		switch s.Status {
 		case v1.ActivityStatusTypeRunning:
@@ -88,11 +88,17 @@ func UpdateStepsStatus(status v1.ActivityStatusType, steps []v1.CoreActivityStep
 
 		case v1.ActivityStatusTypeAborted, v1.ActivityStatusTypeError, v1.ActivityStatusTypeFailed:
 			failed = true
+
+		case v1.ActivityStatusTypeTimedOut:
+			timedOut = true
 		}
 	}
 
 	if failed {
 		return v1.ActivityStatusTypeFailed
+	}
+	if timedOut {
+		return v1.ActivityStatusTypeTimedOut
 	}
 	if running {
 		return v1.ActivityStatusTypeRunning
