@@ -118,6 +118,41 @@ func TestUpdateStatus(t *testing.T) {
 				},
 			},
 		},
+		{
+			expected: "TimedOut",
+			activity: &v1.PipelineActivity{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pipeline-timedout",
+					Namespace: ns,
+				},
+				Spec: v1.PipelineActivitySpec{
+					Steps: []v1.PipelineActivityStep{
+						{
+							Kind: v1.ActivityStepKindTypeStage,
+							Stage: &v1.StageActivityStep{
+								Steps: []v1.CoreActivityStep{
+									{
+										Name:   "do-something",
+										Status: v1.ActivityStatusTypeSucceeded,
+									},
+								},
+							},
+						},
+						{
+							Kind: v1.ActivityStepKindTypeStage,
+							Stage: &v1.StageActivityStep{
+								Steps: []v1.CoreActivityStep{
+									{
+										Name:   "timed-out-something",
+										Status: v1.ActivityStatusTypeTimedOut,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
