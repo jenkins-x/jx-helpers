@@ -1,7 +1,6 @@
 package scmhelpers_test
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -14,8 +13,7 @@ import (
 )
 
 func TestPromptUserForGitUsernameAndToken(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "")
-	assert.NoError(t, err, "failed to createtemp dir")
+	tmpDir := t.TempDir()
 
 	credentialFile := filepath.Join(tmpDir, "git/credentials")
 
@@ -34,7 +32,7 @@ func TestPromptUserForGitUsernameAndToken(t *testing.T) {
 		Input:             fakeInput,
 	}
 
-	err = f.FindGitToken()
+	err := f.FindGitToken()
 	require.NoError(t, err, "failed to find token")
 
 	assert.FileExists(t, credentialFile, "should have created the git credentials file")

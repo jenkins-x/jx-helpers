@@ -5,7 +5,6 @@ package files
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -16,9 +15,7 @@ import (
 
 func TestUnzip(t *testing.T) {
 	t.Parallel()
-	dest, err := ioutil.TempDir("", "testUnzip")
-	require.NoError(t, err, "[TEST SETUP] failed to create temporary directory for tests")
-	defer os.RemoveAll(dest)
+	dest := t.TempDir()
 
 	zipFile, err := filepath.Abs("")
 	require.NoError(t, err, "[TEST SETUP] could not obtain CWD")
@@ -40,9 +37,7 @@ func TestUnzip(t *testing.T) {
 
 func TestUnzipSpecificFilesHappyPath(t *testing.T) {
 	t.Parallel()
-	dest, err := ioutil.TempDir("", "testUnzip")
-	require.NoError(t, err, "[TEST SETUP] failed to create temporary directory for tests")
-	defer os.RemoveAll(dest)
+	dest := t.TempDir()
 
 	zipFile, err := filepath.Abs("")
 	require.NoError(t, err, "[TEST SETUP] could not obtain CWD")
@@ -61,9 +56,7 @@ func TestUnzipSpecificFilesHappyPath(t *testing.T) {
 
 func TestUnzipSpecificFilesMIssingFile(t *testing.T) {
 	t.Parallel()
-	dest, err := ioutil.TempDir("", "testUnzip")
-	require.NoError(t, err, "[TEST SETUP] failed to create temporary directory for tests")
-	defer os.RemoveAll(dest)
+	dest := t.TempDir()
 
 	zipFile, err := filepath.Abs("")
 	require.NoError(t, err, "[TEST SETUP] could not obtain CWD")
