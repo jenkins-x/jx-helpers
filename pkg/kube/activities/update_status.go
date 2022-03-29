@@ -77,6 +77,7 @@ func UpdateStepsStatus(status v1.ActivityStatusType, steps []v1.CoreActivityStep
 	failed := false
 	running := false
 	timedOut := false
+	cancelled := false
 	for _, s := range steps {
 		switch s.Status {
 		case v1.ActivityStatusTypeRunning:
@@ -91,6 +92,8 @@ func UpdateStepsStatus(status v1.ActivityStatusType, steps []v1.CoreActivityStep
 
 		case v1.ActivityStatusTypeTimedOut:
 			timedOut = true
+		case v1.ActivityStatusTypeCancelled:
+			cancelled = true
 		}
 	}
 
@@ -99,6 +102,9 @@ func UpdateStepsStatus(status v1.ActivityStatusType, steps []v1.CoreActivityStep
 	}
 	if timedOut {
 		return v1.ActivityStatusTypeTimedOut
+	}
+	if cancelled {
+		return v1.ActivityStatusTypeCancelled
 	}
 	if running {
 		return v1.ActivityStatusTypeRunning
