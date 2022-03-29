@@ -6,7 +6,6 @@ package helmer_test
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -158,15 +157,13 @@ func TestUpdateRepo(t *testing.T) {
 }
 
 func TestRemoveRequirementsLock(t *testing.T) {
-	dir, err := ioutil.TempDir("", "reqtest")
-	assert.NoError(t, err, "should be able to create a temporary dir")
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	path := filepath.Join(dir, "requirements.lock")
 	ioutil.WriteFile(path, []byte("test"), 0644)
 
 	helm, _ := createHelmWithCwdAndHelmVersion(t, dir, nil, "")
 
-	err = helm.RemoveRequirementsLock()
+	err := helm.RemoveRequirementsLock()
 	assert.NoError(t, err, "should remove requirements.lock file")
 }
 
@@ -336,9 +333,7 @@ func TestSearchChartVersions(t *testing.T) {
 }
 
 func TestFindChart(t *testing.T) {
-	dir, err := ioutil.TempDir("", "charttest")
-	assert.NoError(t, err, "should be able to create a temporary dir")
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	path := filepath.Join(dir, helm.ChartFileName)
 	ioutil.WriteFile(path, []byte("test"), 0644)
 	helm, _ := createHelmWithCwdAndHelmVersion(t, dir, nil, "")

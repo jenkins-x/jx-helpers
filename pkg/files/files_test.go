@@ -47,11 +47,7 @@ func TestGlobFiles(t *testing.T) {
 func TestDeleteDirContents(t *testing.T) {
 	t.Parallel()
 
-	tmpDir, err := ioutil.TempDir("", "TestDeleteDirContents")
-	require.NoError(t, err, "Failed to create temporary directory.")
-	defer func() {
-		err = os.RemoveAll(tmpDir)
-	}()
+	tmpDir := t.TempDir()
 
 	// Various types
 	var testFileNames = []string{
@@ -73,7 +69,7 @@ func TestDeleteDirContents(t *testing.T) {
 	filehelpers.DeleteDirContents(tmpDir)
 
 	//check dir still exists.
-	_, err = os.Stat(tmpDir)
+	_, err := os.Stat(tmpDir)
 	require.NoError(t, err, "Directory has been deleted.")
 
 	//check empty
@@ -86,11 +82,7 @@ func TestDeleteDirContents(t *testing.T) {
 func TestDeleteDirContentsExcept(t *testing.T) {
 	t.Parallel()
 
-	tmpDir, err := ioutil.TempDir("", "TestDeleteDirContents")
-	require.NoError(t, err, "Failed to create temporary directory.")
-	defer func() {
-		err = os.RemoveAll(tmpDir)
-	}()
+	tmpDir := t.TempDir()
 
 	// Various types
 	var testFileNames = []string{
@@ -112,7 +104,7 @@ func TestDeleteDirContentsExcept(t *testing.T) {
 	filehelpers.DeleteDirContentsExcept(tmpDir, "file1")
 
 	//check dir still exists.
-	_, err = os.Stat(tmpDir)
+	_, err := os.Stat(tmpDir)
 	require.NoError(t, err, "Directory has been deleted.")
 
 	//check empty
@@ -133,15 +125,11 @@ func Test_FileExists_for_non_existing_file_returns_false(t *testing.T) {
 }
 
 func Test_FileExists_for_existing_file_returns_true(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "Test_FileExists_for_existing_file_returns_true")
-	require.NoError(t, err, "failed to create temporary directory")
-	defer func() {
-		_ = os.RemoveAll(tmpDir)
-	}()
+	tmpDir := t.TempDir()
 
 	data := []byte("hello\nworld\n")
 	testFile := filepath.Join(tmpDir, "hello.txt")
-	err = ioutil.WriteFile(testFile, data, 0644)
+	err := ioutil.WriteFile(testFile, data, 0644)
 	require.NoError(t, err, "failed to create test file %s", testFile)
 
 	exists, err := filehelpers.FileExists(testFile)
@@ -150,11 +138,7 @@ func Test_FileExists_for_existing_file_returns_true(t *testing.T) {
 }
 
 func Test_FileExists_for_existing_directory_returns_false(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "Test_FileExists_for_existing_file_returns_true")
-	require.NoError(t, err, "failed to create temporary directory")
-	defer func() {
-		_ = os.RemoveAll(tmpDir)
-	}()
+	tmpDir := t.TempDir()
 
 	exists, err := filehelpers.FileExists(tmpDir)
 	assert.NoError(t, err)

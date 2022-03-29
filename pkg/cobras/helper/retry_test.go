@@ -56,10 +56,7 @@ func TestRetryCommand(t *testing.T) {
 	helper.BehaviorOnFatal(func(s string, i int) {})
 	retries := 5
 
-	tmpDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf("failed to create temp dir for test")
-	}
+	tmpDir := t.TempDir()
 
 	testCases := map[string]struct {
 		filename          string
@@ -100,7 +97,7 @@ func TestRetryCommand(t *testing.T) {
 
 	for _, tc := range testCases {
 		if tc.createTestFile {
-			err = ioutil.WriteFile(tc.filename, []byte{105, 110}, os.ModePerm)
+			err := ioutil.WriteFile(tc.filename, []byte{105, 110}, os.ModePerm)
 			if err != nil {
 				t.Fatalf("failed to write test file %s", tc.filename)
 			}

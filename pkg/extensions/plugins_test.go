@@ -5,7 +5,6 @@ package extensions_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -37,13 +36,12 @@ func TestEnsurePluginInstalled(t *testing.T) {
 		"it is a valid failure - but holds up windows development.  See https://github.com/jenkins-x/jx/issues/2677")
 
 	// Remove any existing cruft
-	testPluginBinDir, err := ioutil.TempDir("", "")
-	assert.NoError(t, err, "Error creating temp dir")
+	testPluginBinDir := t.TempDir()
 	t.Logf("using the test dir %s", testPluginBinDir)
 
 	srv, port := serveTestScript(t)
 	defer func() {
-		err = srv.Close()
+		err := srv.Close()
 		assert.NoError(t, err, "Error getting plugin bin dir for namespace jx-test")
 	}()
 	testPlugin := jxCore.Plugin{
