@@ -6,13 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"k8s.io/kubernetes/pkg/util/slice"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
@@ -243,7 +243,8 @@ func (h *HelmCLI) BuildDependency() error {
 
 // InstallChart installs a helm chart according with the given flags
 func (h *HelmCLI) InstallChart(chart, releaseName, ns, version string, timeout int,
-	values, valueStrings, valueFiles []string, repo, username, password string) error {
+	values, valueStrings, valueFiles []string, repo, username, password string,
+) error {
 	var err error
 	var args []string
 	args = append(args, "install", "--wait", "--name", releaseName, "--namespace", ns, chart)
@@ -294,7 +295,8 @@ func (h *HelmCLI) InstallChart(chart, releaseName, ns, version string, timeout i
 
 // FetchChart fetches a Helm Chart
 func (h *HelmCLI) FetchChart(chart, version string, untar bool, untardir, repo,
-	username, password string) error {
+	username, password string,
+) error {
 	var args []string
 	args = append(args, "fetch", chart)
 	repo, err := addUsernamePasswordToURL(repo, username, password)
@@ -333,7 +335,8 @@ func (h *HelmCLI) FetchChart(chart, version string, untar bool, untardir, repo,
 
 // Template generates the YAML from the chart template to the given directory
 func (h *HelmCLI) Template(chart, releaseName, ns, outDir string, upgrade bool,
-	values, valueStrings, valueFiles []string) error {
+	values, valueStrings, valueFiles []string,
+) error {
 	args := []string{"template", "--name", releaseName, "--namespace", ns, chart, "--output-dir", outDir, "--debug"}
 	if upgrade {
 		args = append(args, "--is-upgrade")
@@ -361,7 +364,8 @@ func (h *HelmCLI) Template(chart, releaseName, ns, outDir string, upgrade bool,
 // UpgradeChart upgrades a helm chart according with given helm flags
 func (h *HelmCLI) UpgradeChart(chart, releaseName, ns, version string,
 	install bool, timeout int, force, wait bool, values, valueStrings,
-	valueFiles []string, repo, username, password string) error {
+	valueFiles []string, repo, username, password string,
+) error {
 	var err error
 	var args []string
 	args = append(args, "upgrade", "--namespace", ns)
@@ -493,7 +497,7 @@ func (h *HelmCLI) ListReleases(ns string) (map[string]ReleaseSummary, []string, 
 			}
 		}
 	}
-	slice.SortStrings(keys)
+	sort.Strings(keys)
 	return result, keys, nil
 }
 
@@ -544,7 +548,8 @@ func (h *HelmCLI) StatusReleaseWithOutput(ns, releaseName, outputFormat string) 
 
 // Lint lints the helm chart from the current working directory and returns the warnings in the output
 func (h *HelmCLI) Lint(valuesFiles []string) (string, error) {
-	args := []string{"lint",
+	args := []string{
+		"lint",
 		"--set", "tags.jx-lint=true",
 		"--set", "global.jxLint=true",
 		"--set-string", "global.jxTypeEnv=lint",
