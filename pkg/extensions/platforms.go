@@ -20,6 +20,10 @@ var (
 			Goos:   "Darwin",
 		},
 		{
+			Goarch: "arm64",
+			Goos:   "Darwin",
+		},
+		{
 			Goarch: "amd64",
 			Goos:   "Linux",
 		},
