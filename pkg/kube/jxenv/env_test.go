@@ -11,7 +11,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/AlecAivazis/survey.v1/core"
+	"github.com/AlecAivazis/survey/v2/core"
 	k8sv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"

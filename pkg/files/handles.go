@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	"github.com/AlecAivazis/survey/v2/terminal"
 )
 
 // IOFileHandles is a struct for holding CommonOptions' In, Out, and Err I/O handles, to simplify function calls.
