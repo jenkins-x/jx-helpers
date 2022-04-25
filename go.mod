@@ -1,7 +1,7 @@
 module github.com/jenkins-x/jx-helpers/v3
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.2
+	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
 	github.com/blang/semver v3.5.1+incompatible
@@ -26,7 +26,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
-	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.6.2
