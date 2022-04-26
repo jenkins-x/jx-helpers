@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/google/uuid v1.1.4
 	github.com/jenkins-x/go-scm v1.11.5
-	github.com/jenkins-x/jx-api/v4 v4.3.5
+	github.com/jenkins-x/jx-api/v4 v4.3.6
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/magiconair/properties v1.8.5
@@ -89,7 +89,7 @@ require (
 	github.com/shurcooL/githubv4 v0.0.0-20190718010115-4ba037080260 // indirect
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
-	github.com/vrischmann/envconfig v1.2.0 // indirect
+	github.com/vrischmann/envconfig v1.3.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
