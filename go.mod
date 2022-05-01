@@ -14,7 +14,7 @@ require (
 	github.com/jenkins-x/go-scm v1.11.5
 	github.com/jenkins-x/jx-api/v4 v4.3.6
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
-	github.com/jenkins-x/jx-logging/v3 v3.0.6
+	github.com/jenkins-x/jx-logging/v3 v3.0.7
 	github.com/magiconair/properties v1.8.5
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.7.0
@@ -60,7 +60,7 @@ require (
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.7 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -71,10 +71,9 @@ require (
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3 // indirect
+	github.com/jenkins-x/logrus-stackdriver-formatter v0.2.4 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kr/pretty v0.2.1 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
