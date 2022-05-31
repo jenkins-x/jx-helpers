@@ -1,11 +1,12 @@
 package batch
 
 import (
+	"fmt"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 )
 
-type options struct {
-}
+type options struct{}
 
 // NewBatchInput creates a new batch input implementation
 func NewBatchInput() *options {
@@ -30,11 +31,11 @@ func (f *options) PickValidValue(message string, defaultValue string, validator 
 }
 
 // PickNameWithDefault picks a value
-func (f *options) PickNameWithDefault(names []string, message string, defaultValue string, help string) (string, error) {
-	if defaultValue == "" && len(names) > 0 {
+func (f *options) PickNameWithDefault(names []string, message string, defaultValue interface{}, help string) (string, error) {
+	if fmt.Sprintf("%v", defaultValue) == "" && len(names) > 0 {
 		defaultValue = names[0]
 	}
-	return defaultValue, nil
+	return fmt.Sprintf("%v", defaultValue), nil
 }
 
 func (f *options) SelectNamesWithFilter(names []string, message string, selectAll bool, filter string, help string) ([]string, error) {
