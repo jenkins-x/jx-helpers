@@ -21,9 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	info = termcolor.ColorInfo
-)
+var info = termcolor.ColorInfo
 
 // Factory helper for discovering the git source URL and token
 type Factory struct {

@@ -74,8 +74,17 @@ func (c *client) PickValidValue(message string, defaultValue string, validator f
 }
 
 // PickNameWithDefault gets the user to pick an option from a list of options, with a default option specified
-func (c *client) PickNameWithDefault(names []string, message string, defaultValue string, help string) (string, error) {
+
+func (c *client) PickNameWithDefault(names []string, message string, defaultValue interface{}, help string) (string, error) {
 	name := ""
+	// Default value used to be a string in v1, but it's an interface in v2
+	// This creates issues when selecting the first element in the survey prompt
+	// See: https://github.com/AlecAivazis/survey/issues/342
+	// To workaround this issue, we set the default to nil, if PickNameWithDefault
+	// is called with empty string as default
+	if fmt.Sprintf("%v", defaultValue) == "" {
+		defaultValue = nil
+	}
 	if len(names) == 0 {
 		return "", nil
 	} else if len(names) == 1 {
@@ -87,7 +96,7 @@ func (c *client) PickNameWithDefault(names []string, message string, defaultValu
 			Default: defaultValue,
 		}
 		surveyOpts := survey.WithStdio(c.in, c.out, c.err)
-		err := survey.AskOne(prompt, &name, nil, surveyOpts)
+		err := survey.AskOne(prompt, &name, surveyOpts)
 		if err != nil {
 			return "", err
 		}

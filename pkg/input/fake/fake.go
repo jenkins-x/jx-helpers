@@ -1,6 +1,7 @@
 package fake
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
@@ -45,10 +46,10 @@ func (f *FakeInput) PickValidValue(message string, defaultValue string, validato
 }
 
 // PickNameWithDefault picks a value
-func (f *FakeInput) PickNameWithDefault(names []string, message string, defaultValue string, help string) (string, error) {
+func (f *FakeInput) PickNameWithDefault(names []string, message string, defaultValue interface{}, help string) (string, error) {
 	value := f.getValue(message)
 	if value == "" {
-		value = defaultValue
+		value = fmt.Sprintf("%v", defaultValue)
 	}
 	return value, nil
 }

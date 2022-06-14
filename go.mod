@@ -3,14 +3,17 @@ module github.com/jenkins-x/jx-helpers/v3
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/MakeNowJust/heredoc v1.0.0
+	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/creack/pty v1.1.17
 	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.5
 	github.com/google/uuid v1.1.4
+	github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec
 	github.com/jenkins-x/go-scm v1.11.5
 	github.com/jenkins-x/jx-api/v4 v4.3.6
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
