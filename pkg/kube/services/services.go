@@ -125,12 +125,13 @@ func getUrlFromVirtualService(virtualService *unstructured.Unstructured) (string
 func FindUrlFromVsIstio(dynamicClient dynamic.Interface, namespace, name string) (string, error) {
 	virtualService, err := getIstioVirtualService(dynamicClient, namespace, name)
 	if err != nil {
-		return "", err
+		return "", nil
 	}
+	log.Logger().Debugf("Attempting to find via istio virtual services")
 	return getUrlFromVirtualService(virtualService)
 }
 
-func FindServiceURL(client kubernetes.Interface, namespace string, name string, dynamicClient dynamic.Interface) (string, error) {
+func FindServiceURLWithDynamicClient(client kubernetes.Interface, namespace string, name string, dynamicClient dynamic.Interface) (string, error) {
 	log.Logger().Debugf("Finding service url for %s in namespace %s", name, namespace)
 	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
@@ -157,12 +158,14 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string, 
 	}
 	if err != nil {
 		log.Logger().Debugf("Unable to finding ingress for %s in namespace %s - err %s", name, namespace, err)
-		log.Logger().Debugf("Attempting to find via istio virtual services")
-		url, err := FindUrlFromVsIstio(dynamicClient, namespace, name)
-		if err == nil {
+		url, vs_err := FindUrlFromVsIstio(dynamicClient, namespace, name)
+		if url != "" && vs_err == nil {
 			return url, nil
 		}
-		return "", errors.Wrapf(err, "getting ingress and istio virtual service for service %q in namespace %s", name, namespace)
+		if vs_err != nil {
+			log.Logger().Debugf("Unable to finding istio for %s in namespace %s - err %s", name, namespace, vs_err)
+		}
+		return "", errors.Wrapf(err, "getting ingress for service %q in namespace %s", name, namespace)
 	}
 	url := ""
 
@@ -170,14 +173,19 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string, 
 
 	if url == "" {
 		log.Logger().Debugf("Unable to find service url via ingress for %s in namespace %s", name, namespace)
-		log.Logger().Debugf("Attempting to find via istio virtual services")
-		url, err = FindUrlFromVsIstio(dynamicClient, namespace, name)
-		if err != nil {
-			log.Logger().Debugf("err finding url from istio virtual service for %s in namespace %s: %s", name, namespace, err)
-			return "", err
+		url, vs_err := FindUrlFromVsIstio(dynamicClient, namespace, name)
+		if url != "" && vs_err == nil {
+			return url, nil
+		}
+		if vs_err != nil {
+			log.Logger().Debugf("Unable to finding istio for %s in namespace %s - err %s", name, namespace, vs_err)
 		}
 	}
 	return url, nil
+}
+
+func FindServiceURL(client kubernetes.Interface, namespace string, name string) (string, error) {
+	return FindServiceURLWithDynamicClient(client, namespace, name, nil)
 }
 
 func FindIngressURL(client kubernetes.Interface, namespace string, name string) (string, error) {
@@ -347,11 +355,11 @@ func FindServiceSchemePort(client kubernetes.Interface, namespace string, name s
 	return ExtractServiceSchemePort(svc)
 }
 
-func GetServiceURLFromName(c kubernetes.Interface, name, ns string, dynamicClient dynamic.Interface) (string, error) {
-	return FindServiceURL(c, ns, name, dynamicClient)
+func GetServiceURLFromName(c kubernetes.Interface, name, ns string) (string, error) {
+	return FindServiceURL(c, ns, name)
 }
 
-func FindServiceURLs(client kubernetes.Interface, namespace string, dynamicClient dynamic.Interface) ([]ServiceURL, error) {
+func FindServiceURLs(client kubernetes.Interface, namespace string) ([]ServiceURL, error) {
 	options := meta_v1.ListOptions{}
 	var urls []ServiceURL
 	svcs, err := client.CoreV1().Services(namespace).List(context.TODO(), options)
@@ -361,7 +369,7 @@ func FindServiceURLs(client kubernetes.Interface, namespace string, dynamicClien
 	for _, svc := range svcs.Items {
 		url := GetServiceURL(&svc)
 		if url == "" {
-			url, _ = FindServiceURL(client, namespace, svc.Name, dynamicClient)
+			url, _ = FindServiceURL(client, namespace, svc.Name)
 		}
 		if len(url) > 0 {
 			urls = append(urls, ServiceURL{

@@ -431,7 +431,7 @@ func TestGetUrlFromVirtualService(t *testing.T) {
 	dynamicClient := fakedyn.NewSimpleDynamicClient(scheme)
 	url, err := services.FindUrlFromVsIstio(dynamicClient, namespace, name)
 	assert.Equal(t, url, "")
-	assert.EqualError(t, err, "virtualservices.networking.istio.io \""+name+"\" not found")
+	assert.NoError(t, err)
 	// case with a virtual service in the given namespace
 	virtualService := &unstructured.Unstructured{}
 	virtualService.SetUnstructuredContent(map[string]interface{}{
