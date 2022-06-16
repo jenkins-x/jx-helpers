@@ -176,11 +176,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 			return path, err
 		}
 		deleted := make([]string, 0)
-		// lets only delete plugins for this major version so we can keep, say, helm 2 and 3 around
-		prefix := plugin.Name + "-"
-		if len(version) > 0 {
-			prefix += version[0:1]
-		}
+		prefix := pluginName + "-"
 		for _, f := range fileObs {
 			if strings.HasPrefix(f.Name(), prefix) {
 				err = os.Remove(filepath.Join(pluginBinDir, f.Name()))
