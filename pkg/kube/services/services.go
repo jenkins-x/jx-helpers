@@ -17,9 +17,12 @@ import (
 	nv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	tools_watch "k8s.io/client-go/tools/watch"
 )
@@ -92,7 +95,43 @@ func GetServiceURLFromMap(services map[string]*v1.Service, name string) string {
 	return GetServiceURL(services[name])
 }
 
-func FindServiceURL(client kubernetes.Interface, namespace string, name string) (string, error) {
+func getIstioVirtualService(dynamicClient dynamic.Interface, namespace, name string) (*unstructured.Unstructured, error) {
+	dynamicClient, err := kube.LazyCreateDynamicClient(dynamicClient)
+	if err != nil {
+		return nil, err
+	}
+	//  Create a GVR which represents an Istio Virtual Service.
+	virtualServiceGVR := schema.GroupVersionResource{
+		Group:    "networking.istio.io",
+		Version:  "v1alpha3",
+		Resource: "virtualservices",
+	}
+	virtualService, err := dynamicClient.Resource(virtualServiceGVR).Namespace(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+	return virtualService, err
+}
+
+// getUrlFromVirtualService finds url from virtual services istio
+func getUrlFromVirtualService(virtualService *unstructured.Unstructured) (string, error) {
+	vs := virtualService.Object
+	if spec, ok := vs["spec"].(map[string]interface{}); ok {
+		if hosts, ok := spec["hosts"].([]interface{}); ok {
+			return fmt.Sprintf("%v", hosts[0]), nil
+		}
+	}
+	return "", errors.New("No url found in the virtual service")
+}
+
+// FindUrlFromVsIstio finds the host from istio virtual service
+func FindUrlFromVsIstio(dynamicClient dynamic.Interface, namespace, name string) (string, error) {
+	virtualService, err := getIstioVirtualService(dynamicClient, namespace, name)
+	if err != nil {
+		return "", nil
+	}
+	log.Logger().Debugf("Attempting to find via istio virtual services")
+	return getUrlFromVirtualService(virtualService)
+}
+
+func FindServiceURLWithDynamicClient(client kubernetes.Interface, namespace string, name string, dynamicClient dynamic.Interface) (string, error) {
 	log.Logger().Debugf("Finding service url for %s in namespace %s", name, namespace)
 	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
@@ -119,6 +158,13 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 	}
 	if err != nil {
 		log.Logger().Debugf("Unable to finding ingress for %s in namespace %s - err %s", name, namespace, err)
+		url, vs_err := FindUrlFromVsIstio(dynamicClient, namespace, name)
+		if url != "" && vs_err == nil {
+			return url, nil
+		}
+		if vs_err != nil {
+			log.Logger().Debugf("Unable to finding istio for %s in namespace %s - err %s", name, namespace, vs_err)
+		}
 		return "", errors.Wrapf(err, "getting ingress for service %q in namespace %s", name, namespace)
 	}
 	url := ""
@@ -127,8 +173,19 @@ func FindServiceURL(client kubernetes.Interface, namespace string, name string) 
 
 	if url == "" {
 		log.Logger().Debugf("Unable to find service url via ingress for %s in namespace %s", name, namespace)
+		url, vs_err := FindUrlFromVsIstio(dynamicClient, namespace, name)
+		if url != "" && vs_err == nil {
+			return url, nil
+		}
+		if vs_err != nil {
+			log.Logger().Debugf("Unable to finding istio for %s in namespace %s - err %s", name, namespace, vs_err)
+		}
 	}
 	return url, nil
+}
+
+func FindServiceURL(client kubernetes.Interface, namespace string, name string) (string, error) {
+	return FindServiceURLWithDynamicClient(client, namespace, name, nil)
 }
 
 func FindIngressURL(client kubernetes.Interface, namespace string, name string) (string, error) {

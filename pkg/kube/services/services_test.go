@@ -12,6 +12,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	nv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	fakedyn "k8s.io/client-go/dynamic/fake"
 )
 
 func TestExtractServiceSchemePortDefault(t *testing.T) {
@@ -418,4 +421,34 @@ func TestFindURLFromIngress(t *testing.T) {
 		assert.Equal(t, tc.ExpectedURL, actual, "IngressURL for %s", tc.Name)
 		t.Logf("test %s generated URL from Ingress %s", tc.Name, actual)
 	}
+}
+
+func TestGetUrlFromVirtualService(t *testing.T) {
+	var namespace = "default"
+	var name = "jenkins"
+	// case when there is no virtual service
+	scheme := runtime.NewScheme()
+	dynamicClient := fakedyn.NewSimpleDynamicClient(scheme)
+	url, err := services.FindUrlFromVsIstio(dynamicClient, namespace, name)
+	assert.Equal(t, url, "")
+	assert.NoError(t, err)
+	// case with a virtual service in the given namespace
+	virtualService := &unstructured.Unstructured{}
+	virtualService.SetUnstructuredContent(map[string]interface{}{
+		"apiVersion": "networking.istio.io/v1alpha3",
+		"kind":       "VirtualService",
+		"metadata": map[string]interface{}{
+			"name":      name,
+			"namespace": namespace,
+		},
+		"spec": map[string]interface{}{
+			"hosts": []interface{}{"testing.jenkins-x.in"},
+		},
+	})
+	dynamicClient = fakedyn.NewSimpleDynamicClient(scheme, virtualService)
+	url, err = services.FindUrlFromVsIstio(dynamicClient, namespace, name)
+	if assert.NoError(t, err) {
+		assert.Equal(t, url, "testing.jenkins-x.in")
+	}
+	assert.Equal(t, err, nil)
 }
