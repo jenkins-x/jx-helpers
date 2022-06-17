@@ -289,3 +289,11 @@ func HasSuffix(text string, suffixes ...string) bool {
 	}
 	return false
 }
+
+// EnsureStringArrayContains appends token to slice if token isn't already in slice
+func EnsureStringArrayContains(slice []string, token string) []string {
+	if StringArrayIndex(slice, token) < 0 {
+		return append(slice, token)
+	}
+	return slice
+}

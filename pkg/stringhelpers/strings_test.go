@@ -153,3 +153,12 @@ func TestHasSuffix(t *testing.T) {
 	assert.True(t, stringhelpers.HasSuffix("some text", "ignored", " text", "another"), "should have found suffix for 2nd suffix")
 	assert.False(t, stringhelpers.HasSuffix("cheese toast", "ignored", " something", "another"), "should not have matched a suffix")
 }
+
+func TestEnsureStringArrayContains(t *testing.T) {
+	s := []string{"foo", "bar"}
+	test := stringhelpers.EnsureStringArrayContains(s, "fubar")
+	assert.Len(t, test, 3)
+	assert.Contains(t, test, "fubar")
+	test = stringhelpers.EnsureStringArrayContains(s, "fubar")
+	assert.Len(t, test, 3)
+}
