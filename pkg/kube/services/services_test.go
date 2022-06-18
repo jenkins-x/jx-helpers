@@ -448,7 +448,7 @@ func TestGetUrlFromVirtualService(t *testing.T) {
 	dynamicClient = fakedyn.NewSimpleDynamicClient(scheme, virtualService)
 	url, err = services.FindUrlFromVsIstio(dynamicClient, namespace, name)
 	if assert.NoError(t, err) {
-		assert.Equal(t, url, "testing.jenkins-x.in")
+		assert.Equal(t, url, "http://testing.jenkins-x.in")
 	}
 	assert.Equal(t, err, nil)
 }
