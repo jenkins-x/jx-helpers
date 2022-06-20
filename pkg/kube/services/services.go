@@ -115,7 +115,7 @@ func getUrlFromVirtualService(virtualService *unstructured.Unstructured) (string
 	vs := virtualService.Object
 	if spec, ok := vs["spec"].(map[string]interface{}); ok {
 		if hosts, ok := spec["hosts"].([]interface{}); ok {
-			return fmt.Sprintf("%v", hosts[0]), nil
+			return "http://" + fmt.Sprintf("%v", hosts[0]), nil
 		}
 	}
 	return "", errors.New("No url found in the virtual service")
