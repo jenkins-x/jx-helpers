@@ -6,12 +6,12 @@ package jxenv_test
 import (
 	"testing"
 
+	"github.com/AlecAivazis/survey/v2/core"
 	jenkinsio_v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/stretchr/testify/assert"
-	"github.com/AlecAivazis/survey/v2/core"
 	k8sv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
