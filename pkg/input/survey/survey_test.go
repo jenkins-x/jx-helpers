@@ -72,9 +72,7 @@ func TestPickNameWithDefault(t *testing.T) {
 
 		output := strings.TrimSpace(expect.StripTrailingEmptyLines(term.String()))
 		expectedOutput := fmt.Sprintf("? Pick %s", answer)
-		if output != expectedOutput {
-			t.Fatalf("Unexpected output.\nExpected: \n%s ; \nFound: \n%s", expectedOutput, output)
-		}
+		assert.Contains(t, output, expectedOutput, "Unexpected output")
 	}
 }
 
