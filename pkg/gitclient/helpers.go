@@ -352,6 +352,52 @@ func CloneToDir(g Interface, gitURL, dir string) (string, error) {
 	return dir, nil
 }
 
+// SparseCloneToDir clones the git repository sparsely to either the given directory or create a temporary on.
+// SparseCheckoutPatterns are checked out interpreted as in .gitignore. If no sparseCheckoutPatterns are given the files
+// directly under the root of the repository are checked out.
+// NOTE: This functionality is experimental and also the behaviour may vary between different git servers.
+// If shallow is true the clone is made with --depth=1
+func SparseCloneToDir(g Interface, gitURL, dir string, shallow bool, sparseCheckoutPatterns ...string) (string, error) {
+	var err error
+	if dir != "" {
+		err = os.MkdirAll(dir, util.DefaultWritePermissions)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to create directory %s", dir)
+		}
+	} else {
+		dir, err = ioutil.TempDir("", "jx-git-")
+		if err != nil {
+			return "", errors.Wrap(err, "failed to create temporary directory")
+		}
+	}
+
+	log.Logger().Debugf("cloning %s to directory %s sparsely", termcolor.ColorInfo(gitURL), termcolor.ColorInfo(dir))
+
+	parentDir := filepath.Dir(dir)
+	sparseCloneArgs := []string{"clone", "--no-checkout", "--filter=blob:none"}
+	if shallow {
+		sparseCloneArgs = append(sparseCloneArgs, "--depth=1")
+	}
+	_, err = g.Command(parentDir, append(sparseCloneArgs, gitURL, dir)...)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to clone repository %s to directory: %s", gitURL, dir)
+	}
+	_, err = g.Command(dir, "sparse-checkout", "init")
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to initiate sparse checkout")
+	}
+	sparseCheckoutArgs := append([]string{"sparse-checkout", "set"}, sparseCheckoutPatterns...)
+	_, err = g.Command(dir, sparseCheckoutArgs...)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to set sparse checkout patterns to %v", sparseCheckoutPatterns)
+	}
+	_, err = g.Command(dir, "checkout")
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to checkout sparsly")
+	}
+	return dir, nil
+}
+
 // GetLatestCommitSha returns the latest commit sha
 func GetLatestCommitSha(g Interface, dir string) (string, error) {
 	return g.Command(dir, "rev-parse", "HEAD")
