@@ -14,10 +14,10 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/google/uuid v1.1.4
 	github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec
-	github.com/jenkins-x/go-scm v1.11.5
-	github.com/jenkins-x/jx-api/v4 v4.3.6
-	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
-	github.com/jenkins-x/jx-logging/v3 v3.0.7
+	github.com/jenkins-x/go-scm v1.11.6
+	github.com/jenkins-x/jx-api/v4 v4.4.0
+	github.com/jenkins-x/jx-kube-client/v3 v3.0.3
+	github.com/jenkins-x/jx-logging/v3 v3.0.9
 	github.com/magiconair/properties v1.8.5
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.7.0
@@ -32,8 +32,8 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.6.2
-	k8s.io/api v0.21.0
-	k8s.io/apimachinery v0.21.0
+	k8s.io/api v0.21.4
+	k8s.io/apimachinery v0.21.4
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/kustomize/kyaml v0.10.15
 	sigs.k8s.io/yaml v1.2.0
@@ -112,7 +112,7 @@ require (
 	k8s.io/klog/v2 v2.8.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7 // indirect
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 )
 
 replace (
