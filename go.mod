@@ -16,7 +16,7 @@ require (
 	github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec
 	github.com/jenkins-x/go-scm v1.11.6
 	github.com/jenkins-x/jx-api/v4 v4.4.0
-	github.com/jenkins-x/jx-kube-client/v3 v3.0.3
+	github.com/jenkins-x/jx-kube-client/v3 v3.0.4
 	github.com/jenkins-x/jx-logging/v3 v3.0.9
 	github.com/magiconair/properties v1.8.5
 	github.com/onsi/ginkgo v1.11.0
@@ -125,4 +125,4 @@ replace (
 	k8s.io/client-go => k8s.io/client-go v0.20.6
 )
 
-go 1.17
+go 1.18
