@@ -53,7 +53,7 @@ func AddAdditionalCommands(g CommandGroups, message string, cmds []*cobra.Comman
 	group := CommandGroup{Message: message}
 	for _, c := range cmds {
 		// Don't show commands that have no short description
-		if !g.Has(c) && len(c.Short) != 0 {
+		if !g.Has(c) && len(c.Short) != 0 && c.Runnable() {
 			group.Commands = append(group.Commands, c)
 		}
 	}
