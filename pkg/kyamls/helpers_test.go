@@ -14,7 +14,7 @@ func TestGetLabels(t *testing.T) {
 	rNode, readErr := yaml.ReadFile(path)
 	require.NoError(t, readErr)
 
-	labels, err := kyamls.GetLabels(rNode, path)
+	labels, err := kyamls.GetMap(rNode, path, []string{"metadata", "labels"})
 	require.NoError(t, err)
 
 	value, _ := labels["gitops/type"]
@@ -26,7 +26,7 @@ func TestGetAnnotations(t *testing.T) {
 	rNode, readErr := yaml.ReadFile(path)
 	require.NoError(t, readErr)
 
-	annotations, err := kyamls.GetAnnotations(rNode, path)
+	annotations, err := kyamls.GetMap(rNode, path, []string{"metadata", "annotations"})
 	require.NoError(t, err)
 
 	value, _ := annotations["size"]
@@ -58,8 +58,8 @@ func TestGetMetadataMap(t *testing.T) {
 
 	for _, test := range tests {
 		rNode, _ := yaml.ReadFile(test.path)
-		_, annotationsErr := kyamls.GetAnnotations(rNode, test.path)
-		_, labelsErr := kyamls.GetLabels(rNode, test.path)
+		_, annotationsErr := kyamls.GetMap(rNode, test.path, []string{"metadata", "annotations"})
+		_, labelsErr := kyamls.GetMap(rNode, test.path, []string{"metadata", "labels"})
 
 		if test.expectedAnnotationsErr {
 			assert.NotNil(t, labelsErr)

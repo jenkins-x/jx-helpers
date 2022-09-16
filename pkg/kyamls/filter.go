@@ -14,12 +14,17 @@ type Filter struct {
 	Kinds          []string
 	KindsIgnore    []string
 	Names          []string
+	SelectTarget   string
 	Selector       map[string]string
 	InvertSelector bool
 }
 
 // ToFilterFn creates a filter function
 func (f *Filter) ToFilterFn() (func(node *yaml.RNode, path string) (bool, error), error) {
+	mapPath := []string{"metadata", "labels"}
+	if f.SelectTarget != "" {
+		mapPath = strings.Split(f.SelectTarget, ".")
+	}
 	kf := f.Parse()
 	return func(node *yaml.RNode, path string) (bool, error) {
 		name := GetName(node, path)
@@ -50,7 +55,7 @@ func (f *Filter) ToFilterFn() (func(node *yaml.RNode, path string) (bool, error)
 		if f.Selector == nil {
 			return true, nil
 		}
-		labels, err := GetLabels(node, path)
+		labels, err := GetMap(node, path, mapPath)
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to get labels for %s", path)
 		}
@@ -93,6 +98,7 @@ func (f *Filter) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArrayVarP(&f.Kinds, "kind", "k", nil, "adds Kubernetes resource kinds to filter on. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
 	cmd.Flags().StringArrayVarP(&f.KindsIgnore, "kind-ignore", "", nil, "adds Kubernetes resource kinds to exclude. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
 	cmd.Flags().StringToStringVarP(&f.Selector, "selector", "", nil, "adds Kubernetes label selector to filter on, e.g. -s app=pusher-wave,heritage=Helm")
+	cmd.Flags().StringVar(&f.SelectTarget, "selector-target", "", "sets which path in the Kubernetes resources to select on instead of metadata.labels.")
 	cmd.Flags().BoolVarP(&f.InvertSelector, "invert-selector", "", false, "inverts the effect of selector to exclude resources matched by selector")
 }
 
