@@ -24,7 +24,6 @@ const (
 		`{{$rootCmd := rootCmd .}}` +
 		`{{$visibleFlags := visibleFlags (flagsNotIntersected .LocalFlags .PersistentFlags)}}` +
 		`{{$explicitlyExposedFlags := exposed .}}` +
-		`{{$optionsCmdFor := optionsCmdFor .}}` +
 		`{{$usageLine := usageLine .}}`
 
 	// SectionAliases is the help template section that displays command aliases.
@@ -54,10 +53,6 @@ const (
 	// SectionTipsHelp is the help template section that displays the '--help' hint.
 	SectionTipsHelp = `{{if .HasSubCommands}}Use "{{$rootCmd}} <command> --help" for more information about a given command.
 {{end}}`
-
-	// SectionTipsGlobalOptions is the help template section that displays the 'options' hint for displaying global flags.
-	SectionTipsGlobalOptions = `{{if $optionsCmdFor}}Use "{{$optionsCmdFor}}" for a list of global command-line options (applies to all commands).
-{{end}}`
 )
 
 // MainHelpTemplate if the template for 'help' used by most commands.
@@ -76,7 +71,6 @@ func MainUsageTemplate() string {
 		SectionFlags,
 		SectionUsage,
 		SectionTipsHelp,
-		SectionTipsGlobalOptions,
 	}
 	return strings.TrimRightFunc(strings.Join(sections, ""), unicode.IsSpace)
 }

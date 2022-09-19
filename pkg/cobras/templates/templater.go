@@ -94,7 +94,6 @@ func (templater *templater) templateFuncs(exposedFlags ...string) template.FuncM
 		"cmdGroupsString":     templater.cmdGroupsString,
 		"rootCmd":             templater.rootCmdName,
 		"isRootCmd":           templater.isRootCmd,
-		"optionsCmdFor":       templater.optionsCmdFor,
 		"usageLine":           templater.usageLine,
 		"exposed": func(c *cobra.Command) *flag.FlagSet {
 			exposed := flag.NewFlagSet("exposed", flag.ContinueOnError)
@@ -156,11 +155,13 @@ func (t *templater) cmdGroupsString(c *cobra.Command) string {
 		}
 	}
 	pluginCommandGroups, _ := t.GetPluginCommandGroups()
-	for _, cmdGroup := range pluginCommandGroups {
-		for _, cmd := range cmdGroup.Commands {
-			l := len(cmd.SubCommand)
-			if l > maxLen {
-				maxLen = l
+	if c == t.RootCmd {
+		for _, cmdGroup := range pluginCommandGroups {
+			for _, cmd := range cmdGroup.Commands {
+				l := len(cmd.SubCommand)
+				if l > maxLen {
+					maxLen = l
+				}
 			}
 		}
 	}
@@ -169,19 +170,19 @@ func (t *templater) cmdGroupsString(c *cobra.Command) string {
 		for _, cmd := range cmdGroup.Commands {
 			if cmd.Runnable() {
 				path := t.groupPath(cmd)
-				//cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
 				cmds = append(cmds, "  "+table.PadRight(termcolor.ColorInfo(path), " ", maxLen)+" "+cmd.Short)
 			}
 		}
 		groups = append(groups, strings.Join(cmds, "\n"))
 	}
-	for _, cmdGroup := range pluginCommandGroups {
-		cmds := []string{cmdGroup.Message}
-		for _, cmd := range cmdGroup.Commands {
-			//cmds = append(cmds, "  "+rpad(path, maxLen - len(path))+" "+cmd.Short)
-			cmds = append(cmds, "  "+table.PadRight(termcolor.ColorInfo(cmd.SubCommand), " ", maxLen)+" "+fmt.Sprintf("%s (from plugin)", cmd.Description))
+	if c == t.RootCmd {
+		for _, cmdGroup := range pluginCommandGroups {
+			cmds := []string{cmdGroup.Message}
+			for _, cmd := range cmdGroup.Commands {
+				cmds = append(cmds, "  "+table.PadRight(termcolor.ColorInfo(cmd.SubCommand), " ", maxLen)+" "+fmt.Sprintf("%s (from plugin)", cmd.Description))
+			}
+			groups = append(groups, strings.Join(cmds, "\n"))
 		}
-		groups = append(groups, strings.Join(cmds, "\n"))
 	}
 	return fmt.Sprintf("%s\n", strings.Join(groups, "\n\n"))
 }
@@ -211,20 +212,6 @@ func (t *templater) rootCmd(c *cobra.Command) *cobra.Command {
 		panic("nil root cmd")
 	}
 	return t.RootCmd
-}
-
-func (t *templater) optionsCmdFor(c *cobra.Command) string {
-	if !c.Runnable() {
-		return ""
-	}
-	rootCmdStructure := t.parents(c)
-	for i := len(rootCmdStructure) - 1; i >= 0; i-- {
-		cmd := rootCmdStructure[i]
-		if _, _, err := cmd.Find([]string{"options"}); err == nil {
-			return cmd.CommandPath() + " options"
-		}
-	}
-	return ""
 }
 
 func (t *templater) usageLine(c *cobra.Command) string {

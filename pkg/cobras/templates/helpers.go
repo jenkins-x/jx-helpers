@@ -35,9 +35,9 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 	}
 	groups := make(map[string]PluginCommandGroup, 0)
 
-	o.addPlugins(localPlugins, otherCommands, groups)
+	o.addPlugins(localPlugins, &otherCommands, groups)
 
-	err := o.addManagedPlugins(otherCommands, groups)
+	err := o.addManagedPlugins(&otherCommands, groups)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to add managed plugins")
 	}
@@ -97,7 +97,7 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 	return pcgs, nil
 }
 
-func (o *Options) addManagedPlugins(otherCommands PluginCommandGroup, groups map[string]PluginCommandGroup) error {
+func (o *Options) addManagedPlugins(otherCommands *PluginCommandGroup, groups map[string]PluginCommandGroup) error {
 	// Managed plugins
 	var err error
 	if o.ManagedPluginsEnabled {
@@ -117,7 +117,7 @@ func (o *Options) addManagedPlugins(otherCommands PluginCommandGroup, groups map
 	return nil
 }
 
-func (o *Options) addPlugins(pluginSlice []jxCore.Plugin, otherCommands PluginCommandGroup, groups map[string]PluginCommandGroup) {
+func (o *Options) addPlugins(pluginSlice []jxCore.Plugin, otherCommands *PluginCommandGroup, groups map[string]PluginCommandGroup) {
 	for _, plugin := range pluginSlice {
 		pluginCommand := &PluginCommand{
 			PluginSpec: plugin.Spec,
