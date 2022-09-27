@@ -30,39 +30,33 @@ func GetNamespace(node *yaml.RNode, path string) string {
 	return GetStringField(node, path, "metadata", "namespace")
 }
 
-func getMetadataMap(node *yaml.RNode, path string, mapName string) (map[string]string, error) {
-	metadata, err := node.Pipe(yaml.Lookup("metadata", mapName))
+// GetMap return the content of mapPath in node as a map
+func GetMap(node *yaml.RNode, filePath string, mapPath []string) (map[string]string, error) {
+	mapNode, err := node.Pipe(yaml.Lookup(mapPath...))
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get %s", mapName)
+		return nil, errors.Wrapf(err, "failed to get %v", mapPath)
 	}
 	m := map[string]string{}
-	if metadata == nil {
+	if mapNode == nil {
 		return m, nil
 	}
-	err = metadata.VisitFields(func(node *yaml.MapNode) error {
+	err = mapNode.VisitFields(func(node *yaml.MapNode) error {
 		v := ""
 		k, err := node.Key.String()
 		if err != nil {
-			return errors.Wrapf(err, "failed to find %s key for path %s", mapName, path)
+			return errors.Wrapf(err, "failed to find %v key for path %s", mapPath, filePath)
 		}
 		v, err = node.Value.String()
 		if err != nil {
-			return errors.Wrapf(err, "failed to find %s %s value for path %s", mapName, k, path)
+			return errors.Wrapf(err, "failed to find %v %s value for path %s", mapPath, k, filePath)
 		}
 		m[strings.TrimSpace(k)] = strings.TrimSpace(v)
 		return nil
 	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get %v", mapPath)
+	}
 	return m, nil
-}
-
-// GetLabels returns the labels for the given file
-func GetLabels(node *yaml.RNode, path string) (map[string]string, error) {
-	return getMetadataMap(node, path, "labels")
-}
-
-// GetAnnotations returns the annotations for the given file
-func GetAnnotations(node *yaml.RNode, path string) (map[string]string, error) {
-	return getMetadataMap(node, path, "annotations")
 }
 
 // GetStringField returns the given field from the node or returns a blank string if the field cannot be found
