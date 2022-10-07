@@ -17,6 +17,7 @@ spec:
                 - jx-pipeline
                 - jx-admin
                 - jx-preview
+                - jx-updatebot
             package: github.com/jenkins-x/jx-helpers
             upgradePackages:
               include:
