@@ -13,9 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	info = termcolor.ColorInfo
-)
+var info = termcolor.ColorInfo
 
 // EnsureUserAndEmailSetup returns the user name and email for the gitter
 // lazily setting them if they are blank either from the given values or if they are empty
@@ -23,7 +21,9 @@ var (
 func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, gitUserEmail string) (string, string, error) {
 	userName, _ := gitter.Command(dir, "config", "--get", "user.name")
 	userEmail, _ := gitter.Command(dir, "config", "--get", "user.email")
-	if userName == "" {
+	// Seems like changing it to alpine image, results in username being set to root
+	// ToDo(@ankitm123): Look at why this happened in alpine go image and not the normal go image
+	if userName == "" || userName == "root" {
 		userName = gitUserName
 		if userName == "" {
 			userName = os.Getenv("GIT_AUTHOR_NAME")
