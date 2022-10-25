@@ -95,11 +95,18 @@ func trimQuotes(text string) string {
 
 // AddFlags add CLI flags for specifying a filter
 func (f *Filter) AddFlags(cmd *cobra.Command) {
-	cmd.Flags().StringArrayVarP(&f.Kinds, "kind", "k", nil, "adds Kubernetes resource kinds to filter on. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
-	cmd.Flags().StringArrayVarP(&f.KindsIgnore, "kind-ignore", "", nil, "adds Kubernetes resource kinds to exclude. For kind expressions see: https://github.com/jenkins-x/jx-helpers/v3/tree/master/docs/kind_filters.md")
-	cmd.Flags().StringToStringVarP(&f.Selector, "selector", "", nil, "adds Kubernetes label selector to filter on, e.g. -s app=pusher-wave,heritage=Helm")
-	cmd.Flags().StringVar(&f.SelectTarget, "selector-target", "", "sets which path in the Kubernetes resources to select on instead of metadata.labels.")
-	cmd.Flags().BoolVarP(&f.InvertSelector, "invert-selector", "", false, "inverts the effect of selector to exclude resources matched by selector")
+	cmd.Flags().StringArrayVarP(&f.Kinds, "kind", "k", nil,
+		"adds Kubernetes resource kinds to filter on. For kind expressions see:"+
+			" https://github.com/jenkins-x/jx-helpers/tree/master/docs/kind_filters.md")
+	cmd.Flags().StringArrayVarP(&f.KindsIgnore, "kind-ignore", "", nil,
+		"adds Kubernetes resource kinds to exclude. For kind expressions see:"+
+			" https://github.com/jenkins-x/jx-helpers/tree/master/docs/kind_filters.md")
+	cmd.Flags().StringToStringVarP(&f.Selector, "selector", "", nil,
+		"adds Kubernetes label selector to filter on, e.g. -s app=pusher-wave,heritage=Helm")
+	cmd.Flags().StringVar(&f.SelectTarget, "selector-target", "",
+		"sets which path in the Kubernetes resources to select on instead of metadata.labels.")
+	cmd.Flags().BoolVarP(&f.InvertSelector, "invert-selector", "", false,
+		"inverts the effect of selector to exclude resources matched by selector")
 }
 
 // Parse parses the filter strings
