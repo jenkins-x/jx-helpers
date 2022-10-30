@@ -105,6 +105,7 @@ func LoadGitCredential() ([]Credentials, error) {
 
 // loadGitCredentialsAuthFile loads the git credentials file
 func LoadGitCredentialsFile(fileName string) ([]Credentials, bool, error) {
+	pMask := "****"
 	log.Logger().Debugf("loading git credentials file %s", termcolor.ColorInfo(fileName))
 
 	exists, err := files.FileExists(fileName)
@@ -137,7 +138,7 @@ func LoadGitCredentialsFile(fileName string) ([]Credentials, bool, error) {
 		username := user.Username()
 		password, _ := user.Password()
 		if username == "" {
-			log.Logger().Warnf("ignoring missing user name in git credentials file: %s URL: %s", fileName, line)
+			log.Logger().Warnf("ignoring missing user name in git credentials file: %s URL: %s", fileName, strings.ReplaceAll(line, password, pMask))
 			continue
 		}
 		if password == "" {
