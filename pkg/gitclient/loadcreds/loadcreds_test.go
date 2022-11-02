@@ -4,10 +4,12 @@
 package loadcreds_test
 
 import (
+	"bytes"
 	"path/filepath"
 	"testing"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/loadcreds"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +21,7 @@ func TestGitCredentialsFile(t *testing.T) {
 }
 
 func TestLoadGitCredentials(t *testing.T) {
-	fileName := filepath.Join("test_data", "git", "credentials")
+	fileName := filepath.Join("testdata", "git", "credentials")
 	config, exists, err := loadcreds.LoadGitCredentialsFile(fileName)
 	require.NoError(t, err, "should not have failed to load file %s", fileName)
 	assert.NotNil(t, config, "should have returned not nil config for file %s", fileName)
@@ -43,4 +45,13 @@ func assertServerUserPassword(t *testing.T, configs []loadcreds.Credentials, ser
 
 	t.Logf("found server %s username %s password %s", credentials.ServerURL, credentials.Username, credentials.Password)
 	return credentials
+}
+
+func TestPasswordMask(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	log.SetOutput(buffer)
+	fileName := filepath.Join("testdata", "git", "credentials_missing_pass")
+	_, _, _ = loadcreds.LoadGitCredentialsFile(fileName)
+	// The test credential file has pass1234 as the password, but our logs should not contain this
+	assert.NotContains(t, buffer.String(), "pass1234")
 }
