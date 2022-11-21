@@ -10,6 +10,11 @@ import (
 
 // StringMapHasValue returns true if the given map contains the given value
 func StringMapHasValue(m map[string]string, value string) bool {
+	return MapHasValue(m, value)
+}
+
+// StringHasValue returns true if the given map contains the given value
+func MapHasValue[K comparable, V comparable](m map[K]V, value V) bool {
 	if m == nil {
 		return false
 	}
@@ -22,10 +27,12 @@ func StringMapHasValue(m map[string]string, value string) bool {
 }
 
 // MapKeys returns the keys of a given map
-func MapKeys(m map[string]string) []string {
-	var keys []string
+func MapKeys[V interface{}](m map[string]V) []string {
+	keys := make([]string, len(m))
+	count := 0
 	for key := range m {
-		keys = append(keys, key)
+		keys[count] = key
+		count++
 	}
 	return keys
 }
@@ -34,8 +41,8 @@ func MapKeys(m map[string]string) []string {
 //
 // so if you want to add some annotations to a resource you can do
 // resource.Annotations = kube.MergeMaps(resource.Annotations, myAnnotations)
-func MergeMaps(maps ...map[string]string) map[string]string {
-	answer := map[string]string{}
+func MergeMaps[K comparable, V interface{}](maps ...map[K]V) map[K]V {
+	answer := map[K]V{}
 	for _, m := range maps {
 		if m != nil {
 			for k, v := range m {
@@ -47,13 +54,13 @@ func MergeMaps(maps ...map[string]string) map[string]string {
 }
 
 // CombineMapTrees recursively copies all the values from the input map into the destination map preserving any missing entries in the destination
-func CombineMapTrees(destination map[string]interface{}, input map[string]interface{}) {
+func CombineMapTrees[K comparable](destination map[K]interface{}, input map[K]interface{}) {
 	for k, v := range input {
 		old, exists := destination[k]
 		if exists {
-			vm, ok := v.(map[string]interface{})
+			vm, ok := v.(map[K]interface{})
 			if ok {
-				oldm, ok := old.(map[string]interface{})
+				oldm, ok := old.(map[K]interface{})
 				if ok {
 					// if both entries are maps lets combine them
 					// otherwise we assume that the input entry is correct
@@ -176,7 +183,7 @@ func KeyValuesToMap(values []string) map[string]string {
 	return answer
 }
 
-// MapToKeyValues converts the the map into a sorted array of key/value pairs
+// MapToKeyValues converts the map into a sorted array of key/value pairs
 func MapToKeyValues(values map[string]string) []string {
 	var answer []string
 	for k, v := range values {
