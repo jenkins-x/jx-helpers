@@ -382,11 +382,7 @@ func SparseCloneToDir(g Interface, gitURL, dir string, shallow bool, sparseCheck
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to clone repository %s to directory: %s", gitURL, dir)
 	}
-	_, err = g.Command(dir, "sparse-checkout", "init")
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to initiate sparse checkout")
-	}
-	sparseCheckoutArgs := append([]string{"sparse-checkout", "set"}, sparseCheckoutPatterns...)
+	sparseCheckoutArgs := append([]string{"sparse-checkout", "--no-cone", "set"}, sparseCheckoutPatterns...)
 	_, err = g.Command(dir, sparseCheckoutArgs...)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to set sparse checkout patterns to %v", sparseCheckoutPatterns)
