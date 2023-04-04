@@ -29,7 +29,7 @@ func LazyCreateDynamicClient(client dynamic.Interface) (dynamic.Interface, error
 	f := kubeclient.NewFactory()
 	cfg, err := f.CreateKubeConfig()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get kubernetes config, Please make sure that you have set up a cluster before running a quickstart. See Administration documentation.")
+		return nil, errors.Wrap(err, "failed to get kubernetes config.Please make sure that you have set up a cluster before running a quickstart.")
 	}
 	client, err = dynamic.NewForConfig(cfg)
 	if err != nil {
