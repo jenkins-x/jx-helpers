@@ -216,23 +216,21 @@ func IngressURL(ing *nv1.Ingress) string {
 	}
 
 	rule := ing.Spec.Rules[0]
-	for _, tls := range ing.Spec.TLS {
-		for _, h := range tls.Hosts {
-			if h != "" {
-				url := "https://" + h
-				log.Logger().Debugf("found service url %s", url)
-				return url
-			}
-		}
-	}
-	ann := ing.Annotations
 	hostname := rule.Host
-	if hostname == "" && ann != nil {
+	ann := ing.Annotations
+	if ann != nil && ann[kube.AnnotationHost] != "" {
 		hostname = ann[kube.AnnotationHost]
 	}
+
 	if hostname == "" {
 		log.Logger().Debug("Could not find hostname from rule or ingress annotation")
 		return ""
+	}
+
+	if len(ing.Spec.TLS) > 0 {
+		url := "https://" + hostname
+		log.Logger().Debugf("found service url %s", url)
+		return url
 	}
 
 	url := "http://" + hostname
