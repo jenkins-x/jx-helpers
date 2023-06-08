@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -605,4 +606,26 @@ func Merge(g Interface, dir string, commitish string) error {
 		return errors.Wrapf(err, "failed to merge %s", commitish)
 	}
 	return nil
+}
+
+// GetSizePack returns the disk space consumed by the packs in a repository in bytes
+func GetSizePack(g Interface, dir string) (int64, error) {
+	out, err := g.Command(dir, "count-objects", "-v")
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to get size-pack in dir %s", dir)
+	}
+
+	// count-objects command does not have a format flag, so we need to parse the output
+	for _, line := range strings.Split(out, "\n") {
+		if strings.HasPrefix(line, "size-pack:") {
+			sizeString := strings.TrimSpace(strings.TrimPrefix(line, "size-pack:"))
+			size, err := strconv.ParseInt(sizeString, 10, 64)
+			if err != nil {
+				return 0, err
+			}
+			// git returns the pack size in KiB, so we need to convert to B
+			return size * 1024, nil
+		}
+	}
+	return 0, errors.Errorf("no size-pack found in git output: %s", out)
 }
