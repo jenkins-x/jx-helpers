@@ -2,7 +2,6 @@ package gitclient
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -337,7 +336,7 @@ func CloneToDir(g Interface, gitURL, dir string) (string, error) {
 			return "", errors.Wrapf(err, "failed to create directory %s", dir)
 		}
 	} else {
-		dir, err = ioutil.TempDir("", "jx-git-")
+		dir, err = os.MkdirTemp("", "jx-git-")
 		if err != nil {
 			return "", errors.Wrap(err, "failed to create temporary directory")
 		}
@@ -366,7 +365,7 @@ func SparseCloneToDir(g Interface, gitURL, dir string, shallow bool, sparseCheck
 			return "", errors.Wrapf(err, "failed to create directory %s", dir)
 		}
 	} else {
-		dir, err = ioutil.TempDir("", "jx-git-")
+		dir, err = os.MkdirTemp("", "jx-git-")
 		if err != nil {
 			return "", errors.Wrap(err, "failed to create temporary directory")
 		}
