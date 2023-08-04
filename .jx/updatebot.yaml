@@ -3,23 +3,10 @@ kind: UpdateConfig
 spec:
   rules:
     - changes:
-        - regex:
-            pattern: |
-              github.com/jenkins-x/jx-helpers v(.*)
-            files:
-              - "go.mod"
         - go:
             owner:
               - jenkins-x-plugins
-            repositories:
-              include:
-                - jx-project
-                - jx-pipeline
-                - jx-admin
-                - jx-preview
-                - jx-updatebot
             package: github.com/jenkins-x/jx-helpers
             upgradePackages:
               include:
-                - "github.com/jenkins-x/*"
-                - "github.com/jenkins-x-plugins/*"
+                - "github.com/jenkins-x/jx-helpers"
