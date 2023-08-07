@@ -22,4 +22,4 @@ spec:
             package: github.com/jenkins-x/jx-helpers
             upgradePackages:
               include:
-                - "github.com/jenkins-x/jx-helpers"
+                - "github.com/jenkins-x/jx-helpers/*"
