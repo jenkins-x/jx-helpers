@@ -112,7 +112,7 @@ func (f *Filter) AddKindFlags(cmd *cobra.Command) {
 // AddSelectorFlags add CLI flags for specifying the selector part of a filter
 func (f *Filter) AddSelectorFlags(cmd *cobra.Command) {
 	cmd.Flags().StringToStringVarP(&f.Selector, "selector", "", nil,
-		"adds Kubernetes label selector to filter on, e.g. -s app=pusher-wave,heritage=Helm")
+		"adds Kubernetes label selector to filter on, e.g. --selector app=pusher-wave,heritage=Helm")
 	cmd.Flags().StringVar(&f.SelectTarget, "selector-target", "",
 		"sets which path in the Kubernetes resources to select on instead of metadata.labels.")
 	cmd.Flags().BoolVarP(&f.InvertSelector, "invert-selector", "", false,
