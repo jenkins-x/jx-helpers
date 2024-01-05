@@ -84,7 +84,7 @@ func toValidName(name string, allowDots bool, maxLength int) string {
 			if !allowDots && ch == '.' {
 				ch = '-'
 			}
-			if !(ch >= 'a' && ch <= 'z') && !(ch >= '0' && ch <= '9') && ch != '-' && ch != '.' {
+			if !(ch >= 'a' && ch <= 'z') && !(ch >= '0' && ch <= '9') && ch != '-' && ch != '.' && ch != '/' {
 				ch = '-'
 			}
 
