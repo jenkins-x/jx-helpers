@@ -2,15 +2,20 @@ package jobs
 
 import (
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // IsJobSucceeded returns true if the job completed and did not fail
 func IsJobSucceeded(job *batchv1.Job) bool {
-	return IsJobFinished(job) && job.Status.Succeeded > 0
+	return IsJobFinished(job) && job.Status.Conditions[0].Type == batchv1.JobComplete
 }
 
 // IsJobFinished returns true if the job has completed
 func IsJobFinished(job *batchv1.Job) bool {
-	BackoffLimit := job.Spec.BackoffLimit
-	return job.Status.CompletionTime != nil || (job.Status.Active == 0 && BackoffLimit != nil && job.Status.Failed >= *BackoffLimit)
+	for _, con := range job.Status.Conditions {
+		if con.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
