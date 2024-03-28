@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	gitcfg "gopkg.in/src-d/go-git.v4/config"
+	gitcfg "github.com/go-git/go-git/v5/config"
 )
 
 // DiscoverUpstreamGitURL discovers the upstream git URL from the given git configuration
