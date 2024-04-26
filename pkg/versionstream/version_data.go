@@ -2,7 +2,12 @@ package versionstream
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/blang/semver"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
@@ -11,12 +16,6 @@ import (
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
-
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 // Callback a callback function for processing version information. Return true to continue processing
@@ -60,6 +59,11 @@ var (
 
 // StableVersion stores the stable version information
 type StableVersion struct {
+	// Indicates that this chart is deprecated and should be replaced with ReplacementChart
+	ReplacementChart string `json:"replacementChart,omitempty"`
+	// ReplacementChartPrefix can hold a replacement chart prefix in case ReplacementChart is set
+	ReplacementChartPrefix string `json:"replacementChartPrefix,omitempty"`
+
 	// Version the default version to use
 	Version string `json:"version,omitempty"`
 	// VersionUpperLimit represents the upper limit which indicates a version which is too new.
