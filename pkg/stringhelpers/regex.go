@@ -1,6 +1,8 @@
 package stringhelpers
 
-import "regexp"
+import (
+	"regexp"
+)
 
 // Group is a submatch group
 type Group struct {

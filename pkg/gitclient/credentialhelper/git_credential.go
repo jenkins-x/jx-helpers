@@ -2,8 +2,8 @@ package credentialhelper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,7 +16,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -48,17 +47,17 @@ func CreateGitCredential(lines []string) (GitCredential, error) {
 
 	fieldMap, err := stringhelpers.ExtractKeyValuePairs(lines, "=")
 	if err != nil {
-		return credential, errors.Wrap(err, "unable to extract git credential parameters")
+		return credential, fmt.Errorf("unable to extract git credential parameters: %w", err)
 	}
 
 	data, err := json.Marshal(fieldMap)
 	if err != nil {
-		return GitCredential{}, errors.Wrapf(err, "unable to marshal git credential data")
+		return GitCredential{}, fmt.Errorf("unable to marshal git credential data: %w", err)
 	}
 
 	err = json.Unmarshal(data, &credential)
 	if err != nil {
-		return GitCredential{}, errors.Wrapf(err, "unable unmarshal git credential data")
+		return GitCredential{}, fmt.Errorf("unable unmarshal git credential data: %w", err)
 	}
 
 	return credential, nil
@@ -74,7 +73,7 @@ func CreateGitCredentialFromURL(gitURL string, username string, password string)
 
 	u, err := url.Parse(gitURL)
 	if err != nil {
-		return credential, errors.Wrapf(err, "unable to parse URL %s", gitURL)
+		return credential, fmt.Errorf("unable to parse URL %s: %w", gitURL, err)
 	}
 
 	credential.Protocol = u.Scheme
@@ -142,7 +141,7 @@ func (g *GitCredential) URL() (url.URL, error) {
 	}
 	u, err := url.Parse(urlAsString)
 	if err != nil {
-		return url.URL{}, errors.Wrap(err, "unable to construct URL")
+		return url.URL{}, fmt.Errorf("unable to construct URL: %w", err)
 	}
 
 	u.User = url.UserPassword(g.Username, g.Password)
@@ -159,7 +158,7 @@ func WriteGitCredentialFromSecretMount() error {
 
 	server, err := parseGitSecretServerUrl(os.Getenv(GIT_SECRET_SERVER))
 	if err != nil {
-		return errors.Wrapf(err, "failed to parse environment variable %s=%s", GIT_SECRET_SERVER, os.Getenv(GIT_SECRET_SERVER))
+		return fmt.Errorf("failed to parse environment variable %s=%s: %w", GIT_SECRET_SERVER, os.Getenv(GIT_SECRET_SERVER), err)
 	}
 
 	if mountLocation == "" {
@@ -176,7 +175,7 @@ func WriteGitCredentialFromSecretMount() error {
 
 	exists, err := files.DirExists(mountLocation)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if %s exists", mountLocation)
+		return fmt.Errorf("failed to check if %s exists: %w", mountLocation, err)
 	}
 	if !exists {
 		return fmt.Errorf("failed to find directory %s", mountLocation)
@@ -187,7 +186,7 @@ func WriteGitCredentialFromSecretMount() error {
 
 	exists, err = files.FileExists(userPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if %s exists", userPath)
+		return fmt.Errorf("failed to check if %s exists: %w", userPath, err)
 	}
 	if !exists {
 		return fmt.Errorf("failed to find user secret %s", userPath)
@@ -195,33 +194,33 @@ func WriteGitCredentialFromSecretMount() error {
 
 	exists, err = files.FileExists(passPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if %s exists", passPath)
+		return fmt.Errorf("failed to check if %s exists: %w", passPath, err)
 	}
 	if !exists {
 		return fmt.Errorf("failed to find password secret %s", passPath)
 	}
 
-	userData, err := ioutil.ReadFile(userPath)
+	userData, err := os.ReadFile(userPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %s", userPath)
+		return fmt.Errorf("failed to read %s: %w", userPath, err)
 	}
 
-	passData, err := ioutil.ReadFile(passPath)
+	passData, err := os.ReadFile(passPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %s", passPath)
+		return fmt.Errorf("failed to read %s: %w", passPath, err)
 	}
 
 	// match structure defined here https://git-scm.com/docs/git-credential-store
 	file, err := getCredentialsFilename(xdgCongifHome)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get credentials filename to use to write git auth to")
+		return fmt.Errorf("failed to get credentials filename to use to write git auth to: %w", err)
 	}
 
 	contents := fmt.Sprintf("%s://%s:%s@%s", server.Scheme, userData, passData, server.Host)
 
-	err = ioutil.WriteFile(file, []byte(contents), files.DefaultFileWritePermissions)
+	err = os.WriteFile(file, []byte(contents), files.DefaultFileWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to write file %s", file)
+		return fmt.Errorf("failed to write file %s: %w", file, err)
 	}
 
 	log.Logger().Infof("wrote git credentials file %s", termcolor.ColorInfo(file))
@@ -233,7 +232,7 @@ func getCredentialsFilename(xdgCongifHome string) (string, error) {
 	if xdgCongifHome == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", errors.Wrapf(err, "no $XDG_CONFIG_HOME set and failed to find user home directory")
+			return "", fmt.Errorf("no $XDG_CONFIG_HOME set and failed to find user home directory: %w", err)
 		}
 		return filepath.Join(home, ".git-credentials"), nil
 	}
@@ -241,12 +240,12 @@ func getCredentialsFilename(xdgCongifHome string) (string, error) {
 	writeDirectory := filepath.Join(xdgCongifHome, "git")
 	exists, err := files.DirExists(writeDirectory)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to check if directory %s exists", writeDirectory)
+		return "", fmt.Errorf("failed to check if directory %s exists: %w", writeDirectory, err)
 	}
 	if !exists {
 		err = os.MkdirAll(writeDirectory, os.ModePerm)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to create directory %s", writeDirectory)
+			return "", fmt.Errorf("failed to create directory %s: %w", writeDirectory, err)
 		}
 	}
 	return filepath.Join(xdgCongifHome, "git", "credentials"), nil

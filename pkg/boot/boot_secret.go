@@ -2,11 +2,12 @@ package boot
 
 import (
 	"context"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -29,7 +30,7 @@ type BootSecret struct {
 func LoadBootSecret(kubeClient kubernetes.Interface, ns, operatorNamespace, secretName, defaultUserName string) (*BootSecret, error) {
 	secret, err := getBootSecret(kubeClient, ns, operatorNamespace, secretName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find boot secret")
+		return nil, fmt.Errorf("failed to find boot secret: %w", err)
 	}
 
 	answer := &BootSecret{}
@@ -62,7 +63,7 @@ func getBootSecret(kubeClient kubernetes.Interface, ns string, operatorNamespace
 		secret, err = kubeClient.CoreV1().Secrets(operatorNamespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	}
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find secret %s in namespace %s or %s", secretName, ns, operatorNamespace)
+		return nil, fmt.Errorf("failed to find secret %s in namespace %s or %s: %w", secretName, ns, operatorNamespace, err)
 	}
 	return secret, nil
 }

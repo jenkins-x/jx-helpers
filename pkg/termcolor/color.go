@@ -1,10 +1,10 @@
 package termcolor
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 )
 
 // ColorInfo returns a new function that returns info-colorized (green) strings for the
@@ -90,7 +90,7 @@ func GetColor(optionName string, colorNames []string) (*color.Color, error) {
 	for _, colorName := range colorNames {
 		a := colorMap[colorName]
 		if a == color.Attribute(0) {
-			return nil, errors.Errorf("invalid color option %s name %s when has values %#v", optionName, colorName, ColorNameValues())
+			return nil, fmt.Errorf("invalid color option %s name %s when has values %#v", optionName, colorName, ColorNameValues())
 		}
 		attributes = append(attributes, a)
 	}

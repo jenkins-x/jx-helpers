@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-errors/errors"
 	"github.com/google/uuid"
 	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 func Init(g Interface, dir string) error {
 	_, err := g.Command(dir, "init")
 	if err != nil {
-		return errors.Wrapf(err, "failed to initialise git in dir %s", dir)
+		return fmt.Errorf("failed to initialise git in dir %s: %w", dir, err)
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func Add(g Interface, dir string, args ...string) error {
 	add := append([]string{"add"}, args...)
 	_, err := g.Command(dir, add...)
 	if err != nil {
-		return errors.Wrapf(err, "failed to add %s to git", strings.Join(args, ", "))
+		return fmt.Errorf("failed to add %s to git: %w", strings.Join(args, ", "), err)
 	}
 	return nil
 }
@@ -44,18 +44,18 @@ func Add(g Interface, dir string, args ...string) error {
 func AddAndCommitFiles(gitter Interface, dir, message string) (bool, error) {
 	_, err := gitter.Command(dir, "add", "*")
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to add files to git")
+		return false, fmt.Errorf("failed to add files to git: %w", err)
 	}
 	changes, err := HasChanges(gitter, dir)
 	if err != nil {
-		return changes, errors.Wrapf(err, "failed to check if there are changes")
+		return changes, fmt.Errorf("failed to check if there are changes: %w", err)
 	}
 	if !changes {
 		return changes, nil
 	}
 	_, err = gitter.Command(dir, "commit", "-m", message)
 	if err != nil {
-		return changes, errors.Wrapf(err, "failed to git commit initial code changes")
+		return changes, fmt.Errorf("failed to git commit initial code changes: %w", err)
 	}
 	return changes, nil
 }
@@ -66,12 +66,12 @@ func CreateBranch(gitter Interface, dir string) (string, error) {
 	gitRef := branchName
 	_, err := gitter.Command(dir, "branch", branchName)
 	if err != nil {
-		return branchName, errors.Wrapf(err, "create branch %s from %s", branchName, gitRef)
+		return branchName, fmt.Errorf("create branch %s from %s: %w", branchName, gitRef, err)
 	}
 
 	_, err = gitter.Command(dir, "checkout", branchName)
 	if err != nil {
-		return branchName, errors.Wrapf(err, "checkout branch %s", branchName)
+		return branchName, fmt.Errorf("checkout branch %s: %w", branchName, err)
 	}
 	return branchName, nil
 }
@@ -80,7 +80,7 @@ func CreateBranch(gitter Interface, dir string) (string, error) {
 func CreateBranchFrom(g Interface, dir string, branchName string, startPoint string) error {
 	_, err := g.Command(dir, "branch", branchName, startPoint)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create branch %s from %s", branchName, startPoint)
+		return fmt.Errorf("failed to create branch %s from %s: %w", branchName, startPoint, err)
 	}
 	return nil
 }
@@ -90,7 +90,7 @@ func SetUpstreamTo(g Interface, dir string, branch string) error {
 	upstream := fmt.Sprintf("origin/%s", branch)
 	_, err := g.Command(dir, "branch", "--set-upstream-to", upstream, branch)
 	if err != nil {
-		return errors.Wrapf(err, "failed to set upstream to %s for branch %s", upstream, branch)
+		return fmt.Errorf("failed to set upstream to %s for branch %s: %w", upstream, branch, err)
 	}
 	return nil
 }
@@ -99,7 +99,7 @@ func SetUpstreamTo(g Interface, dir string, branch string) error {
 func RefIsBranch(gitter Interface, dir string, ref string) (bool, error) {
 	remoteBranches, err := RemoteBranches(gitter, dir)
 	if err != nil {
-		return false, errors.Wrapf(err, "error getting remote branches to find provided ref %s", ref)
+		return false, fmt.Errorf("error getting remote branches to find provided ref %s: %w", ref, err)
 	}
 	for _, b := range remoteBranches {
 		if strings.Contains(b, ref) {
@@ -134,14 +134,14 @@ func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) e
 	remoteName := "origin"
 	_, err := g.Command(dir, "init")
 	if err != nil {
-		return errors.Wrapf(err, "failed to init a new git repository in directory %s", dir)
+		return fmt.Errorf("failed to init a new git repository in directory %s: %w", dir, err)
 	}
 	if true {
 		log.Logger().Infof("ran git init in %s", dir)
 	}
 	err = AddRemote(g, dir, "origin", gitURL)
 	if err != nil {
-		return errors.Wrapf(err, "failed to add remote %s with url %s in directory %s", remoteName, gitURL, dir)
+		return fmt.Errorf("failed to add remote %s with url %s in directory %s: %w", remoteName, gitURL, dir, err)
 	}
 	if true {
 		log.Logger().Infof("ran git add remote %s %s in %s", remoteName, gitURL, dir)
@@ -149,8 +149,9 @@ func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) e
 
 	_, err = g.Command(dir, "fetch", remoteName, branch, "--depth=1")
 	if err != nil {
-		return errors.Wrapf(err, "failed to fetch %s from %s in directory %s", branch, gitURL,
-			dir)
+		return fmt.Errorf("failed to fetch %s from %s in directory %s: %w", branch, gitURL,
+			dir, err)
+
 	}
 	_, err = g.Command(dir, "checkout", "-t", fmt.Sprintf("%s/%s", remoteName, branch))
 	if err != nil {
@@ -160,7 +161,7 @@ func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) e
 			// git init checks out the master branch by default
 			_, err = g.Command(dir, "branch", branch)
 			if err != nil {
-				return errors.Wrapf(err, "failed to create branch %s in directory %s", branch, dir)
+				return fmt.Errorf("failed to create branch %s in directory %s: %w", branch, dir, err)
 			}
 
 			if true {
@@ -169,12 +170,13 @@ func ShallowCloneBranch(g Interface, gitURL string, branch string, dir string) e
 		}
 		_, err = g.Command(dir, "reset", "--hard", fmt.Sprintf("%s/%s", remoteName, branch))
 		if err != nil {
-			return errors.Wrapf(err, "failed to reset hard to %s in directory %s", branch, dir)
+			return fmt.Errorf("failed to reset hard to %s in directory %s: %w", branch, dir, err)
 		}
 		_, err = g.Command(dir, "branch", "--set-upstream-to", fmt.Sprintf("%s/%s", remoteName, branch), branch)
 		if err != nil {
-			return errors.Wrapf(err, "failed to set tracking information to %s/%s %s in directory %s", remoteName,
-				branch, branch, dir)
+			return fmt.Errorf("failed to set tracking information to %s/%s %s in directory %s: %w", remoteName,
+				branch, branch, dir, err)
+
 		}
 	}
 	return nil
@@ -210,7 +212,7 @@ func Describe(g Interface, dir string, contains bool, commitish string, abbrev s
 				return commitish, "", nil
 			}
 		}
-		return "", "", errors.Wrapf(err, "running git %s", strings.Join(args, " "))
+		return "", "", fmt.Errorf("running git %s: %w", strings.Join(args, " "), err)
 	}
 	trimmed := strings.TrimSpace(strings.Trim(out, "\n"))
 	parts := splitDescribeRegex.Split(trimmed, -1)
@@ -251,7 +253,7 @@ func CommitIfChanges(g Interface, dir string, message string) error {
 	}
 	_, err = g.Command(dir, "commit", "-m", message)
 	if err != nil {
-		return errors.Wrap(err, "failed to commit to git")
+		return fmt.Errorf("failed to commit to git: %w", err)
 	}
 	return nil
 }
@@ -292,14 +294,14 @@ func FindGitConfigDir(dir string) (string, string, error) {
 func GetCommitPointedToByLatestTag(g Interface, dir string) (string, string, error) {
 	tagSHA, tagName, err := NthTag(g, dir, 1)
 	if err != nil {
-		return "", "", errors.Wrapf(err, "getting commit pointed to by latest tag in %s", dir)
+		return "", "", fmt.Errorf("getting commit pointed to by latest tag in %s: %w", dir, err)
 	}
 	if tagSHA == "" {
 		return tagSHA, tagName, nil
 	}
 	commitSHA, err := g.Command(dir, "rev-list", "-n", "1", tagSHA)
 	if err != nil {
-		return "", "", errors.Wrapf(err, "running for git rev-list -n 1 %s", tagSHA)
+		return "", "", fmt.Errorf("running for git rev-list -n 1 %s: %w", tagSHA, err)
 	}
 	return commitSHA, tagName, err
 }
@@ -310,7 +312,7 @@ func NthTag(g Interface, dir string, n int) (string, string, error) {
 	out, err := g.Command(dir, "for-each-ref", "--sort=-creatordate",
 		"--format=%(objectname)%00%(refname:short)", fmt.Sprintf("--count=%d", n), "refs/tags")
 	if err != nil {
-		return "", "", errors.Wrapf(err, "running git")
+		return "", "", fmt.Errorf("running git: %w", err)
 	}
 	tagList := strings.Split(out, "\n")
 
@@ -321,7 +323,7 @@ func NthTag(g Interface, dir string, n int) (string, string, error) {
 	fields := strings.Split(tagList[n-1], "\x00")
 
 	if len(fields) != 2 {
-		return "", "", errors.Errorf("Unexpected format for returned tag and sha: '%s'", tagList[n-1])
+		return "", "", fmt.Errorf("Unexpected format for returned tag and sha: '%s'", tagList[n-1])
 	}
 
 	return fields[0], fields[1], nil
@@ -333,12 +335,12 @@ func CloneToDir(g Interface, gitURL, dir string) (string, error) {
 	if dir != "" {
 		err = os.MkdirAll(dir, util.DefaultWritePermissions)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to create directory %s", dir)
+			return "", fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	} else {
 		dir, err = os.MkdirTemp("", "jx-git-")
 		if err != nil {
-			return "", errors.Wrap(err, "failed to create temporary directory")
+			return "", fmt.Errorf("failed to create temporary directory: %w", err)
 		}
 	}
 
@@ -347,7 +349,7 @@ func CloneToDir(g Interface, gitURL, dir string) (string, error) {
 	parentDir := filepath.Dir(dir)
 	_, err = g.Command(parentDir, "clone", gitURL, dir)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to clone repository %s to directory: %s", gitURL, dir)
+		return "", fmt.Errorf("failed to clone repository %s to directory: %s: %w", gitURL, dir, err)
 	}
 	return dir, nil
 }
@@ -362,12 +364,12 @@ func SparseCloneToDir(g Interface, gitURL, dir string, shallow bool, sparseCheck
 	if dir != "" {
 		err = os.MkdirAll(dir, util.DefaultWritePermissions)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to create directory %s", dir)
+			return "", fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	} else {
 		dir, err = os.MkdirTemp("", "jx-git-")
 		if err != nil {
-			return "", errors.Wrap(err, "failed to create temporary directory")
+			return "", fmt.Errorf("failed to create temporary directory: %w", err)
 		}
 	}
 
@@ -380,16 +382,16 @@ func SparseCloneToDir(g Interface, gitURL, dir string, shallow bool, sparseCheck
 	}
 	_, err = g.Command(parentDir, append(sparseCloneArgs, gitURL, dir)...)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to clone repository %s to directory: %s", gitURL, dir)
+		return "", fmt.Errorf("failed to clone repository %s to directory: %s: %w", gitURL, dir, err)
 	}
 	sparseCheckoutArgs := append([]string{"sparse-checkout", "set", "--no-cone"}, sparseCheckoutPatterns...)
 	_, err = g.Command(dir, sparseCheckoutArgs...)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to set sparse checkout patterns to %v", sparseCheckoutPatterns)
+		return "", fmt.Errorf("failed to set sparse checkout patterns to %v: %w", sparseCheckoutPatterns, err)
 	}
 	_, err = g.Command(dir, "checkout")
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to checkout sparsly")
+		return "", fmt.Errorf("failed to checkout sparsly: %w", err)
 	}
 	return dir, nil
 }
@@ -414,7 +416,7 @@ func Push(g Interface, dir string, remote string, force bool, refspec ...string)
 	args = append(args, refspec...)
 	_, err := g.Command(dir, args...)
 	if err != nil {
-		return errors.Wrapf(err, "failed to push to the branch %v", refspec)
+		return fmt.Errorf("failed to push to the branch %v: %w", refspec, err)
 	}
 	return nil
 }
@@ -436,7 +438,7 @@ func CloneOrPull(g Interface, url string, dir string) error {
 	}
 	_, err = CloneToDir(g, url, dir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to clone %s to %s", url, dir)
+		return fmt.Errorf("failed to clone %s to %s: %w", url, dir, err)
 	}
 	return nil
 
@@ -446,7 +448,7 @@ func CloneOrPull(g Interface, url string, dir string) error {
 func Pull(g Interface, dir string) error {
 	_, err := g.Command(dir, "pull")
 	if err != nil {
-		return errors.Wrapf(err, "failed to git pull in dir %s", dir)
+		return fmt.Errorf("failed to git pull in dir %s: %w", dir, err)
 	}
 	return nil
 }
@@ -455,7 +457,7 @@ func Pull(g Interface, dir string) error {
 func FetchTags(g Interface, dir string) error {
 	_, err := g.Command(dir, "fetch", "--tags")
 	if err != nil {
-		return errors.Wrapf(err, "failed to fetch tags")
+		return fmt.Errorf("failed to fetch tags: %w", err)
 	}
 	return nil
 }
@@ -464,7 +466,7 @@ func FetchTags(g Interface, dir string) error {
 func FetchRemoteTags(g Interface, dir string, repo string) error {
 	_, err := g.Command(dir, "fetch", repo, "--tags")
 	if err != nil {
-		return errors.Wrapf(err, "failed to fetch remote tags")
+		return fmt.Errorf("failed to fetch remote tags: %w", err)
 	}
 	return nil
 }
@@ -503,7 +505,7 @@ func fetchBranch(g Interface, dir string, repo string, unshallow bool, shallow b
 	verbose bool, refspecs ...string) error {
 	args := []string{"fetch", repo}
 	if shallow && unshallow {
-		return errors.Errorf("cannot use --depth=1 and --unshallow at the same time")
+		return fmt.Errorf("cannot use --depth=1 and --unshallow at the same time")
 	}
 	if shallow {
 		args = append(args, "--depth=1")
@@ -516,7 +518,7 @@ func fetchBranch(g Interface, dir string, repo string, unshallow bool, shallow b
 	}
 	_, err := g.Command(dir, args...)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.New(err)
 	}
 	if verbose {
 		if shallow {
@@ -535,7 +537,7 @@ func fetchBranch(g Interface, dir string, repo string, unshallow bool, shallow b
 func Checkout(g Interface, dir string, branch string) error {
 	_, err := g.Command(dir, "checkout", branch)
 	if err != nil {
-		return errors.Wrapf(err, "failed to checkout %s", branch)
+		return fmt.Errorf("failed to checkout %s: %w", branch, err)
 	}
 	return nil
 }
@@ -550,7 +552,7 @@ func CheckoutRemoteBranch(g Interface, dir string, branch string) error {
 	if stringhelpers.StringArrayIndex(remoteBranches, remoteBranch) < 0 {
 		_, err := g.Command(dir, "checkout", "-t", remoteBranch)
 		if err != nil {
-			return errors.Wrapf(err, "failed to checkout %s", remoteBranch)
+			return fmt.Errorf("failed to checkout %s: %w", remoteBranch, err)
 		}
 		return nil
 	}
@@ -588,7 +590,7 @@ func GetLatestCommitAuthorEmail(g Interface, dir string) (string, error) {
 func Remove(g Interface, dir, fileName string) error {
 	_, err := g.Command(dir, "rm", "-r", fileName)
 	if err != nil {
-		return errors.Wrapf(err, "failed to remove %s in dir %s", fileName, dir)
+		return fmt.Errorf("failed to remove %s in dir %s: %w", fileName, dir, err)
 	}
 	return nil
 }
@@ -602,7 +604,7 @@ func Status(g Interface, dir string) (string, error) {
 func Merge(g Interface, dir string, commitish string) error {
 	_, err := g.Command(dir, "merge", commitish)
 	if err != nil {
-		return errors.Wrapf(err, "failed to merge %s", commitish)
+		return fmt.Errorf("failed to merge %s: %w", commitish, err)
 	}
 	return nil
 }
@@ -611,7 +613,7 @@ func Merge(g Interface, dir string, commitish string) error {
 func GetSizePack(g Interface, dir string) (int64, error) {
 	out, err := g.Command(dir, "count-objects", "-v")
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to get size-pack in dir %s", dir)
+		return 0, fmt.Errorf("failed to get size-pack in dir %s: %w", dir, err)
 	}
 
 	// count-objects command does not have a format flag, so we need to parse the output
@@ -626,5 +628,5 @@ func GetSizePack(g Interface, dir string) (int64, error) {
 			return size * 1024, nil
 		}
 	}
-	return 0, errors.Errorf("no size-pack found in git output: %s", out)
+	return 0, fmt.Errorf("no size-pack found in git output: %s", out)
 }

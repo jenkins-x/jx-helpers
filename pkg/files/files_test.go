@@ -5,7 +5,6 @@ package files_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -58,11 +57,11 @@ func TestDeleteDirContents(t *testing.T) {
 	for _, filename := range testFileNames {
 		//Validate filename deletion as a file, directory, and non-empty directory.
 		filePath := filepath.Join(tmpDir, filename)
-		ioutil.WriteFile(filePath, []byte(filename), os.ModePerm)
+		os.WriteFile(filePath, []byte(filename), os.ModePerm)
 		dirPath := filepath.Join(tmpDir, filename+"-dir")
 		os.Mkdir(dirPath, os.ModeDir)
 		fileInDirPath := filepath.Join(dirPath, filename)
-		ioutil.WriteFile(fileInDirPath, []byte(filename), os.ModePerm)
+		os.WriteFile(fileInDirPath, []byte(filename), os.ModePerm)
 	}
 
 	//delete contents
@@ -93,11 +92,11 @@ func TestDeleteDirContentsExcept(t *testing.T) {
 	for _, filename := range testFileNames {
 		//Validate filename deletion as a file, directory, and non-empty directory.
 		filePath := filepath.Join(tmpDir, filename)
-		ioutil.WriteFile(filePath, []byte(filename), os.ModePerm)
+		os.WriteFile(filePath, []byte(filename), os.ModePerm)
 		dirPath := filepath.Join(tmpDir, filename+"-dir")
 		os.Mkdir(dirPath, os.ModeDir)
 		fileInDirPath := filepath.Join(dirPath, filename)
-		ioutil.WriteFile(fileInDirPath, []byte(filename), os.ModePerm)
+		os.WriteFile(fileInDirPath, []byte(filename), os.ModePerm)
 	}
 
 	//delete contents
@@ -129,7 +128,7 @@ func Test_FileExists_for_existing_file_returns_true(t *testing.T) {
 
 	data := []byte("hello\nworld\n")
 	testFile := filepath.Join(tmpDir, "hello.txt")
-	err := ioutil.WriteFile(testFile, data, 0644)
+	err := os.WriteFile(testFile, data, 0644)
 	require.NoError(t, err, "failed to create test file %s", testFile)
 
 	exists, err := filehelpers.FileExists(testFile)

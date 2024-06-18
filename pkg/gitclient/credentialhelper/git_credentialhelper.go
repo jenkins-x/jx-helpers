@@ -2,10 +2,9 @@ package credentialhelper
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 // GitCredentialsHelper is used to implement the git credential helper algorithm.
@@ -53,7 +52,7 @@ func (h *GitCredentialsHelper) Run(op string) error {
 		// not yet implemented (HF)
 		fmt.Println("")
 	default:
-		err = errors.Errorf("invalid git credential operation '%s'", op)
+		err = fmt.Errorf("invalid git credential operation '%s'", op)
 	}
 
 	return err
@@ -69,19 +68,19 @@ func (h *GitCredentialsHelper) Get() error {
 	}
 
 	if scanner.Err() != nil {
-		return errors.Wrap(scanner.Err(), "unable to read input from stdin")
+		return fmt.Errorf("unable to read input from stdin: %w", scanner.Err())
 	}
 
 	gitCredential, err := CreateGitCredential(data)
 	if err != nil {
-		return errors.Wrap(scanner.Err(), "unable to create GitCredential struct")
+		return fmt.Errorf("unable to create GitCredential struct: %w", scanner.Err())
 	}
 
 	answer := h.Fill(gitCredential)
 
 	_, err = fmt.Fprintf(h.out, answer.String())
 	if err != nil {
-		return errors.Wrap(err, "unable to write response to stdin")
+		return fmt.Errorf("unable to write response to stdin: %w", err)
 	}
 
 	return nil

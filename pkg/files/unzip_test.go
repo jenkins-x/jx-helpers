@@ -4,7 +4,7 @@
 package files
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -23,7 +23,7 @@ func TestUnzip(t *testing.T) {
 
 	err = Unzip(zipFile, dest)
 	require.NoError(t, err, "failed to unzip archive")
-	files, err := ioutil.ReadDir(dest)
+	files, err := os.ReadDir(dest)
 	require.NoError(t, err, "failed to list files")
 
 	assert.Len(t, files, 2)
@@ -45,7 +45,7 @@ func TestUnzipSpecificFilesHappyPath(t *testing.T) {
 
 	err = UnzipSpecificFiles(zipFile, dest, "file2.txt")
 	require.NoError(t, err, "failed to unzip archive")
-	files, err := ioutil.ReadDir(dest)
+	files, err := os.ReadDir(dest)
 	require.NoError(t, err, "failed to list files")
 
 	assert.Len(t, files, 1)
@@ -67,7 +67,7 @@ func TestUnzipSpecificFilesMIssingFile(t *testing.T) {
 }
 
 func assertFileContents(t *testing.T, file, expected string) {
-	bytes, err := ioutil.ReadFile(file)
+	bytes, err := os.ReadFile(file)
 	if assert.NoError(t, err, "could not read contents of %s", file) {
 		assert.Equal(t, expected, string(bytes), "file contents for %s did not match", file)
 	}

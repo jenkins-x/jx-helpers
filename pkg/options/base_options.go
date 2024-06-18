@@ -9,7 +9,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/signals"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -52,14 +52,14 @@ func (o *BaseOptions) Validate() error {
 	if o.LogLevel != "" {
 		err := log.SetLevel(o.LogLevel)
 		if err != nil {
-			return errors.Wrapf(err, "failed to set the log level %s", o.LogLevel)
+			return fmt.Errorf("failed to set the log level %s: %w", o.LogLevel, err)
 		}
 		return nil
 	}
 	if o.Verbose {
 		err := log.SetLevel("debug")
 		if err != nil {
-			return errors.Wrapf(err, "failed to set debug level")
+			return fmt.Errorf("failed to set debug level: %w", err)
 		}
 	}
 	if o.Out == nil {

@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
-	"github.com/pkg/errors"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	fakedyn "k8s.io/client-go/dynamic/fake"
@@ -29,11 +30,11 @@ func LazyCreateDynamicClient(client dynamic.Interface) (dynamic.Interface, error
 	f := kubeclient.NewFactory()
 	cfg, err := f.CreateKubeConfig()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get kubernetes config")
+		return nil, fmt.Errorf("failed to get kubernetes config: %w", err)
 	}
 	client, err = dynamic.NewForConfig(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "error building dynamic clientset")
+		return nil, fmt.Errorf("error building dynamic clientset: %w", err)
 	}
 	return client, nil
 }
@@ -55,11 +56,11 @@ func LazyCreateKubeClientWithMandatory(client kubernetes.Interface, mandatory bo
 	f := kubeclient.NewFactory()
 	cfg, err := f.CreateKubeConfig()
 	if err != nil {
-		return client, errors.Wrap(err, "failed to get kubernetes config")
+		return client, fmt.Errorf("failed to get kubernetes config: %w", err)
 	}
 	client, err = kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return client, errors.Wrap(err, "error building kubernetes clientset")
+		return client, fmt.Errorf("error building kubernetes clientset: %w", err)
 	}
 	return client, nil
 }
@@ -82,18 +83,18 @@ func LazyCreateKubeClientAndNamespace(client kubernetes.Interface, ns string) (k
 		f := kubeclient.NewFactory()
 		cfg, err := f.CreateKubeConfig()
 		if err != nil {
-			return client, ns, errors.Wrap(err, "failed to get kubernetes config")
+			return client, ns, fmt.Errorf("failed to get kubernetes config: %w", err)
 		}
 		client, err = kubernetes.NewForConfig(cfg)
 		if err != nil {
-			return client, ns, errors.Wrap(err, "error building kubernetes clientset")
+			return client, ns, fmt.Errorf("error building kubernetes clientset: %w", err)
 		}
 	}
 	if ns == "" {
 		var err error
 		ns, err = kubeclient.CurrentNamespace()
 		if err != nil {
-			return client, ns, errors.Wrap(err, "failed to get current kubernetes namespace")
+			return client, ns, fmt.Errorf("failed to get current kubernetes namespace: %w", err)
 		}
 	}
 	return client, ns, nil

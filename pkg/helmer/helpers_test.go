@@ -183,7 +183,7 @@ func TestReplaceVaultURI(t *testing.T) {
 		assert2.NoError(t, err)
 	}()
 	assert2.NoError(t, err)
-	err = ioutil.WriteFile(valuesFile.Name(), []byte(valuesyaml), 0600)
+	err = os.WriteFile(valuesFile.Name(), []byte(valuesyaml), 0600)
 	assert2.NoError(t, err)
 	options := helm.InstallChartOptions{
 		ValueFiles: []string{
@@ -199,7 +199,7 @@ func TestReplaceVaultURI(t *testing.T) {
 	cleanup, err := options.DecorateWithSecrets(vaultClient)
 	defer cleanup()
 	assert2.Len(t, options.ValueFiles, 1)
-	newValuesYaml, err := ioutil.ReadFile(options.ValueFiles[0])
+	newValuesYaml, err := os.ReadFile(options.ValueFiles[0])
 	assert2.NoError(t, err)
 	assert2.Equal(t, fmt.Sprintf(`foo:
   bar: %s
@@ -220,7 +220,7 @@ func TestReplaceVaultURIWithLocalFile(t *testing.T) {
 		assert2.NoError(t, err)
 	}()
 	assert2.NoError(t, err)
-	err = ioutil.WriteFile(valuesFile.Name(), []byte(valuesyaml), 0600)
+	err = os.WriteFile(valuesFile.Name(), []byte(valuesyaml), 0600)
 	assert2.NoError(t, err)
 	options := helm.InstallChartOptions{
 		ValueFiles: []string{
@@ -239,7 +239,7 @@ func TestReplaceVaultURIWithLocalFile(t *testing.T) {
 	cleanup, err := options.DecorateWithSecrets(vaultClient)
 	defer cleanup()
 	assert2.Len(t, options.ValueFiles, 1)
-	newValuesYaml, err := ioutil.ReadFile(options.ValueFiles[0])
+	newValuesYaml, err := os.ReadFile(options.ValueFiles[0])
 	assert2.NoError(t, err)
 	assert2.Equal(t, fmt.Sprintf(`foo:
   bar: %s

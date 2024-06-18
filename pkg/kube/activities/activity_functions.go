@@ -1,10 +1,11 @@
 package activities
 
 import (
+	"fmt"
 	"time"
 
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
-	"github.com/pkg/errors"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -76,7 +77,7 @@ func StartPromotionUpdate(a *v1.PipelineActivity, s *v1.PipelineActivityStep, ps
 	if pullRequest != nil {
 		err = CompletePromotionPullRequest(a, s, ps, pullRequest)
 		if err != nil {
-			return errors.Wrap(err, "unable to complete promotion pull request")
+			return fmt.Errorf("unable to complete promotion pull request: %w", err)
 		}
 	}
 	if p.StartedTimestamp == nil {

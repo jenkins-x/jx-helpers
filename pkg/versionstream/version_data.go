@@ -2,7 +2,6 @@ package versionstream
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,7 +13,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"sigs.k8s.io/yaml"
 )
 
@@ -96,12 +95,12 @@ func (data *StableVersion) VerifyPackage(name string, currentVersion string, wor
 
 	currentSem, err := semver.Make(currentVersion)
 	if err != nil {
-		return errors.Wrapf(err, "failed to parse semantic version for current version %s for package %s", currentVersion, name)
+		return fmt.Errorf("failed to parse semantic version for current version %s for package %s: %w", currentVersion, name, err)
 	}
 
 	minSem, err := semver.Make(version)
 	if err != nil {
-		return errors.Wrapf(err, "failed to parse required semantic version %s for package %s", version, name)
+		return fmt.Errorf("failed to parse required semantic version %s for package %s: %w", version, name, err)
 	}
 
 	upperLimitText := ConvertToVersion(data.UpperLimit)
@@ -119,7 +118,7 @@ func (data *StableVersion) VerifyPackage(name string, currentVersion string, wor
 
 	limitSem, err := semver.Make(upperLimitText)
 	if err != nil {
-		return errors.Wrapf(err, "failed to parse upper limit version %s for package %s", upperLimitText, name)
+		return fmt.Errorf("failed to parse upper limit version %s for package %s: %w", upperLimitText, name, err)
 	}
 
 	if currentSem.GE(limitSem) {
@@ -163,7 +162,7 @@ func LoadStableVersion(wrkDir string, kind VersionKind, name string) (*StableVer
 	path := filepath.Join(wrkDir, string(kind), name, "defaults.yaml")
 	exists, err := files.FileExists(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to check if path exists %s", path)
+		return nil, fmt.Errorf("failed to check if path exists %s: %w", path, err)
 	}
 	if !exists {
 		path = filepath.Join(wrkDir, string(kind), name+".yml")
@@ -188,18 +187,18 @@ func LoadStableVersionFile(path string) (*StableVersion, error) {
 	version := &StableVersion{}
 	exists, err := files.FileExists(path)
 	if err != nil {
-		return version, errors.Wrapf(err, "failed to check if file exists %s", path)
+		return version, fmt.Errorf("failed to check if file exists %s: %w", path, err)
 	}
 	if !exists {
 		return version, nil
 	}
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return version, errors.Wrapf(err, "failed to load YAML file %s", path)
+		return version, fmt.Errorf("failed to load YAML file %s: %w", path, err)
 	}
 	version, err = LoadStableVersionFromData(data)
 	if err != nil {
-		return version, errors.Wrapf(err, "failed to unmarshal YAML for file %s", path)
+		return version, fmt.Errorf("failed to unmarshal YAML for file %s: %w", path, err)
 	}
 	return version, err
 }
@@ -209,7 +208,7 @@ func LoadStableVersionFromData(data []byte) (*StableVersion, error) {
 	version := &StableVersion{}
 	err := yaml.Unmarshal(data, version)
 	if err != nil {
-		return version, errors.Wrapf(err, "failed to unmarshal YAML")
+		return version, fmt.Errorf("failed to unmarshal YAML: %w", err)
 	}
 	return version, err
 }
@@ -246,17 +245,17 @@ func SaveStableVersion(wrkDir string, kind VersionKind, name string, stableVersi
 func SaveStableVersionFile(path string, stableVersion *StableVersion) error {
 	data, err := yaml.Marshal(stableVersion)
 	if err != nil {
-		return errors.Wrapf(err, "failed to marshal data to YAML %#v", stableVersion)
+		return fmt.Errorf("failed to marshal data to YAML %#v: %w", stableVersion, err)
 	}
 	dir, _ := filepath.Split(path)
 	err = os.MkdirAll(dir, files.DefaultDirWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create directory %s", dir)
+		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
-	err = ioutil.WriteFile(path, data, files.DefaultFileWritePermissions)
+	err = os.WriteFile(path, data, files.DefaultFileWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to write file %s", path)
+		return fmt.Errorf("failed to write file %s: %w", path, err)
 	}
 	return nil
 }
@@ -299,7 +298,7 @@ func ResolveDockerImage(versionsDir, image string) (string, error) {
 func UpdateStableVersionFiles(globPattern string, version string, excludeFiles ...string) ([]string, error) {
 	matchingFiles, err := filepath.Glob(globPattern)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create glob from pattern %s", globPattern)
+		return nil, fmt.Errorf("failed to create glob from pattern %s: %w", globPattern, err)
 	}
 	answer := make([]string, 0)
 
@@ -310,7 +309,7 @@ func UpdateStableVersionFiles(globPattern string, version string, excludeFiles .
 		}
 		data, err := LoadStableVersionFile(path)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to load oldVersion info for %s", path)
+			return nil, fmt.Errorf("failed to load oldVersion info for %s: %w", path, err)
 		}
 		if data.Version == "" || data.Version == version {
 			continue
@@ -319,7 +318,7 @@ func UpdateStableVersionFiles(globPattern string, version string, excludeFiles .
 		data.Version = version
 		err = SaveStableVersionFile(path, data)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to save oldVersion info for %s", path)
+			return nil, fmt.Errorf("failed to save oldVersion info for %s: %w", path, err)
 		}
 	}
 	return answer, nil
@@ -341,7 +340,7 @@ func UpdateStableVersion(dir string, kindStr string, name string, version string
 
 	err = SaveStableVersion(dir, kind, name, data)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to save versionstream file")
+		return nil, fmt.Errorf("failed to save versionstream file: %w", err)
 	}
 	return answer, nil
 }
@@ -352,18 +351,18 @@ func GetRepositoryPrefixes(dir string) (*RepositoryPrefixes, error) {
 	fileName := filepath.Join(dir, "charts", "repositories.yml")
 	exists, err := files.FileExists(fileName)
 	if err != nil {
-		return answer, errors.Wrapf(err, "failed to find file %s", fileName)
+		return answer, fmt.Errorf("failed to find file %s: %w", fileName, err)
 	}
 	if !exists {
 		return answer, nil
 	}
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
-		return answer, errors.Wrapf(err, "failed to load file %s", fileName)
+		return answer, fmt.Errorf("failed to load file %s: %w", fileName, err)
 	}
 	err = yaml.Unmarshal(data, answer)
 	if err != nil {
-		return answer, errors.Wrapf(err, "failed to unmarshal YAML in file %s", fileName)
+		return answer, fmt.Errorf("failed to unmarshal YAML in file %s: %w", fileName, err)
 	}
 	return answer, nil
 }
@@ -374,18 +373,18 @@ func GetQuickStarts(dir string) (*QuickStarts, error) {
 	fileName := filepath.Join(dir, "quickstarts.yml")
 	exists, err := files.FileExists(fileName)
 	if err != nil {
-		return answer, errors.Wrapf(err, "failed to find file %s", fileName)
+		return answer, fmt.Errorf("failed to find file %s: %w", fileName, err)
 	}
 	if !exists {
 		return answer, nil
 	}
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
-		return answer, errors.Wrapf(err, "failed to load file %s", fileName)
+		return answer, fmt.Errorf("failed to load file %s: %w", fileName, err)
 	}
 	err = yaml.Unmarshal(data, &answer)
 	if err != nil {
-		return answer, errors.Wrapf(err, "failed to unmarshal YAML in file %s", fileName)
+		return answer, fmt.Errorf("failed to unmarshal YAML in file %s: %w", fileName, err)
 	}
 	return answer, nil
 }
@@ -394,12 +393,12 @@ func GetQuickStarts(dir string) (*QuickStarts, error) {
 func SaveQuickStarts(dir string, qs *QuickStarts) error {
 	data, err := yaml.Marshal(qs)
 	if err != nil {
-		return errors.Wrapf(err, "failed to marshal quickstarts to YAML")
+		return fmt.Errorf("failed to marshal quickstarts to YAML: %w", err)
 	}
 	fileName := filepath.Join(dir, "quickstarts.yml")
-	err = ioutil.WriteFile(fileName, data, files.DefaultFileWritePermissions)
+	err = os.WriteFile(fileName, data, files.DefaultFileWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to save file %s", fileName)
+		return fmt.Errorf("failed to save file %s: %w", fileName, err)
 	}
 	return nil
 }
@@ -514,7 +513,7 @@ func (p *RepositoryPrefixes) URLsForPrefix(prefix string) []string {
 func NameFromPath(basepath string, path string) (string, error) {
 	name, err := filepath.Rel(basepath, path)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to extract base path from %s", path)
+		return "", fmt.Errorf("failed to extract base path from %s: %w", path, err)
 	}
 	ext := filepath.Ext(name)
 	if ext != "" {

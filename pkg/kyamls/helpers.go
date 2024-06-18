@@ -1,10 +1,11 @@
 package kyamls
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -34,7 +35,7 @@ func GetNamespace(node *yaml.RNode, path string) string {
 func GetMap(node *yaml.RNode, filePath string, mapPath []string) (map[string]string, error) {
 	mapNode, err := node.Pipe(yaml.Lookup(mapPath...))
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get %v", mapPath)
+		return nil, fmt.Errorf("failed to get %v: %w", mapPath, err)
 	}
 	m := map[string]string{}
 	if mapNode == nil {
@@ -44,17 +45,17 @@ func GetMap(node *yaml.RNode, filePath string, mapPath []string) (map[string]str
 		v := ""
 		k, err := node.Key.String()
 		if err != nil {
-			return errors.Wrapf(err, "failed to find %v key for path %s", mapPath, filePath)
+			return fmt.Errorf("failed to find %v key for path %s: %w", mapPath, filePath, err)
 		}
 		v, err = node.Value.String()
 		if err != nil {
-			return errors.Wrapf(err, "failed to find %v %s value for path %s", mapPath, k, filePath)
+			return fmt.Errorf("failed to find %v %s value for path %s: %w", mapPath, k, filePath, err)
 		}
 		m[strings.TrimSpace(k)] = strings.TrimSpace(v)
 		return nil
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get %v", mapPath)
+		return nil, fmt.Errorf("failed to get %v: %w", mapPath, err)
 	}
 	return m, nil
 }

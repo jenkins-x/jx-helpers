@@ -2,6 +2,7 @@ package scmhelpers
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/loadcreds"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,7 +23,7 @@ import (
 func NewScmClient(kind, gitServerURL, token string, ignoreMissingToken bool) (*scm.Client, string, error) {
 	creds, err := loadcreds.LoadGitCredential()
 	if err != nil {
-		return nil, token, errors.Wrapf(err, "failed to load git credentials")
+		return nil, token, fmt.Errorf("failed to load git credentials: %w", err)
 	}
 	serverCreds := loadcreds.GetServerCredentials(creds, gitServerURL)
 	if token == "" {
@@ -41,7 +42,7 @@ func NewScmClient(kind, gitServerURL, token string, ignoreMissingToken bool) (*s
 		if ignoreMissingToken {
 			return nil, token, nil
 		}
-		return nil, token, errors.Wrapf(err, "failed to load git credentials")
+		return nil, token, fmt.Errorf("failed to load git credentials: %w", err)
 	}
 	username := serverCreds.Username
 	if username == "" {
@@ -75,12 +76,12 @@ func DiscoverGitKind(jxClient versioned.Interface, namespace, gitServerURL strin
 	var err error
 	jxClient, namespace, err = jxclient.LazyCreateJXClientAndNamespace(jxClient, namespace)
 	if err != nil {
-		return gitKind, errors.Wrapf(err, "failed to create jx client")
+		return gitKind, fmt.Errorf("failed to create jx client: %w", err)
 	}
 
 	resources, err := jxClient.JenkinsV1().SourceRepositories(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
-		return gitKind, errors.Wrapf(err, "failed to list SourceRepository resources in namespace %s", namespace)
+		return gitKind, fmt.Errorf("failed to list SourceRepository resources in namespace %s: %w", namespace, err)
 	}
 	for _, sr := range resources.Items {
 		ss := &sr.Spec

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,8 +11,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 
 	jxClient "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 
@@ -171,7 +168,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 			termcolor.ColorInfo(version), termcolor.ColorInfo(fmt.Sprintf("jx %s", plugin.Spec.SubCommand)), termcolor.ColorInfo(u), pluginBinDir)
 
 		// Look for other versions to cleanup
-		fileObs, err := ioutil.ReadDir(pluginBinDir)
+		fileObs, err := os.ReadDir(pluginBinDir)
 		if err != nil {
 			return path, err
 		}
@@ -199,7 +196,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 			return "", err
 		}
 		filename := filepath.Base(pluginURL.Path)
-		tmpDir, err := ioutil.TempDir("", pluginName)
+		tmpDir, err := os.MkdirTemp("", pluginName)
 		defer func() {
 			err := os.RemoveAll(tmpDir)
 			if err != nil {
@@ -267,13 +264,13 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 			oldPath = filepath.Join(tmpDir, oldFile)
 			exists, err := files.FileExists(oldPath)
 			if err != nil {
-				return "", errors.Wrapf(err, "failed to check if file %s exists", oldPath)
+				return "", fmt.Errorf("failed to check if file %s exists: %w", oldPath, err)
 			}
 			if !exists {
 				// lets look in sub dirs...
-				fs, err := ioutil.ReadDir(tmpDir)
+				fs, err := os.ReadDir(tmpDir)
 				if err != nil {
-					return "", errors.Wrapf(err, "failed to read dir %s", tmpDir)
+					return "", fmt.Errorf("failed to read dir %s: %w", tmpDir, err)
 				}
 				for _, f := range fs {
 					n := f.Name()
@@ -283,7 +280,7 @@ func EnsurePluginInstalledForAliasFile(plugin jxCore.Plugin, pluginBinDir string
 					oldPath2 := filepath.Join(tmpDir, n, oldFile)
 					exists, err = files.FileExists(oldPath2)
 					if err != nil {
-						return "", errors.Wrapf(err, "failed to check if file %s exists", oldPath2)
+						return "", fmt.Errorf("failed to check if file %s exists: %w", oldPath2, err)
 					}
 					if exists {
 						oldPath = oldPath2

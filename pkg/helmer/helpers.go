@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -20,7 +19,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"sigs.k8s.io/yaml"
 
 	"helm.sh/helm/v3/pkg/chart"
@@ -79,7 +78,7 @@ type Requirements struct {
 func AddHelmRepoIfMissing(helmer Helmer, helmURL, repoName, username, password string) (string, error) {
 	missing, existingName, err := helmer.IsRepoMissing(helmURL)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to check if the repository with URL '%s' is missing", helmURL)
+		return "", fmt.Errorf("failed to check if the repository with URL '%s' is missing: %w", helmURL, err)
 	}
 	if missing {
 		if repoName == "" {
@@ -95,7 +94,7 @@ func AddHelmRepoIfMissing(helmer Helmer, helmURL, repoName, username, password s
 		// Avoid collisions
 		existingRepos, err := helmer.ListRepos()
 		if err != nil {
-			return "", errors.Wrapf(err, "listing helm repos")
+			return "", fmt.Errorf("listing helm repos: %w", err)
 		}
 		baseName := repoName
 		for i := 0; true; i++ {
@@ -108,7 +107,7 @@ func AddHelmRepoIfMissing(helmer Helmer, helmURL, repoName, username, password s
 		log.Logger().Debugf("Adding missing Helm repo: %s %s", termcolor.ColorInfo(repoName), termcolor.ColorInfo(helmURL))
 		err = helmer.AddRepo(repoName, helmURL, username, password)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to add the repository '%s' with URL '%s'", repoName, helmURL)
+			return "", fmt.Errorf("failed to add the repository '%s' with URL '%s': %w", repoName, helmURL, err)
 		}
 		log.Logger().Debugf("Successfully added Helm repository %s.", repoName)
 	} else {
@@ -205,7 +204,7 @@ func findFileName(dir string, fileName string) (string, error) {
 			return name, nil
 		}
 	}
-	myfiles, err := ioutil.ReadDir(dir)
+	myfiles, err := os.ReadDir(dir)
 	if err != nil {
 		return "", err
 	}
@@ -245,7 +244,7 @@ func LoadRequirementsFile(fileName string) (*Requirements, error) {
 		return nil, err
 	}
 	if exists {
-		data, err := ioutil.ReadFile(fileName)
+		data, err := os.ReadFile(fileName)
 		if err != nil {
 			return nil, err
 		}
@@ -262,7 +261,7 @@ func LoadChartFile(fileName string) (*chart.Metadata, error) {
 		return nil, err
 	}
 	if exists {
-		data, err := ioutil.ReadFile(fileName)
+		data, err := os.ReadFile(fileName)
 		if err != nil {
 			return nil, err
 		}
@@ -275,16 +274,16 @@ func LoadChartFile(fileName string) (*chart.Metadata, error) {
 func LoadValuesFile(fileName string) (map[string]interface{}, error) {
 	exists, err := files.FileExists(fileName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "checking %s exists", fileName)
+		return nil, fmt.Errorf("checking %s exists: %w", fileName, err)
 	}
 	if exists {
-		data, err := ioutil.ReadFile(fileName)
+		data, err := os.ReadFile(fileName)
 		if err != nil {
-			return nil, errors.Wrapf(err, "reading %s", fileName)
+			return nil, fmt.Errorf("reading %s: %w", fileName, err)
 		}
 		v, err := LoadValues(data)
 		if err != nil {
-			return nil, errors.Wrapf(err, "unmarshaling %s", fileName)
+			return nil, fmt.Errorf("unmarshaling %s: %w", fileName, err)
 		}
 		return v, nil
 	}
@@ -304,7 +303,7 @@ func LoadTemplatesDir(dirName string) (map[string]string, error) {
 	}
 	answer := make(map[string]string)
 	if exists {
-		files, err := ioutil.ReadDir(dirName)
+		files, err := os.ReadDir(dirName)
 		if err != nil {
 			return nil, err
 		}
@@ -341,11 +340,11 @@ func LoadValues(data []byte) (map[string]interface{}, error) {
 func SaveFile(fileName string, contents interface{}) error {
 	data, err := yaml.Marshal(contents)
 	if err != nil {
-		return errors.Wrapf(err, "failed to marshal helm file %s", fileName)
+		return fmt.Errorf("failed to marshal helm file %s: %w", fileName, err)
 	}
-	err = ioutil.WriteFile(fileName, data, files.DefaultFileWritePermissions)
+	err = os.WriteFile(fileName, data, files.DefaultFileWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to save helm file %s", fileName)
+		return fmt.Errorf("failed to save helm file %s: %w", fileName, err)
 	}
 	return nil
 }
@@ -370,15 +369,15 @@ func LoadChartNameAndVersion(chartFile string) (string, string, error) {
 func ModifyChart(chartFile string, fn func(chart *chart.Metadata) error) error {
 	chart, err := chartutil.LoadChartfile(chartFile)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to load chart file %s", chartFile)
+		return fmt.Errorf("Failed to load chart file %s: %w", chartFile, err)
 	}
 	err = fn(chart)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to modify chart for file %s", chartFile)
+		return fmt.Errorf("Failed to modify chart for file %s: %w", chartFile, err)
 	}
 	err = chartutil.SaveChartfile(chartFile, chart)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to save modified chart file %s", chartFile)
+		return fmt.Errorf("Failed to save modified chart file %s: %w", chartFile, err)
 	}
 	return nil
 }
@@ -397,12 +396,12 @@ func AppendMyValues(valueFiles []string) ([]string, error) {
 	// from ~/.jx folder also only if it's present
 	curDir, err := os.Getwd()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get the current working directory")
+		return nil, fmt.Errorf("failed to get the current working directory: %w", err)
 	}
 	myValuesFile := filepath.Join(curDir, "myvalues.yaml")
 	exists, err := files.FileExists(myValuesFile)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to check if the myvaules.yaml file exists in the current directory")
+		return nil, fmt.Errorf("failed to check if the myvaules.yaml file exists in the current directory: %w", err)
 	}
 	if exists {
 		valueFiles = append(valueFiles, myValuesFile)
@@ -410,12 +409,12 @@ func AppendMyValues(valueFiles []string) ([]string, error) {
 	} else {
 		configDir, err := util.ConfigDir()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read the config directory")
+			return nil, fmt.Errorf("failed to read the config directory: %w", err)
 		}
 		myValuesFile = filepath.Join(configDir, "myvalues.yaml")
 		exists, err = util.FileExists(myValuesFile)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to check if the myvaules.yaml file exists in the .jx directory")
+			return nil, fmt.Errorf("failed to check if the myvaules.yaml file exists in the .jx directory: %w", err)
 		}
 		if exists {
 			valueFiles = append(valueFiles, myValuesFile)
@@ -447,7 +446,7 @@ func CombineValueFilesToFile(outFile string, inputFiles []string, chartName stri
 	for _, input := range inputFiles {
 		values, err := chartutil.ReadValuesFile(input)
 		if err != nil {
-			return errors.Wrapf(err, "Failed to read helm values YAML file %s", input)
+			return fmt.Errorf("Failed to read helm values YAML file %s: %w", input, err)
 		}
 		sourceMap := answer.AsMap()
 		maps.CombineMapTrees(sourceMap, values.AsMap())
@@ -461,11 +460,11 @@ func CombineValueFilesToFile(outFile string, inputFiles []string, chartName stri
 	answer = chartutil.Values(answerMap)
 	text, err := answer.YAML()
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal the combined values YAML files back to YAML")
+		return fmt.Errorf("Failed to marshal the combined values YAML files back to YAML: %w", err)
 	}
-	err = ioutil.WriteFile(outFile, []byte(text), files.DefaultFileWritePermissions)
+	err = os.WriteFile(outFile, []byte(text), files.DefaultFileWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to save combined helm values YAML file %s", outFile)
+		return fmt.Errorf("Failed to save combined helm values YAML file %s: %w", outFile, err)
 	}
 	return nil
 }
@@ -492,7 +491,7 @@ func InspectChart(chart string, version string, repo string, username string, pa
 		dirPrefix = "jx-helm-fetch"
 	}
 
-	dir, err := ioutil.TempDir("", dirPrefix)
+	dir, err := os.MkdirTemp("", dirPrefix)
 	defer func() {
 		err1 := os.RemoveAll(dir)
 		if err1 != nil {
@@ -500,7 +499,7 @@ func InspectChart(chart string, version string, repo string, username string, pa
 		}
 	}()
 	if err != nil {
-		return errors.Wrapf(err, "creating tempdir")
+		return fmt.Errorf("creating tempdir: %w", err)
 	}
 	parts := strings.Split(chart, "/")
 	inspectPath := filepath.Join(dir, parts[len(parts)-1])
@@ -508,7 +507,7 @@ func InspectChart(chart string, version string, repo string, username string, pa
 		// This is a local path
 		err := files.CopyDir(chart, dir, true)
 		if err != nil {
-			return errors.Wrapf(err, "copying %s to %s", chart, dir)
+			return fmt.Errorf("copying %s to %s: %w", chart, dir, err)
 		}
 		helmer.SetCWD(dir)
 		inspectPath = dir
@@ -637,7 +636,7 @@ func DecorateWithSecrets(valueFiles []string, secretURLClient secreturl.Client) 
 			if err != nil {
 				return nil, cleanup, errors.Wrapf(err, "creating temp file for %s", valueFile)
 			}
-			bytes, err := ioutil.ReadFile(valueFile)
+			bytes, err := os.ReadFile(valueFile)
 			if err != nil {
 				return nil, cleanup, errors.Wrapf(err, "reading file %s", valueFile)
 			}
@@ -648,7 +647,7 @@ func DecorateWithSecrets(valueFiles []string, secretURLClient secreturl.Client) 
 					return nil, cleanup, errors.Wrapf(err, "replacing vault URIs")
 				}
 			}
-			err = ioutil.WriteFile(newValuesFile.Name(), []byte(newValues), 0600)
+			err = os.WriteFile(newValuesFile.Name(), []byte(newValues), 0600)
 			if err != nil {
 				return nil, cleanup, errors.Wrapf(err, "writing new values file %s", newValuesFile.Name())
 			}
@@ -667,7 +666,7 @@ func LoadParameters(dir string, secretURLClient secreturl.Client) (chartutil.Val
 	}
 	m := map[string]interface{}{}
 	if exists {
-		data, err := ioutil.ReadFile(fileName)
+		data, err := os.ReadFile(fileName)
 		if err != nil {
 			return nil, errors.Wrapf(err, "reading %s", fileName)
 		}

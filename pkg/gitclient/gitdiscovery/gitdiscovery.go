@@ -7,14 +7,13 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/gitconfig"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
-	"github.com/pkg/errors"
 )
 
 // FindGitURLFromDir tries to find the git clone URL from the given directory
 func FindGitURLFromDir(dir string, preferUpstream bool) (string, error) {
 	_, gitConfDir, err := gitclient.FindGitConfigDir(dir)
 	if err != nil {
-		return "", errors.Wrapf(err, "there was a problem obtaining the git config dir of directory %s", dir)
+		return "", fmt.Errorf("there was a problem obtaining the git config dir of directory %s: %w", dir, err)
 	}
 
 	if gitConfDir == "" {
@@ -32,10 +31,10 @@ func FindGitURLFromDir(dir string, preferUpstream bool) (string, error) {
 func FindGitInfoFromDir(dir string) (*giturl.GitRepository, error) {
 	gitURL, err := FindGitURLFromDir(dir, false)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to discover the git URL")
+		return nil, fmt.Errorf("failed to discover the git URL: %w", err)
 	}
 	if gitURL == "" {
-		return nil, errors.Errorf("no git URL could be discovered")
+		return nil, fmt.Errorf("no git URL could be discovered")
 	}
 
 	return giturl.ParseGitURL(gitURL)

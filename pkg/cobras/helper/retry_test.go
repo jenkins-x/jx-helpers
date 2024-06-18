@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -97,7 +96,7 @@ func TestRetryCommand(t *testing.T) {
 
 	for _, tc := range testCases {
 		if tc.createTestFile {
-			err := ioutil.WriteFile(tc.filename, []byte{105, 110}, os.ModePerm)
+			err := os.WriteFile(tc.filename, []byte{105, 110}, os.ModePerm)
 			if err != nil {
 				t.Fatalf("failed to write test file %s", tc.filename)
 			}

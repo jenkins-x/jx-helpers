@@ -2,7 +2,6 @@ package linter
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +13,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/table"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 	yaml2 "gopkg.in/yaml.v2"
 	"sigs.k8s.io/yaml"
@@ -62,7 +61,7 @@ func (o *Options) Lint(ls []Linter, dir string) error {
 		path := filepath.Join(dir, l.Path)
 		exists, err := files.FileExists(path)
 		if err != nil {
-			return errors.Wrapf(err, "failed to check if file exists %s", path)
+			return fmt.Errorf("failed to check if file exists %s: %w", path, err)
 		}
 		if !exists {
 			continue
@@ -75,7 +74,7 @@ func (o *Options) Lint(ls []Linter, dir string) error {
 
 		err = l.Linter(path, test)
 		if err != nil {
-			return errors.Wrapf(err, "failed to lint %s", path)
+			return fmt.Errorf("failed to lint %s: %w", path, err)
 		}
 	}
 	return o.LogResults()
@@ -131,9 +130,9 @@ func (o *Options) logTapResults() error {
 
 	text := buf.String()
 	if o.OutFile != "" {
-		err := ioutil.WriteFile(o.OutFile, []byte(text), files.DefaultFileWritePermissions)
+		err := os.WriteFile(o.OutFile, []byte(text), files.DefaultFileWritePermissions)
 		if err != nil {
-			return errors.Wrapf(err, "failed to save file %s", o.OutFile)
+			return fmt.Errorf("failed to save file %s: %w", o.OutFile, err)
 		}
 		log.Logger().Infof("saved file %s", info(o.OutFile))
 		return nil
@@ -144,9 +143,9 @@ func (o *Options) logTapResults() error {
 
 // LintResource lints a resource
 func (o *Options) LintResource(path string, test *Test, resource interface{}) error {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %s", path)
+		return fmt.Errorf("failed to read %s: %w", path, err)
 	}
 
 	err = yaml.UnmarshalStrict(data, resource)
@@ -157,7 +156,7 @@ func (o *Options) LintResource(path string, test *Test, resource interface{}) er
 
 	validationErrors, err := util.ValidateYaml(resource, data)
 	if err != nil {
-		return errors.Wrapf(err, "failed to validate %s", path)
+		return fmt.Errorf("failed to validate %s: %w", path, err)
 	}
 
 	for _, msg := range validationErrors {
@@ -172,9 +171,9 @@ func (o *Options) LintResource(path string, test *Test, resource interface{}) er
 
 // LintYaml2Resource lints a resource
 func (o *Options) LintYaml2Resource(path string, test *Test, resource interface{}) error {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %s", path)
+		return fmt.Errorf("failed to read %s: %w", path, err)
 	}
 
 	err = yaml2.UnmarshalStrict(data, resource)
@@ -185,7 +184,7 @@ func (o *Options) LintYaml2Resource(path string, test *Test, resource interface{
 
 	validationErrors, err := util.ValidateYaml(resource, data)
 	if err != nil {
-		return errors.Wrapf(err, "failed to validate %s", path)
+		return fmt.Errorf("failed to validate %s: %w", path, err)
 	}
 
 	for _, msg := range validationErrors {

@@ -3,6 +3,7 @@ package pods
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -14,7 +15,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -275,7 +276,7 @@ func GetReadyPodForSelector(client kubernetes.Interface, namespace string, selec
 		err = nil
 	}
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to list pods in namespace %s with selector %s", namespace, selector)
+		return nil, fmt.Errorf("failed to list pods in namespace %s with selector %s: %w", namespace, selector, err)
 	}
 	if podList != nil {
 		for i := range podList.Items {
@@ -299,7 +300,7 @@ func GetRunningPodForSelector(client kubernetes.Interface, namespace string, sel
 		err = nil
 	}
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to list pods in namespace %s with selector %s", namespace, selector)
+		return nil, fmt.Errorf("failed to list pods in namespace %s with selector %s: %w", namespace, selector, err)
 	}
 	if podList != nil {
 		for i := range podList.Items {
@@ -432,7 +433,7 @@ func GetFirstPodForService(client kubernetes.Interface, svc *v1.Service, namespa
 	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
 	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), listOptions)
 	if err != nil {
-		return v1.Pod{}, errors.Wrap(err, "failed to list pods")
+		return v1.Pod{}, fmt.Errorf("failed to list pods: %w", err)
 	}
 	if pods != nil && len(pods.Items) > 0 {
 		// use the first one thats matched
@@ -480,7 +481,7 @@ func ExecCmd(client kubernetes.Interface, config *restclient.Config, podName, ns
 	})
 
 	if err != nil {
-		return "", "", errors.Wrapf(err, "failed to execute command %s", command)
+		return "", "", fmt.Errorf("failed to execute command %s: %w", command, err)
 	}
 
 	return buf.String(), errBuf.String(), nil

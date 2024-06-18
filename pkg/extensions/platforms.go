@@ -1,6 +1,8 @@
 package extensions
 
-import jenkinsv1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
+import (
+	jenkinsv1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
+)
 
 // Platform represents a platform for binaries
 type Platform struct {

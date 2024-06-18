@@ -3,7 +3,7 @@ package pods_test
 import (
 	"context"
 	"errors"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -51,7 +51,7 @@ func TestPodFailed(t *testing.T) {
 	t.Parallel()
 
 	sourceData := filepath.Join("test_data", "pod_failed")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	for _, f := range fileNames {

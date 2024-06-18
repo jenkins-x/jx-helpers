@@ -2,9 +2,8 @@ package gitconfig
 
 import (
 	"fmt"
-	"io/ioutil"
-
 	gitcfg "github.com/go-git/go-git/v5/config"
+	"os"
 )
 
 // DiscoverUpstreamGitURL discovers the upstream git URL from the given git configuration
@@ -53,7 +52,7 @@ func parseGitConfig(gitConf string) (*gitcfg.Config, error) {
 		return nil, fmt.Errorf("no GitConfDir defined")
 	}
 	cfg := gitcfg.NewConfig()
-	data, err := ioutil.ReadFile(gitConf)
+	data, err := os.ReadFile(gitConf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load %s due to %s", gitConf, err)
 	}

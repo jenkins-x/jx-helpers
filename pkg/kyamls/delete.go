@@ -1,19 +1,20 @@
 package kyamls
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/pkg/errors"
+
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func DeleteFiles(dir string, deleteFn func(node *yaml.RNode, path string) (bool, error), filter Filter) error {
 	filterFn, err := filter.ToFilterFn()
 	if err != nil {
-		return errors.Wrap(err, "failed to create filter")
+		return fmt.Errorf("failed to create filter: %w", err)
 	}
 
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -25,13 +26,13 @@ func DeleteFiles(dir string, deleteFn func(node *yaml.RNode, path string) (bool,
 		}
 		node, err := yaml.ReadFile(path)
 		if err != nil {
-			return errors.Wrapf(err, "failed to load file %s", path)
+			return fmt.Errorf("failed to load file %s: %w", path, err)
 		}
 
 		if filterFn != nil {
 			flag, err := filterFn(node, path)
 			if err != nil {
-				return errors.Wrapf(err, "failed to evaluate filter on file %s", path)
+				return fmt.Errorf("failed to evaluate filter on file %s: %w", path, err)
 			}
 			if !flag {
 				return nil
@@ -45,13 +46,13 @@ func DeleteFiles(dir string, deleteFn func(node *yaml.RNode, path string) (bool,
 
 		err = files.DeleteFile(path)
 		if err != nil {
-			return errors.Wrapf(err, "failed to delete %s", path)
+			return fmt.Errorf("failed to delete %s: %w", path, err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete files in dir %s", dir)
+		return fmt.Errorf("failed to delete files in dir %s: %w", dir, err)
 	}
 	return nil
 }

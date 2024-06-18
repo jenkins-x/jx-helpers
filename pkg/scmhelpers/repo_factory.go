@@ -11,7 +11,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 type CreateRepository struct {
@@ -81,7 +80,7 @@ func (r *CreateRepository) CreateRepository(scmClient *scm.Client) (*scm.Reposit
 		repo = nil
 	}
 	if err != nil {
-		return repo, errors.Wrapf(err, "failed to lookup repository %s", fullName)
+		return repo, fmt.Errorf("failed to lookup repository %s: %w", fullName, err)
 	}
 	if repo != nil {
 		log.Logger().Infof("repository already exists at %s", info(repo.Link))
@@ -99,11 +98,11 @@ func (r *CreateRepository) CreateRepository(scmClient *scm.Client) (*scm.Reposit
 	if r.CurrentUsername == "" {
 		user, _, err := scmClient.Users.Find(ctx)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to find current username")
+			return nil, fmt.Errorf("failed to find current username: %w", err)
 		}
 		r.CurrentUsername = user.Login
 		if r.CurrentUsername == "" {
-			return nil, errors.Errorf("no login for current git user %#v", user)
+			return nil, fmt.Errorf("no login for current git user %#v", user)
 		}
 	}
 
@@ -113,7 +112,7 @@ func (r *CreateRepository) CreateRepository(scmClient *scm.Client) (*scm.Reposit
 	}
 	repo, _, err = scmClient.Repositories.Create(ctx, repoInput)
 	if err != nil {
-		return repo, errors.Wrapf(err, "failed to create repository %s", fullName)
+		return repo, fmt.Errorf("failed to create repository %s: %w", fullName, err)
 	}
 
 	log.Logger().Infof("creating git repository %s", info(repo.Link))

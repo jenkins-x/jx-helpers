@@ -1,12 +1,11 @@
 package kube
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
-
-	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
+	"os"
 )
 
 const (
@@ -90,7 +89,7 @@ func CertificateAuthorityData(config *api.Config, context *api.Context) []byte {
 func UpdateConfig(namespace string, server string, caData string, user string, token string) error {
 	config, po, err := LoadConfig()
 	if err != nil {
-		return errors.Wrap(err, "loading existing config")
+		return fmt.Errorf("loading existing config: %w", err)
 	}
 
 	clusterName := "jx-cluster"
@@ -171,7 +170,7 @@ func CurrentNamespace(config *api.Config) string {
 		}
 	}
 	// if we are in a pod lets try load the pod namespace file
-	data, err := ioutil.ReadFile(PodNamespaceFile)
+	data, err := os.ReadFile(PodNamespaceFile)
 	if err == nil {
 		n := string(data)
 		if n != "" {

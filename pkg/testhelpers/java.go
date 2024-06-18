@@ -1,6 +1,8 @@
 package testhelpers
 
-import "github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+import (
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+)
 
 // TestShouldDisableMaven should disable maven
 func TestShouldDisableMaven() bool {

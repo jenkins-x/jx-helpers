@@ -1,32 +1,31 @@
 package yaml2s
 
 import (
-	"io/ioutil"
+	"fmt"
+	"os"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"gopkg.in/yaml.v2"
-
-	"github.com/pkg/errors"
 )
 
 // LoadFile loads the given YAML file using the gopkg.in/yaml.v2 library
 func LoadFile(fileName string, dest interface{}) error {
 	exists, err := files.FileExists(fileName)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if file exists  %s", fileName)
+		return fmt.Errorf("failed to check if file exists  %s: %w", fileName, err)
 	}
 	if !exists {
 		return nil
 	}
 
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read file %s", fileName)
+		return fmt.Errorf("failed to read file %s: %w", fileName, err)
 	}
 
 	err = yaml.Unmarshal(data, dest)
 	if err != nil {
-		return errors.Wrapf(err, "failed to unmarshal file %s", fileName)
+		return fmt.Errorf("failed to unmarshal file %s: %w", fileName, err)
 	}
 	return nil
 }
@@ -35,11 +34,11 @@ func LoadFile(fileName string, dest interface{}) error {
 func SaveFile(obj interface{}, fileName string) error {
 	data, err := yaml.Marshal(obj)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal to YAML")
+		return fmt.Errorf("failed to marshal to YAML: %w", err)
 	}
-	err = ioutil.WriteFile(fileName, data, files.DefaultFileWritePermissions)
+	err = os.WriteFile(fileName, data, files.DefaultFileWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to save file %s", fileName)
+		return fmt.Errorf("failed to save file %s: %w", fileName, err)
 	}
 	return nil
 }

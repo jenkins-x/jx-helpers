@@ -15,7 +15,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 // HelmCLI implements common helm actions based on helm CLI
@@ -153,7 +152,7 @@ func (h *HelmCLI) SearchCharts(filter string, allVersions bool) ([]ChartSummary,
 	}
 	output, err := h.runHelmWithOutput(args...)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to search charts")
+		return nil, fmt.Errorf("failed to search charts: %w", err)
 	}
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
@@ -187,17 +186,17 @@ func (h *HelmCLI) SearchCharts(filter string, allVersions bool) ([]ChartSummary,
 func (h *HelmCLI) IsRepoMissing(repoURL string) (bool, string, error) {
 	repos, err := h.ListRepos()
 	if err != nil {
-		return true, "", errors.Wrap(err, "failed to list the repositories")
+		return true, "", fmt.Errorf("failed to list the repositories: %w", err)
 	}
 	searchedURL, err := url.Parse(repoURL)
 	if err != nil {
-		return true, "", errors.Wrap(err, "provided repo IR: is invalid")
+		return true, "", fmt.Errorf("provided repo IR: is invalid: %w", err)
 	}
 	for name, repoURL := range repos {
 		if len(repoURL) > 0 {
 			ru, err := url.Parse(repoURL)
 			if err != nil {
-				return true, "", errors.Wrap(err, "failed to parse the repo URL")
+				return true, "", fmt.Errorf("failed to parse the repo URL: %w", err)
 			}
 			// match on the whole repoURL as helm dep build requires on username + passowrd in the URL
 			if ru.Host == searchedURL.Host && ru.Path == searchedURL.Path {
@@ -219,12 +218,12 @@ func (h *HelmCLI) RemoveRequirementsLock() error {
 	path := filepath.Join(dir, "requirements.lock")
 	exists, err := files.FileExists(path)
 	if err != nil {
-		return errors.Wrapf(err, "no requirements.lock file found in directory '%s'", dir)
+		return fmt.Errorf("no requirements.lock file found in directory '%s': %w", dir, err)
 	}
 	if exists {
 		err = os.Remove(path)
 		if err != nil {
-			return errors.Wrap(err, "failed to remove the requirements.lock file")
+			return fmt.Errorf("failed to remove the requirements.lock file: %w", err)
 		}
 	}
 	return nil
@@ -356,7 +355,7 @@ func (h *HelmCLI) Template(chart, releaseName, ns, outDir string, upgrade bool,
 	}
 	err := h.runHelm(args...)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to run helm %s", strings.Join(args, " "))
+		return fmt.Errorf("Failed to run helm %s: %w", strings.Join(args, " "), err)
 	}
 	return err
 }
@@ -444,7 +443,7 @@ func (h *HelmCLI) DeleteRelease(ns, releaseName string, purge bool) error {
 func (h *HelmCLI) ListReleases(ns string) (map[string]ReleaseSummary, []string, error) {
 	output, err := h.runHelmWithOutput("list", "--all", "--namespace", ns)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "running helm list --all --namespace %s", ns)
+		return nil, nil, fmt.Errorf("running helm list --all --namespace %s: %w", ns, err)
 	}
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	result := make(map[string]ReleaseSummary)
@@ -470,7 +469,7 @@ func (h *HelmCLI) ListReleases(ns string) (map[string]ReleaseSummary, []string, 
 						ChartVersion:  chartFullName[lastDash+1:],
 					}
 				} else {
-					return nil, nil, errors.Errorf("Cannot parse %s as helm list output", line)
+					return nil, nil, fmt.Errorf("Cannot parse %s as helm list output", line)
 				}
 			}
 		} else {
@@ -492,7 +491,7 @@ func (h *HelmCLI) ListReleases(ns string) (map[string]ReleaseSummary, []string, 
 						ChartVersion:  chartFullName[lastDash+1:],
 					}
 				} else {
-					return nil, nil, errors.Errorf("Cannot parse %s as helm3 list output", line)
+					return nil, nil, fmt.Errorf("Cannot parse %s as helm3 list output", line)
 				}
 			}
 		}
@@ -507,19 +506,19 @@ func (h *HelmCLI) FindChart() (string, error) {
 	chartFile := filepath.Join(dir, ChartFileName)
 	exists, err := files.FileExists(chartFile)
 	if err != nil {
-		return "", errors.Wrapf(err, "no Chart.yaml file found in directory '%s'", dir)
+		return "", fmt.Errorf("no Chart.yaml file found in directory '%s': %w", dir, err)
 	}
 	if !exists {
 		files, err := filepath.Glob(filepath.Join(dir, "*", "Chart.yaml"))
 		if err != nil {
-			return "", errors.Wrap(err, "no Chart.yaml file found")
+			return "", fmt.Errorf("no Chart.yaml file found: %w", err)
 		}
 		if len(files) > 0 {
 			chartFile = files[0]
 		} else {
 			files, err = filepath.Glob(filepath.Join(dir, "*", "*", "Chart.yaml"))
 			if err != nil {
-				return "", errors.Wrap(err, "no Chart.yaml file found")
+				return "", fmt.Errorf("no Chart.yaml file found: %w", err)
 			}
 			if len(files) > 0 {
 				for _, file := range files {
@@ -571,7 +570,7 @@ func (h *HelmCLI) Env() map[string]string {
 func (h *HelmCLI) Version(tls bool) (string, error) {
 	versionString, err := h.VersionWithArgs(tls)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to query helm version")
+		return "", fmt.Errorf("unable to query helm version: %w", err)
 	}
 
 	return h.extractSemanticVersion(versionString)
@@ -616,7 +615,7 @@ func (h *HelmCLI) extractSemanticVersion(versionString string) (string, error) {
 	r := regexp.MustCompile(`.*v?(?P<SemVer>\d+\.\d+\.\d+).*`)
 	match := r.FindStringSubmatch(versionString)
 	if match == nil {
-		return "", errors.Errorf("unable to extract a semantic version from %s", versionString)
+		return "", fmt.Errorf("unable to extract a semantic version from %s", versionString)
 	}
 
 	for i, name := range r.SubexpNames() {
@@ -625,5 +624,5 @@ func (h *HelmCLI) extractSemanticVersion(versionString string) (string, error) {
 		}
 	}
 
-	return "", errors.Errorf("unable to extract a semantic version from %s", versionString)
+	return "", fmt.Errorf("unable to extract a semantic version from %s", versionString)
 }

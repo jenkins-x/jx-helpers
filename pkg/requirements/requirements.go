@@ -1,7 +1,8 @@
 package requirements
 
 import (
-	"io/ioutil"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,14 +20,13 @@ import (
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
-	"github.com/pkg/errors"
 )
 
 // GetClusterRequirementsConfig returns the cluster requirements from the cluster git repo
 func GetClusterRequirementsConfig(g gitclient.Interface, jxClient versioned.Interface) (*jxcore.RequirementsConfig, error) {
 	env, err := jxenv.GetDevEnvironment(jxClient, jxcore.DefaultNamespace)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get dev environment")
+		return nil, fmt.Errorf("failed to get dev environment: %w", err)
 	}
 	if env == nil {
 		return nil, errors.New("failed to find a dev environment source url as there is no 'dev' Environment resource")
@@ -52,11 +52,11 @@ func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.Requir
 
 	requirements, _, err := jxcore.LoadRequirementsConfig(dir, false)
 	if err != nil {
-		return nil, dir, errors.Wrapf(err, "failed to find requirements from git clone in directory %s", dir)
+		return nil, dir, fmt.Errorf("failed to find requirements from git clone in directory %s: %w", dir, err)
 	}
 
 	if &requirements.Spec == nil {
-		return nil, dir, errors.Wrapf(err, "failed to load requirements in directory %s", dir)
+		return nil, dir, fmt.Errorf("failed to load requirements in directory %s: %w", dir, err)
 	}
 	return &requirements.Spec, dir, nil
 }
@@ -68,12 +68,12 @@ func CloneClusterRepo(g gitclient.Interface, gitURL string) (string, error) {
 	if secretMountPath != "" {
 		err := credentialhelper.WriteGitCredentialFromSecretMount()
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to write git credentials file for secret %s ", secretMountPath)
+			return "", fmt.Errorf("failed to write git credentials file for secret %s : %w", secretMountPath, err)
 		}
 
 		gitURL, err = AddUserPasswordToURLFromDir(gitURL, secretMountPath)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to add username and password to git URL")
+			return "", fmt.Errorf("failed to add username and password to git URL: %w", err)
 		}
 	} else {
 		if kube.IsInCluster() {
@@ -86,7 +86,7 @@ func CloneClusterRepo(g gitclient.Interface, gitURL string) (string, error) {
 	// clone cluster repo to a temp dir and load the requirements
 	dir, err := gitclient.CloneToDir(g, gitURL, "")
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to clone cluster git repo %s", gitURL)
+		return "", fmt.Errorf("failed to clone cluster git repo %s: %w", gitURL, err)
 	}
 	return dir, nil
 }
@@ -95,11 +95,11 @@ func CloneClusterRepo(g gitclient.Interface, gitURL string) (string, error) {
 func AddUserPasswordToURLFromDir(gitURL, path string) (string, error) {
 	username, err := loadFile(filepath.Join(path, "username"))
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to load git username")
+		return "", fmt.Errorf("failed to load git username: %w", err)
 	}
 	password, err := loadFile(filepath.Join(path, "password"))
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to load git password")
+		return "", fmt.Errorf("failed to load git password: %w", err)
 	}
 	if username != "" && password != "" {
 		return stringhelpers.URLSetUserPassword(gitURL, username, password)
@@ -110,14 +110,14 @@ func AddUserPasswordToURLFromDir(gitURL, path string) (string, error) {
 func loadFile(path string) (string, error) {
 	exists, err := files.FileExists(path)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to check for file %s", path)
+		return "", fmt.Errorf("failed to check for file %s: %w", path, err)
 	}
 	if !exists {
 		return "", nil
 	}
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to read file %s", path)
+		return "", fmt.Errorf("failed to read file %s: %w", path, err)
 	}
 	return strings.TrimSpace(string(data)), nil
 }

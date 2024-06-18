@@ -17,8 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/pkg/errors"
-
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 
 	"github.com/ghodss/yaml"
@@ -218,7 +216,7 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 		//If it's bigger than 1, it can only be a batch build
 		err = k.addBatchBuildData(activitiesClient, a)
 		if err != nil {
-			return defaultActivity, create, errors.Wrap(err, "there was a problem adding batch build data")
+			return defaultActivity, create, fmt.Errorf("there was a problem adding batch build data: %w", err)
 		}
 	}
 
@@ -230,7 +228,7 @@ func (k *PipelineActivityKey) GetOrCreate(jxClient versioned.Interface, ns strin
 	if k.isPRBuild() {
 		err = k.reconcileBatchBuildIndividualPR(activitiesClient, a)
 		if err != nil {
-			return defaultActivity, create, errors.Wrap(err, "there was a problem reconciling batch build data")
+			return defaultActivity, create, fmt.Errorf("there was a problem reconciling batch build data: %w", err)
 		}
 	}
 
@@ -254,7 +252,7 @@ func (k *PipelineActivityKey) reconcileBatchBuildIndividualPR(activitiesClient t
 	log.Logger().Info("Checking if batch build reconciling is needed")
 	activities, err := k.findMatchingPipelineActivitiesWithSameCommitSHA(activitiesClient, currentActivity)
 	if err != nil {
-		return errors.Wrap(err, "there was a problem listing all activities to reconcile a batch build")
+		return fmt.Errorf("there was a problem listing all activities to reconcile a batch build: %w", err)
 	}
 
 	if len(activities.Items) == 0 {
@@ -264,7 +262,7 @@ func (k *PipelineActivityKey) reconcileBatchBuildIndividualPR(activitiesClient t
 
 	currentBuildNumber, err := strconv.Atoi(k.Build)
 	if err != nil {
-		return errors.Wrapf(err, "error parsing the current build number for PipelineActivity %s", currentActivity.Name)
+		return fmt.Errorf("error parsing the current build number for PipelineActivity %s: %w", currentActivity.Name, err)
 	}
 
 	//It only makes sense to look for the build before this one
@@ -311,7 +309,7 @@ func updateBatchBuildComprisingPRs(activitiesClient typev1.PipelineActivityInter
 	log.Logger().Infof("Looking for batch pipeline activity with name %s", paName)
 	batchPipelineActivity, err := activitiesClient.Get(context.TODO(), paName, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "there was a problem getting the PipelineActivity %s", paName)
+		return fmt.Errorf("there was a problem getting the PipelineActivity %s: %w", paName, err)
 	}
 
 	if batchPipelineActivity == nil {
@@ -330,14 +328,14 @@ func updateBatchBuildComprisingPRs(activitiesClient typev1.PipelineActivityInter
 
 	_, err = activitiesClient.Update(context.TODO(), batchPipelineActivity, metav1.UpdateOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "there was a problem updating the batch PipelineActivity %s", paName)
+		return fmt.Errorf("there was a problem updating the batch PipelineActivity %s: %w", paName, err)
 	}
 
 	log.Logger().Infof("Removing stale batch build information from %s", previousActivityForPR.Name)
 	previousActivityForPR.Spec.BatchPipelineActivity.BatchBuildNumber = ""
 	_, err = activitiesClient.Update(context.TODO(), previousActivityForPR, metav1.UpdateOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "there was a problem updating the PipelineActivity %s", previousActivityForPR.Name)
+		return fmt.Errorf("there was a problem updating the PipelineActivity %s: %w", previousActivityForPR.Name, err)
 	}
 
 	return nil
@@ -352,7 +350,7 @@ func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.Pipeline
 		listOptions.LabelSelector = selector
 		list, err := activitiesClient.List(context.TODO(), listOptions)
 		if err != nil {
-			return errors.Wrapf(err, "there was a problem listing all PipelineActivities for PR-%s with lastCommitSha %s", prNumber, sha)
+			return fmt.Errorf("there was a problem listing all PipelineActivities for PR-%s with lastCommitSha %s: %w", prNumber, sha, err)
 		}
 
 		// Only proceed if there are existing PipelineActivitys for this commit/branch - it's entirely possible they've
@@ -385,7 +383,7 @@ func (k *PipelineActivityKey) addBatchBuildData(activitiesClient typev1.Pipeline
 
 			_, err = activitiesClient.Update(context.TODO(), &selectedPipeline, metav1.UpdateOptions{})
 			if err != nil {
-				return errors.Wrap(err, "there was a problem updating the PR's PipelineActivity")
+				return fmt.Errorf("there was a problem updating the PR's PipelineActivity: %w", err)
 			}
 			//Add this PR's PipelineActivity info to the pull requests array of the batch build's PipelineActivity
 			prInfos = append(prInfos, v1.PullRequestInfo{
@@ -721,7 +719,7 @@ func (k *PromoteStepActivityKey) GetOrCreatePromoteUpdate(jxClient versioned.Int
 	return a, s, p, p.Update, created, err
 }
 
-//OnPromotePullRequest updates activities on a Promote PR
+// OnPromotePullRequest updates activities on a Promote PR
 func (k *PromoteStepActivityKey) OnPromotePullRequest(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, fn PromotePullRequestFn) error {
 	if !k.IsValid() {
 		return nil
@@ -752,7 +750,7 @@ func (k *PromoteStepActivityKey) OnPromotePullRequest(kubeClient kubernetes.Inte
 	return err
 }
 
-//OnPromoteUpdate updates activities on a Promote Update
+// OnPromoteUpdate updates activities on a Promote Update
 func (k *PromoteStepActivityKey) OnPromoteUpdate(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, fn PromoteUpdateFn) error {
 	if !k.IsValid() {
 		return nil
@@ -813,7 +811,7 @@ func ListSelectedPipelineActivities(activitiesClient typev1.PipelineActivityInte
 	for _, pipelineActivity := range pipelineActivityList.Items {
 		fieldMap, err := newFieldMap(pipelineActivity)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to convert struct to map")
+			return nil, fmt.Errorf("unable to convert struct to map: %w", err)
 		}
 		if fieldSelector.Matches(fieldMap) {
 			matchedItems = append(matchedItems, pipelineActivity)

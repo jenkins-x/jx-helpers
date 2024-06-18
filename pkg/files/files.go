@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"os"
 	"path/filepath"
@@ -13,7 +12,6 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -35,7 +33,7 @@ func FileExists(path string) (bool, error) {
 	if os.IsNotExist(err) {
 		return false, nil
 	}
-	return false, errors.Wrapf(err, "failed to check if file exists %s", path)
+	return false, fmt.Errorf("failed to check if file exists %s: %w", path, err)
 }
 
 // DirExists checks if path exists and is a directory
@@ -67,7 +65,7 @@ func FirstFileExists(paths ...string) (string, error) {
 func FileIsEmpty(path string) (bool, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
-		return true, errors.Wrapf(err, "getting details of file '%s'", path)
+		return true, fmt.Errorf("getting details of file '%s': %w", path, err)
 	}
 	return fi.Size() == 0, nil
 }
@@ -113,11 +111,11 @@ func CreateUniqueDirectory(dir string, name string, maximumAttempts int) (string
 func RenameDir(src string, dst string, force bool) (err error) {
 	err = CopyDir(src, dst, force)
 	if err != nil {
-		return errors.Wrapf(err, "failed to copy source dir %s to %s", src, dst)
+		return fmt.Errorf("failed to copy source dir %s to %s: %w", src, dst, err)
 	}
 	err = os.RemoveAll(src)
 	if err != nil {
-		return errors.Wrapf(err, "failed to cleanup source dir %s", src)
+		return fmt.Errorf("failed to cleanup source dir %s: %w", src, err)
 	}
 	return nil
 }
@@ -141,7 +139,7 @@ func RenameFile(src string, dst string) (err error) {
 func CopyFileOrDir(src string, dst string, force bool) (err error) {
 	fi, err := os.Stat(src)
 	if err != nil {
-		return errors.Wrapf(err, "getting details of file '%s'", src)
+		return fmt.Errorf("getting details of file '%s': %w", src, err)
 	}
 	if fi.IsDir() {
 		return CopyDir(src, dst, force)
@@ -179,7 +177,7 @@ func CopyDir(src string, dst string, force bool) (err error) {
 		return
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return
 	}
@@ -194,18 +192,28 @@ func CopyDir(src string, dst string, force bool) (err error) {
 				return
 			}
 		} else {
-			// Skip symlinks.
-			if entry.Mode()&os.ModeSymlink != 0 {
-				continue
-			}
-
-			err = CopyFile(srcPath, dstPath)
+			err = CopyUnlessSymLink(entry, srcPath, dstPath)
 			if err != nil {
 				return
 			}
 		}
 	}
 
+	return
+}
+
+func CopyUnlessSymLink(entry os.DirEntry, srcPath, dstPath string) (err error) {
+	// Skip symlinks.
+	var info os.FileInfo
+	info, err = entry.Info()
+	if err != nil {
+		return
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return
+	}
+
+	err = CopyFile(srcPath, dstPath)
 	return
 }
 
@@ -256,7 +264,7 @@ func CopyDirPreserve(src string, dst string) error {
 
 	si, err := os.Stat(src)
 	if err != nil {
-		return errors.Wrapf(err, "checking %s exists", src)
+		return fmt.Errorf("checking %s exists: %w", src, err)
 	}
 	if !si.IsDir() {
 		return fmt.Errorf("source is not a directory")
@@ -264,17 +272,17 @@ func CopyDirPreserve(src string, dst string) error {
 
 	_, err = os.Stat(dst)
 	if err != nil && !os.IsNotExist(err) {
-		return errors.Wrapf(err, "checking %s exists", dst)
+		return fmt.Errorf("checking %s exists: %w", dst, err)
 	}
 
 	err = os.MkdirAll(dst, si.Mode())
 	if err != nil {
-		return errors.Wrapf(err, "creating %s", dst)
+		return fmt.Errorf("creating %s: %w", dst, err)
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
-		return errors.Wrapf(err, "reading files in %s", src)
+		return fmt.Errorf("reading files in %s: %w", src, err)
 	}
 
 	for _, entry := range entries {
@@ -284,20 +292,24 @@ func CopyDirPreserve(src string, dst string) error {
 		if entry.IsDir() {
 			err = CopyDirPreserve(srcPath, dstPath)
 			if err != nil {
-				return errors.Wrapf(err, "recursively copying %s", entry.Name())
+				return fmt.Errorf("recursively copying %s: %w", entry.Name(), err)
 			}
 		} else {
 			// Skip symlinks.
-			if entry.Mode()&os.ModeSymlink != 0 {
+			info, err := entry.Info()
+			if err != nil {
+				return err
+			}
+			if info.Mode()&os.ModeSymlink != 0 {
 				continue
 			}
 			if _, err := os.Stat(dstPath); os.IsNotExist(err) {
 				err = CopyFile(srcPath, dstPath)
 				if err != nil {
-					return errors.Wrapf(err, "copying %s to %s", srcPath, dstPath)
+					return fmt.Errorf("copying %s to %s: %w", srcPath, dstPath, err)
 				}
 			} else if err != nil {
-				return errors.Wrapf(err, "checking if %s exists", dstPath)
+				return fmt.Errorf("checking if %s exists: %w", dstPath, err)
 			}
 		}
 	}
@@ -327,7 +339,7 @@ func CopyDirOverwrite(src string, dst string) (err error) {
 		return
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return
 	}
@@ -342,12 +354,7 @@ func CopyDirOverwrite(src string, dst string) (err error) {
 				return
 			}
 		} else {
-			// Skip symlinks.
-			if entry.Mode()&os.ModeSymlink != 0 {
-				continue
-			}
-
-			err = CopyFile(srcPath, dstPath)
+			err = CopyUnlessSymLink(entry, srcPath, dstPath)
 			if err != nil {
 				return
 			}
@@ -359,7 +366,7 @@ func CopyDirOverwrite(src string, dst string) (err error) {
 // loads a file
 func LoadBytes(dir, name string) ([]byte, error) {
 	path := filepath.Join(dir, name) // relative path
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("error loading file %s in directory %s, %v", name, dir, err)
 	}
@@ -378,7 +385,7 @@ func DeleteFile(fileName string) (err error) {
 		if exists {
 			err = os.Remove(fileName)
 			if err != nil {
-				return errors.Wrapf(err, "Could not remove file due to %s", fileName)
+				return fmt.Errorf("Could not remove file due to %s: %w", fileName, err)
 			}
 		}
 	} else {
@@ -392,7 +399,7 @@ func DeleteFile(fileName string) (err error) {
 func DestroyFile(filename string) error {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
-		return errors.Wrapf(err, "Could not Destroy %s", filename)
+		return fmt.Errorf("Could not Destroy %s: %w", filename, err)
 	}
 	size := fileInfo.Size()
 	// Overwrite the file with random data. Doing this multiple times is probably more secure
@@ -400,9 +407,9 @@ func DestroyFile(filename string) error {
 	// Avoid false positive G404 of gosec module - https://github.com/securego/gosec/issues/291
 	/* #nosec */
 	_, _ = rand.Read(randomBytes)
-	err = ioutil.WriteFile(filename, randomBytes, DefaultDirWritePermissions)
+	err = os.WriteFile(filename, randomBytes, DefaultDirWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "Unable to overwrite %s with random data", filename)
+		return fmt.Errorf("Unable to overwrite %s with random data: %w", filename, err)
 	}
 	return DeleteFile(filename)
 }
@@ -486,7 +493,7 @@ func ContentTypeForFileName(name string) string {
 func IgnoreFile(path string, ignores []string) (bool, error) {
 	for _, ignore := range ignores {
 		if matched, err := filepath.Match(ignore, path); err != nil {
-			return false, errors.Wrapf(err, "error when matching ignore %s against path %s", ignore, path)
+			return false, fmt.Errorf("error when matching ignore %s against path %s: %w", ignore, path, err)
 		} else if matched {
 			return true, nil
 		}
@@ -498,12 +505,12 @@ func IgnoreFile(path string, ignores []string) (bool, error) {
 func ListDirectory(root string, recurse bool) error {
 	if info, err := os.Stat(root); err != nil {
 		if os.IsNotExist(err) {
-			return errors.Wrapf(err, "unable to list %s as does not exist", root)
+			return fmt.Errorf("unable to list %s as does not exist: %w", root, err)
 		}
 		if !info.IsDir() {
-			return errors.Errorf("%s is not a directory", root)
+			return fmt.Errorf("%s is not a directory", root)
 		}
-		return errors.Wrapf(err, "stat %s", root)
+		return fmt.Errorf("stat %s: %w", root, err)
 	}
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		dir, _ := filepath.Split(path)
@@ -513,7 +520,7 @@ func ListDirectory(root string, recurse bool) error {
 		}
 		info, err = os.Stat(path)
 		if err != nil {
-			return errors.Wrapf(err, "stat %s", path)
+			return fmt.Errorf("stat %s: %w", path, err)
 		}
 		log.Logger().Infof("%v %d %s %s", info.Mode().String(), info.Size(), info.ModTime().Format(time.RFC822), info.Name())
 		return nil
@@ -526,7 +533,7 @@ func ListDirectory(root string, recurse bool) error {
 func GlobAllFiles(basedir string, pattern string, fn func(string) error) error {
 	names, err := filepath.Glob(pattern)
 	if err != nil {
-		return errors.Wrapf(err, "failed to evaluate glob pattern '%s'", pattern)
+		return fmt.Errorf("failed to evaluate glob pattern '%s': %w", pattern, err)
 	}
 	for _, name := range names {
 		fullPath := name
@@ -535,7 +542,7 @@ func GlobAllFiles(basedir string, pattern string, fn func(string) error) error {
 		}
 		fi, err := os.Stat(fullPath)
 		if err != nil {
-			return errors.Wrapf(err, "getting details of file '%s'", fullPath)
+			return fmt.Errorf("getting details of file '%s': %w", fullPath, err)
 		}
 		if fi.IsDir() {
 			err = GlobAllFiles("", filepath.Join(fullPath, "*"), fn)
@@ -545,7 +552,7 @@ func GlobAllFiles(basedir string, pattern string, fn func(string) error) error {
 		} else {
 			err = fn(fullPath)
 			if err != nil {
-				return errors.Wrapf(err, "failed processing file '%s'", fullPath)
+				return fmt.Errorf("failed processing file '%s': %w", fullPath, err)
 			}
 		}
 	}

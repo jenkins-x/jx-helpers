@@ -1,6 +1,7 @@
 package gitclient
 
 import (
+	"fmt"
 	"os"
 	"os/user"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/homedir"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 var info = termcolor.ColorInfo
@@ -39,7 +39,7 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 		}
 		_, err := gitter.Command(dir, "config", "--global", "--add", "user.name", userName)
 		if err != nil {
-			return userName, userEmail, errors.Wrapf(err, "Failed to set the git username to %s", userName)
+			return userName, userEmail, fmt.Errorf("Failed to set the git username to %s: %w", userName, err)
 		}
 	}
 	if userEmail == "" {
@@ -52,7 +52,7 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 		}
 		_, err := gitter.Command(dir, "config", "--global", "--add", "user.email", userEmail)
 		if err != nil {
-			return userName, userEmail, errors.Wrapf(err, "Failed to set the git email to %s", userEmail)
+			return userName, userEmail, fmt.Errorf("Failed to set the git email to %s: %w", userEmail, err)
 		}
 	}
 	return userName, userEmail, nil
@@ -93,7 +93,7 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 	}
 	_, err := gitter.Command(dir, "config", "--global", "--add", "user.name", userName)
 	if err != nil {
-		return userName, userEmail, errors.Wrapf(err, "Failed to set the git username to %s", userName)
+		return userName, userEmail, fmt.Errorf("Failed to set the git username to %s: %w", userName, err)
 	}
 	if userEmail == "" {
 		userName = os.Getenv("GIT_USER_EMAIL")
@@ -106,7 +106,7 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 	}
 	_, err = gitter.Command(dir, "config", "--global", "--add", "user.email", userEmail)
 	if err != nil {
-		return userName, userEmail, errors.Wrapf(err, "Failed to set the git email to %s", userEmail)
+		return userName, userEmail, fmt.Errorf("Failed to set the git email to %s: %w", userEmail, err)
 	}
 	log.Logger().Infof("setup git user %s email %s", info(userName), info(userEmail))
 	return userName, userEmail, nil
@@ -122,12 +122,12 @@ func SetCredentialHelper(gitter Interface, dir string) error {
 	}
 	err := os.MkdirAll(dir, util.DefaultWritePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to make sure the home directory %s was created", dir)
+		return fmt.Errorf("failed to make sure the home directory %s was created: %w", dir, err)
 	}
 
 	_, err = gitter.Command(dir, "config", "--global", "credential.helper", "store")
 	if err != nil {
-		return errors.Wrapf(err, "failed to setup git")
+		return fmt.Errorf("failed to setup git: %w", err)
 	}
 	if os.Getenv("XDG_CONFIG_HOME") == "" {
 		log.Logger().Warnf("Note that the environment variable $XDG_CONFIG_HOME is not defined so we may not be able to push to git!")
