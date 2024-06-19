@@ -2,6 +2,7 @@ package jxenv
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os/user"
 	"sort"
@@ -10,7 +11,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
-	"github.com/pkg/errors"
 
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
@@ -363,7 +363,7 @@ func GetPermanentEnvironments(jxClient versioned.Interface, ns string) ([]*v1.En
 	var result []*v1.Environment
 	envs, err := jxClient.JenkinsV1().Environments(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return result, errors.Wrapf(err, "listing the environments in namespace %q", ns)
+		return result, fmt.Errorf("listing the environments in namespace %q: %w", ns, err)
 	}
 	for i := range envs.Items {
 		env := &envs.Items[i]
@@ -378,12 +378,12 @@ func GetPermanentEnvironments(jxClient versioned.Interface, ns string) ([]*v1.En
 func ModifyDevEnvironment(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, callback func(env *v1.Environment) error) error {
 	err := EnsureDevNamespaceCreatedWithoutEnvironment(kubeClient, ns)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create the %s Dev namespace", ns)
+		return fmt.Errorf("failed to create the %s Dev namespace: %w", ns, err)
 	}
 
 	env, err := EnsureDevEnvironmentSetup(jxClient, ns)
 	if err != nil {
-		return errors.Wrapf(err, "failed to setup the dev environment for namespace '%s'", ns)
+		return fmt.Errorf("failed to setup the dev environment for namespace '%s': %w", ns, err)
 	}
 
 	if env == nil {
@@ -392,7 +392,7 @@ func ModifyDevEnvironment(kubeClient kubernetes.Interface, jxClient versioned.In
 
 	err = callback(env)
 	if err != nil {
-		return errors.Wrap(err, "failed to call the callback function for dev environment")
+		return fmt.Errorf("failed to call the callback function for dev environment: %w", err)
 	}
 	env, err = jxClient.JenkinsV1().Environments(ns).Update(context.TODO(), env, metav1.UpdateOptions{})
 	if err != nil {

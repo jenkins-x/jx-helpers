@@ -2,7 +2,6 @@ package testhelpers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -27,10 +26,10 @@ func AssertYamlFilesEqual(t *testing.T, expectedFile string, actualFile string, 
 	require.FileExists(t, expectedFile, "expected file for %s", suffix)
 	require.FileExists(t, actualFile, "actual file for %s", suffix)
 
-	expectedData, err := ioutil.ReadFile(expectedFile)
+	expectedData, err := os.ReadFile(expectedFile)
 	require.NoError(t, err, "failed to load expected file %s for %s", expectedFile, suffix)
 
-	actualData, err := ioutil.ReadFile(actualFile)
+	actualData, err := os.ReadFile(actualFile)
 	require.NoError(t, err, "failed to load expected file %s for %s", actualFile, suffix)
 
 	AssertYamlEqual(t, string(expectedData), string(actualData), message, args...)
@@ -57,10 +56,10 @@ func AssertTextFilesEqual(t *testing.T, expected string, actual string, message 
 	require.FileExists(t, expected, "expected file for %s", message)
 	require.FileExists(t, actual, "actual file for %s", message)
 
-	wantData, err := ioutil.ReadFile(expected)
+	wantData, err := os.ReadFile(expected)
 	require.NoError(t, err, "could not load expected file %s for %s", expected, message)
 
-	gotData, err := ioutil.ReadFile(actual)
+	gotData, err := os.ReadFile(actual)
 	require.NoError(t, err, "could not load actual file %s for %s", actual, message)
 	assert.NoError(t, err)
 

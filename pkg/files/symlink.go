@@ -1,10 +1,10 @@
 package files
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 // RecreateSymLink removes any old symlink/binary if they exist and
@@ -12,17 +12,17 @@ import (
 func RecreateSymLink(src, target string) error {
 	exists, err := FileExists(target)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if %s exists", target)
+		return fmt.Errorf("failed to check if %s exists: %w", target, err)
 	}
 	if exists {
 		err = os.Remove(target)
 		if err != nil {
-			return errors.Wrapf(err, "failed to remove %s", target)
+			return fmt.Errorf("failed to remove %s: %w", target, err)
 		}
 	}
 	err = os.Symlink(src, target)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create symlink from %s to %s", src, target)
+		return fmt.Errorf("failed to create symlink from %s to %s: %w", src, target, err)
 	}
 	log.Logger().Infof("created symlink from %s => %s", target, src)
 	return nil

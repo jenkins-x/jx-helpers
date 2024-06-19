@@ -1,6 +1,7 @@
 package jxclient
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
@@ -8,7 +9,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
-	"github.com/pkg/errors"
 )
 
 // LazyCreateJXClient lazy creates the jx client if its not defined
@@ -22,11 +22,11 @@ func LazyCreateJXClient(client versioned.Interface) (versioned.Interface, error)
 	f := kubeclient.NewFactory()
 	cfg, err := f.CreateKubeConfig()
 	if err != nil {
-		return client, errors.Wrap(err, "failed to get kubernetes config")
+		return client, fmt.Errorf("failed to get kubernetes config: %w", err)
 	}
 	client, err = versioned.NewForConfig(cfg)
 	if err != nil {
-		return client, errors.Wrap(err, "error building jx clientset")
+		return client, fmt.Errorf("error building jx clientset: %w", err)
 	}
 	return client, nil
 }
@@ -41,7 +41,7 @@ func LazyCreateJXClientAndNamespace(client versioned.Interface, ns string) (vers
 			var err error
 			client, err = noKubernetesFakeJXClient()
 			if err != nil {
-				return client, ns, errors.Wrapf(err, "failed to ")
+				return client, ns, fmt.Errorf("failed to : %w", err)
 			}
 		}
 		if ns == "" {
@@ -53,18 +53,18 @@ func LazyCreateJXClientAndNamespace(client versioned.Interface, ns string) (vers
 		f := kubeclient.NewFactory()
 		cfg, err := f.CreateKubeConfig()
 		if err != nil {
-			return client, ns, errors.Wrap(err, "failed to get kubernetes config")
+			return client, ns, fmt.Errorf("failed to get kubernetes config: %w", err)
 		}
 		client, err = versioned.NewForConfig(cfg)
 		if err != nil {
-			return client, ns, errors.Wrap(err, "error building jx clientset")
+			return client, ns, fmt.Errorf("error building jx clientset: %w", err)
 		}
 	}
 	if ns == "" {
 		var err error
 		ns, err = kubeclient.CurrentNamespace()
 		if err != nil {
-			return client, ns, errors.Wrap(err, "failed to get current kubernetes namespace")
+			return client, ns, fmt.Errorf("failed to get current kubernetes namespace: %w", err)
 		}
 	}
 	return client, ns, nil

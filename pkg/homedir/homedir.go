@@ -1,11 +1,11 @@
 package homedir
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/pkg/errors"
 )
 
 func HomeDir() string {
@@ -64,7 +64,7 @@ func PluginBinDir(envVar string, defaultDirName string) (string, error) {
 func DefaultPluginBinDir() (string, error) {
 	pluginBinDir, err := PluginBinDir(os.Getenv("JX3_HOME"), ".jx3")
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to find plugin bin dir")
+		return "", fmt.Errorf("failed to find plugin bin dir: %w", err)
 	}
 	return pluginBinDir, nil
 }

@@ -1,6 +1,7 @@
 package scmhelpers
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -13,7 +14,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/gitdiscovery"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -57,28 +58,28 @@ func (o *Options) Validate() error {
 	var err error
 	err = o.discoverRepositoryDetails()
 	if err != nil {
-		return errors.Wrapf(err, "failed to discover the repository details")
+		return fmt.Errorf("failed to discover the repository details: %w", err)
 	}
 	if o.GitServerURL == "" {
-		return errors.Errorf("could not detect the git server URL. try supply --git-server")
+		return fmt.Errorf("could not detect the git server URL. try supply --git-server")
 	}
 	if o.ScmClient == nil {
 		if o.GitToken == "" && o.SourceURL != "" {
 			// lets try get the git token from the source URL
 			o.GitToken, err = GetPasswordFromSourceURL(o.SourceURL)
 			if err != nil {
-				return errors.Wrapf(err, "failed to detect git token from source URL")
+				return fmt.Errorf("failed to detect git token from source URL: %w", err)
 			}
 		}
 		o.ScmClient, o.GitToken, err = NewScmClient(o.GitKind, o.GitServerURL, o.GitToken, o.IgnoreMissingToken)
 		if err != nil {
-			return errors.Wrapf(err, "failed to create ScmClient: try supply --git-token")
+			return fmt.Errorf("failed to create ScmClient: try supply --git-token: %w", err)
 		}
 		if o.ScmClient == nil {
 			if o.IgnoreMissingToken {
 				return nil
 			}
-			return errors.Errorf("no ScmClient created for server %s", o.GitServerURL)
+			return fmt.Errorf("no ScmClient created for server %s", o.GitServerURL)
 		}
 	}
 	return nil
@@ -127,7 +128,7 @@ func (o *Options) discoverRepositoryDetails() error {
 					o.SourceURL = stringhelpers.UrlJoin(o.GitServerURL, o.FullRepositoryName)
 				}
 				if o.SourceURL == "" {
-					return errors.Wrapf(err, "failed to discover git URL in dir %s. you could try pass the git URL as an argument", o.Dir)
+					return fmt.Errorf("failed to discover git URL in dir %s. you could try pass the git URL as an argument: %w", o.Dir, err)
 				}
 			}
 		} else {
@@ -139,14 +140,14 @@ func (o *Options) discoverRepositoryDetails() error {
 				o.SourceURL = stringhelpers.UrlJoin(o.GitServerURL, o.FullRepositoryName)
 			}
 			if o.SourceURL == "" {
-				return errors.Errorf("failed to discover git URL in dir %s. you could try pass the git URL as an argument", o.Dir)
+				return fmt.Errorf("failed to discover git URL in dir %s. you could try pass the git URL as an argument", o.Dir)
 			}
 		}
 	}
 	if o.SourceURL != "" && o.GitURL == nil {
 		o.GitURL, err = giturl.ParseGitURL(o.SourceURL)
 		if err != nil {
-			return errors.Wrapf(err, "failed to parse git URL %s", o.SourceURL)
+			return fmt.Errorf("failed to parse git URL %s: %w", o.SourceURL, err)
 		}
 	}
 
@@ -167,7 +168,7 @@ func (o *Options) discoverRepositoryDetails() error {
 	if o.GitKind == "" {
 		o.GitKind, err = DiscoverGitKind(o.JXClient, o.Namespace, o.GitServerURL)
 		if err != nil {
-			return errors.Wrapf(err, "failed to discover git kind")
+			return fmt.Errorf("failed to discover git kind: %w", err)
 		}
 	}
 	if o.Branch == "" {
@@ -196,7 +197,7 @@ func (o *Options) GetBranch() (string, error) {
 	branch, err := o.GitClient.Command(o.Dir, "rev-parse", "--abbrev-ref", "HEAD")
 	branch = strings.TrimSpace(branch)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to find git branch in dir %s", o.Dir)
+		return "", fmt.Errorf("failed to find git branch in dir %s: %w", o.Dir, err)
 	}
 	return branch, nil
 }

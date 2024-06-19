@@ -1,6 +1,8 @@
 package gitlog
 
-import "strings"
+import (
+	"strings"
+)
 
 // Commit represents a git commit returned from 'git log`
 type Commit struct {

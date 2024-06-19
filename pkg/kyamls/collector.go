@@ -1,18 +1,18 @@
 package kyamls
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func Collect(dir string, filter Filter) ([]yaml.RNode, error) {
 	filterFn, err := filter.ToFilterFn()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create filter")
+		return nil, fmt.Errorf("failed to create filter: %w", err)
 	}
 
 	var resources []yaml.RNode
@@ -25,13 +25,13 @@ func Collect(dir string, filter Filter) ([]yaml.RNode, error) {
 		}
 		node, err := yaml.ReadFile(path)
 		if err != nil {
-			return errors.Wrapf(err, "failed to load file %s", path)
+			return fmt.Errorf("failed to load file %s: %w", path, err)
 		}
 
 		if filterFn != nil {
 			flag, err := filterFn(node, path)
 			if err != nil {
-				return errors.Wrapf(err, "failed to evaluate filter on file %s", path)
+				return fmt.Errorf("failed to evaluate filter on file %s: %w", path, err)
 			}
 			if !flag {
 				return nil

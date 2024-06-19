@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -12,7 +13,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	nv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -63,7 +63,7 @@ func GetServicesByName(client kubernetes.Interface, ns string, services []string
 	answer := make([]*v1.Service, 0)
 	svcList, err := client.CoreV1().Services(ns).List(context.TODO(), meta_v1.ListOptions{})
 	if err != nil {
-		return answer, errors.Wrapf(err, "listing the services in namespace %q", ns)
+		return answer, fmt.Errorf("listing the services in namespace %q: %w", ns, err)
 	}
 	for _, s := range svcList.Items {
 		i := stringhelpers.StringArrayIndex(services, s.GetName())
@@ -138,7 +138,7 @@ func FindServiceURLWithDynamicClient(client kubernetes.Interface, namespace stri
 		err = nil
 	}
 	if err != nil {
-		return "", errors.Wrapf(err, "finding the service %s in namespace %s", name, namespace)
+		return "", fmt.Errorf("finding the service %s in namespace %s: %w", name, namespace, err)
 	}
 	answer := ""
 	if svc != nil {
@@ -165,7 +165,7 @@ func FindServiceURLWithDynamicClient(client kubernetes.Interface, namespace stri
 		if vs_err != nil {
 			log.Logger().Debugf("Unable to finding istio for %s in namespace %s - err %s", name, namespace, vs_err)
 		}
-		return "", errors.Wrapf(err, "getting ingress for service %q in namespace %s", name, namespace)
+		return "", fmt.Errorf("getting ingress for service %q in namespace %s: %w", name, namespace, err)
 	}
 	url := ""
 
@@ -350,7 +350,7 @@ func GetServiceURL(svc *v1.Service) string {
 func FindServiceSchemePort(client kubernetes.Interface, namespace string, name string) (string, string, error) {
 	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
-		return "", "", errors.Wrapf(err, "failed to find service %s in namespace %s", name, namespace)
+		return "", "", fmt.Errorf("failed to find service %s in namespace %s: %w", name, namespace, err)
 	}
 	return ExtractServiceSchemePort(svc)
 }
@@ -499,7 +499,7 @@ func IsServicePresent(c kubernetes.Interface, name, ns string) (bool, error) {
 func GetServiceAppName(c kubernetes.Interface, name, ns string) (string, error) {
 	svc, err := c.CoreV1().Services(ns).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil || svc == nil {
-		return "", errors.Wrapf(err, "retrieving service %q", name)
+		return "", fmt.Errorf("retrieving service %q: %w", name, err)
 	}
 	return ServiceAppName(svc), nil
 }
@@ -568,7 +568,7 @@ func AnnotateServicesWithBasicAuth(client kubernetes.Interface, ns string, servi
 	}
 	svcList, err := GetServices(client, ns)
 	if err != nil {
-		return errors.Wrapf(err, "retrieving the services from namespace %q", ns)
+		return fmt.Errorf("retrieving the services from namespace %q: %w", ns, err)
 	}
 	for _, service := range svcList {
 		// Check if the service is in the white-list
@@ -592,7 +592,7 @@ func AnnotateServicesWithBasicAuth(client kubernetes.Interface, ns string, servi
 		service.Annotations[ExposeIngressAnnotation] = ingressAnnotations
 		_, err = client.CoreV1().Services(ns).Update(context.TODO(), service, meta_v1.UpdateOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "updating the service %q in namesapce %q", service.GetName(), ns)
+			return fmt.Errorf("updating the service %q in namesapce %q: %w", service.GetName(), ns, err)
 		}
 	}
 	return nil

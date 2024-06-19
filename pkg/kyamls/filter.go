@@ -1,10 +1,11 @@
 package kyamls
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -57,7 +58,7 @@ func (f *Filter) ToFilterFn() (func(node *yaml.RNode, path string) (bool, error)
 		}
 		labels, err := GetMap(node, path, mapPath)
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to get labels for %s", path)
+			return false, fmt.Errorf("failed to get labels for %s: %w", path, err)
 		}
 		if labels == nil && f.InvertSelector {
 			return true, nil

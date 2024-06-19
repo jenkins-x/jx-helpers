@@ -3,7 +3,6 @@ package scmhelpers
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,7 +16,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +56,7 @@ func (o *Factory) Create() (*scm.Client, error) {
 	if o.GitToken == "" {
 		err := o.FindGitToken()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to find git token")
+			return nil, fmt.Errorf("failed to find git token: %w", err)
 		}
 	}
 
@@ -69,7 +68,7 @@ func (o *Factory) Create() (*scm.Client, error) {
 
 	scmClient, gitToken, err := NewScmClient(o.GitKind, o.GitServerURL, o.GitToken, o.IgnoreMissingToken)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create ScmClient for server %s", o.GitServerURL)
+		return nil, fmt.Errorf("failed to create ScmClient for server %s: %w", o.GitServerURL, err)
 	}
 	o.ScmClient = scmClient
 	if gitToken != "" {
@@ -83,17 +82,18 @@ func (o *Factory) FindGitToken() error {
 	var err error
 	fileName := o.GitCredentialFile
 	if fileName == "" {
+		// TODO: Support git credential helpers
 		fileName, err = loadcreds.GitCredentialsFile()
 		if err != nil {
-			return errors.Wrapf(err, "failed to find git credentials file")
+			return fmt.Errorf("failed to find git credentials file: %w", err)
 		}
 	}
 	if fileName == "" {
-		return errors.Wrapf(err, "could not deduce the git credentials file")
+		return fmt.Errorf("could not deduce the git credentials file: %w", err)
 	}
 	creds, exists, err := loadcreds.LoadGitCredentialsFile(fileName)
 	if err != nil {
-		return errors.Wrapf(err, "failed to load git credentials")
+		return fmt.Errorf("failed to load git credentials: %w", err)
 	}
 	serverCreds := loadcreds.GetServerCredentials(creds, o.GitServerURL)
 	if o.GitUsername == "" {
@@ -122,7 +122,7 @@ func (o *Factory) FindGitToken() error {
 
 			o.GitUsername, err = o.Input.PickValue(message, "", true, "we need a git username to use")
 			if err != nil {
-				return errors.Wrapf(err, "failed to enter the git user name")
+				return fmt.Errorf("failed to enter the git user name: %w", err)
 			}
 		}
 		if o.GitToken == "" {
@@ -135,7 +135,7 @@ func (o *Factory) FindGitToken() error {
 
 			o.GitToken, err = o.Input.PickValue(message, "", true, "we need a git token to use")
 			if err != nil {
-				return errors.Wrapf(err, "failed to enter the git user name")
+				return fmt.Errorf("failed to enter the git user name: %w", err)
 			}
 		}
 
@@ -143,9 +143,9 @@ func (o *Factory) FindGitToken() error {
 			// lets append the git credential file...
 			text := ""
 			if exists {
-				data, err := ioutil.ReadFile(fileName)
+				data, err := os.ReadFile(fileName)
 				if err != nil {
-					return errors.Wrapf(err, "failed to load file %s", fileName)
+					return fmt.Errorf("failed to load file %s: %w", fileName, err)
 				}
 				text = string(data)
 			}
@@ -155,25 +155,25 @@ func (o *Factory) FindGitToken() error {
 
 			authURL, err := o.CreateAuthenticatedURL(o.GitServerURL)
 			if err != nil {
-				return errors.Wrapf(err, "failed to create authenticated URL for %s", o.GitServerURL)
+				return fmt.Errorf("failed to create authenticated URL for %s: %w", o.GitServerURL, err)
 			}
 			text += authURL + "\n"
 
 			dir := filepath.Dir(fileName)
 			err = os.MkdirAll(dir, files.DefaultDirWritePermissions)
 			if err != nil {
-				return errors.Wrapf(err, "failed to create git credentials dir: %s", dir)
+				return fmt.Errorf("failed to create git credentials dir: %s: %w", dir, err)
 			}
-			err = ioutil.WriteFile(fileName, []byte(text), files.DefaultFileWritePermissions)
+			err = os.WriteFile(fileName, []byte(text), files.DefaultFileWritePermissions)
 			if err != nil {
-				return errors.Wrapf(err, "failed to save file %s", fileName)
+				return fmt.Errorf("failed to save file %s: %w", fileName, err)
 			}
 
 			log.Logger().Infof("saved git credentials to file %s", info(fileName))
 		}
 	}
 	if o.GitToken == "" {
-		return errors.Errorf("could not find git token for git server %s", o.GitServerURL)
+		return fmt.Errorf("could not find git token for git server %s", o.GitServerURL)
 	}
 	return nil
 }
@@ -182,12 +182,12 @@ func (o *Factory) FindGitToken() error {
 func (o *Factory) GetUsername() (string, error) {
 	if o.GitUsername == "" {
 		if o.ScmClient == nil {
-			return "", errors.Errorf("no ScmClient created yet. Did you call Create()")
+			return "", fmt.Errorf("no ScmClient created yet. Did you call Create()")
 		}
 		ctx := context.Background()
 		user, _, err := o.ScmClient.Users.Find(ctx)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to lookup current user")
+			return "", fmt.Errorf("failed to lookup current user: %w", err)
 		}
 		o.GitUsername = user.Login
 	}
@@ -201,11 +201,11 @@ func (o *Factory) CreateAuthenticatedURL(cloneURL string) (string, error) {
 	}
 	userName, err := o.GetUsername()
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to find GitUsername")
+		return "", fmt.Errorf("failed to find GitUsername: %w", err)
 	}
 	answer, err := stringhelpers.URLSetUserPassword(cloneURL, userName, o.GitToken)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to create authenticated git URL")
+		return "", fmt.Errorf("failed to create authenticated git URL: %w", err)
 	}
 	return answer, nil
 }

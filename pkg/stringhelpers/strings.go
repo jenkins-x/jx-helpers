@@ -2,17 +2,16 @@ package stringhelpers
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
-//DisallowedLabelCharacters regex of chars not allowed in lables
+// DisallowedLabelCharacters regex of chars not allowed in lables
 var DisallowedLabelCharacters = regexp.MustCompile("[^a-z0-9-]")
 
 // RegexpSplit splits a string into an array using the regexSep as a separator
@@ -249,7 +248,7 @@ func ExtractKeyValuePairs(values []string, sep string) (map[string]string, error
 	for _, value := range values {
 		parts := strings.Split(value, sep)
 		if len(parts) != 2 {
-			return map[string]string{}, errors.Errorf("expected 2 parts for key value pair '%s', but got %v", value, len(parts))
+			return map[string]string{}, fmt.Errorf("expected 2 parts for key value pair '%s', but got %v", value, len(parts))
 		}
 		pairs[parts[0]] = parts[1]
 	}

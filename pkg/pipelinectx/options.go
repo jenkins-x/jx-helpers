@@ -2,11 +2,12 @@ package pipelinectx
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
-	"github.com/pkg/errors"
+
 	"github.com/sethvargo/go-envconfig"
 	"github.com/spf13/cobra"
 )
@@ -59,7 +60,7 @@ type Options struct {
 func (o *Options) EnvironmentDefaults(ctx context.Context) error {
 	err := envconfig.Process(ctx, o)
 	if err != nil {
-		return errors.Wrapf(err, "failed to process environment options")
+		return fmt.Errorf("failed to process environment options: %w", err)
 	}
 	return nil
 }

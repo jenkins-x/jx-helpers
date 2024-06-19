@@ -1,7 +1,6 @@
 package builds
 
 import (
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -100,7 +99,7 @@ func getDownwardAPILabelsMap() map[string]string {
 	if err != nil {
 		log.Logger().Warnf("failed to detect if the file %s exists: %s", podInfoLabelsFile, err)
 	} else if exists {
-		data, err := ioutil.ReadFile(podInfoLabelsFile)
+		data, err := os.ReadFile(podInfoLabelsFile)
 		if err != nil {
 			log.Logger().Warnf("failed to load downward API pod labels from %s due to: %s", podInfoLabelsFile, err)
 		} else {

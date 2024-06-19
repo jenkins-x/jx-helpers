@@ -2,7 +2,7 @@ package requirements
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"sigs.k8s.io/yaml"
 )
 
@@ -21,15 +21,15 @@ func LoadSettings(dir string, failOnValidationErrors bool) (*jxcore.Settings, er
 
 	exists, err := files.FileExists(path)
 	if err != nil {
-		return config, errors.Wrapf(err, "failed to check if file exists %s", path)
+		return config, fmt.Errorf("failed to check if file exists %s: %w", path, err)
 	}
 	if !exists {
 		return nil, nil
 	}
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return config, errors.Wrapf(err, "failed to read %s", path)
+		return config, fmt.Errorf("failed to read %s: %w", path, err)
 	}
 
 	err = yaml.Unmarshal(data, config)

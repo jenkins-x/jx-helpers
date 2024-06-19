@@ -2,6 +2,7 @@ package scmhelpers
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ func (o *PullRequestOptions) AddFlags(cmd *cobra.Command) {
 func (o *PullRequestOptions) Validate() error {
 	err := o.Options.Validate()
 	if err != nil {
-		return errors.Wrapf(err, "failed to validate repository options")
+		return fmt.Errorf("failed to validate repository options: %w", err)
 	}
 
 	if o.Number <= 0 {
@@ -45,7 +46,7 @@ func (o *PullRequestOptions) Validate() error {
 				log.Logger().Warnf("could not find Pull Request number from environment. Assuming main branch instead")
 				return nil
 			}
-			return errors.Wrapf(err, "failed to get PullRequest from environment. Try supplying option: --pr")
+			return fmt.Errorf("failed to get PullRequest from environment. Try supplying option: --pr: %w", err)
 		}
 
 		if o.Number <= 0 && !o.IgnoreMissingPullRequest {
@@ -72,7 +73,7 @@ func FindPullRequestFromEnvironment() (int, error) {
 	}
 	answer, err := strconv.Atoi(prName)
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to convert PR "+prName+" to a number from env var %s", envVar)
+		return 0, fmt.Errorf("unable to convert PR "+prName+" to a number from env var %s"+": %w", envVar, err)
 	}
 	return answer, nil
 }
@@ -82,7 +83,7 @@ func (o *PullRequestOptions) DiscoverPullRequest() (*scm.PullRequest, error) {
 	ctx := context.Background()
 	pr, _, err := o.ScmClient.PullRequests.Find(ctx, o.FullRepositoryName, o.Number)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find PR %d in repo %s", o.Number, o.Repository)
+		return nil, fmt.Errorf("failed to find PR %d in repo %s: %w", o.Number, o.Repository, err)
 	}
 	return pr, nil
 }

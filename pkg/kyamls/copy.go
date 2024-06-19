@@ -1,18 +1,18 @@
 package kyamls
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func CopyFiles(dir string, filter Filter, suffix string, labels map[string]string) error {
 	filterFn, err := filter.ToFilterFn()
 	if err != nil {
-		return errors.Wrap(err, "failed to create filter")
+		return fmt.Errorf("failed to create filter: %w", err)
 	}
 
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -24,13 +24,13 @@ func CopyFiles(dir string, filter Filter, suffix string, labels map[string]strin
 		}
 		node, err := yaml.ReadFile(path)
 		if err != nil {
-			return errors.Wrapf(err, "failed to load file %s", path)
+			return fmt.Errorf("failed to load file %s: %w", path, err)
 		}
 
 		if filterFn != nil {
 			flag, err := filterFn(node, path)
 			if err != nil {
-				return errors.Wrapf(err, "failed to evaluate filter on file %s", path)
+				return fmt.Errorf("failed to evaluate filter on file %s: %w", path, err)
 			}
 			if !flag {
 				return nil
@@ -48,13 +48,13 @@ func CopyFiles(dir string, filter Filter, suffix string, labels map[string]strin
 
 		err = yaml.WriteFile(node, copyPath)
 		if err != nil {
-			return errors.Wrapf(err, "failed to save %s", path)
+			return fmt.Errorf("failed to save %s: %w", path, err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to modify files in dir %s", dir)
+		return fmt.Errorf("failed to modify files in dir %s: %w", dir, err)
 	}
 	return nil
 }

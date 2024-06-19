@@ -20,5 +20,5 @@ spec:
         app: myapp-myapp
     spec:
       containers:
-        - name: myapp
-          image: "myapp:0.0.12"
+      - name: myapp
+        image: "myapp:0.0.12"

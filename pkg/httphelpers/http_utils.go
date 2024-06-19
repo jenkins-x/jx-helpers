@@ -2,8 +2,9 @@ package httphelpers
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 // defaults mirror the default http.Transport values
@@ -98,11 +98,11 @@ func CallWithExponentialBackOff(url string, auth string, httpMethod string, reqB
 				return backoff.Permanent(err)
 			}
 			if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-				return errors.Errorf("%s not available, error was %d %s", url, resp.StatusCode, resp.Status)
+				return fmt.Errorf("%s not available, error was %d %s", url, resp.StatusCode, resp.Status)
 			}
-			respBody, err = ioutil.ReadAll(resp.Body)
+			respBody, err = io.ReadAll(resp.Body)
 			if err != nil {
-				return backoff.Permanent(errors.Wrap(err, "parsing response body"))
+				return backoff.Permanent(fmt.Errorf("parsing response body: %w", err))
 			}
 			resp.Body.Close()
 			return nil
@@ -113,7 +113,7 @@ func CallWithExponentialBackOff(url string, auth string, httpMethod string, reqB
 		exponentialBackOff.Reset()
 		err := backoff.Retry(f, exponentialBackOff)
 		if err != nil {
-			return []byte{}, errors.Wrapf(err, "error performing request via %s", url)
+			return []byte{}, fmt.Errorf("error performing request via %s: %w", url, err)
 		}
 	}
 	return respBody, nil

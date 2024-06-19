@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
-	"github.com/pkg/errors"
 )
 
 // FakeInput provide a fake provider for testing
@@ -26,7 +25,7 @@ var _ input.Interface = &FakeInput{}
 func (f *FakeInput) PickPassword(message string, help string) (string, error) {
 	value := f.getValue(message)
 	if value == "" {
-		return "", errors.Errorf("missing fake value for message: %s", message)
+		return "", fmt.Errorf("missing fake value for message: %s", message)
 	}
 	return value, nil
 }
@@ -61,7 +60,7 @@ func (f *FakeInput) SelectNamesWithFilter(names []string, message string, select
 func (f *FakeInput) SelectNames(names []string, message string, selectAll bool, help string) ([]string, error) {
 	value, err := f.PickValue(message, "", false, help)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to ")
+		return nil, fmt.Errorf("failed to : %w", err)
 	}
 	return []string{value}, nil
 }
@@ -69,7 +68,7 @@ func (f *FakeInput) SelectNames(names []string, message string, selectAll bool, 
 func (f *FakeInput) Confirm(message string, defaultValue bool, help string) (bool, error) {
 	value, err := f.PickValue(message, "", false, help)
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to ")
+		return false, fmt.Errorf("failed to : %w", err)
 	}
 	if value == "" {
 		return defaultValue, nil

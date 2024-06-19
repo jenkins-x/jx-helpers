@@ -4,7 +4,6 @@
 package files
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +42,7 @@ func Test_UnTargzAll_NestedNoDir(t *testing.T) {
 		}
 		name := strings.TrimPrefix(path, dir+"/")
 		assert.True(t, info.Mode().IsRegular(), "Non regular file %s", name)
-		content, err := ioutil.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if !assert.NoError(t, err, "Error reading file %s", name) {
 			return err
 		}

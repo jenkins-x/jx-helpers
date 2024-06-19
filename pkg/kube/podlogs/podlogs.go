@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
 )
 
 // TailLogs will tail the logs for the pod in ns with containerName,
@@ -30,7 +29,7 @@ func TailLogs(ns string, pod string, containerName string, errOut io.Writer, out
 
 	err := e.Start()
 	if err != nil {
-		return errors.Wrapf(err, "failed to run command: %s %s", name, strings.Join(args, " "))
+		return fmt.Errorf("failed to run command: %s %s: %w", name, strings.Join(args, " "), err)
 	}
 
 	scanner := bufio.NewScanner(stdout)

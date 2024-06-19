@@ -3,7 +3,6 @@ package templates
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -14,7 +13,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/extensions"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,7 +38,7 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 
 	err := o.addManagedPlugins(&otherCommands, groups)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to add managed plugins")
+		return nil, fmt.Errorf("failed to add managed plugins: %w", err)
 	}
 
 	pathCommands := PluginCommandGroup{
@@ -53,7 +52,7 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 
 	paths := sets.NewString(filepath.SplitList(os.Getenv(path))...)
 	for _, dir := range paths.List() {
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 		if err != nil {
 			continue
 		}
@@ -103,7 +102,7 @@ func (o *Options) addManagedPlugins(otherCommands *PluginCommandGroup, groups ma
 	if o.ManagedPluginsEnabled {
 		o.JXClient, o.Namespace, err = jxclient.LazyCreateJXClientAndNamespace(o.JXClient, o.Namespace)
 		if err != nil {
-			return errors.Wrapf(err, "failed to create jx client")
+			return fmt.Errorf("failed to create jx client: %w", err)
 		}
 		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil && apierrors.IsNotFound(err) {

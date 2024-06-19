@@ -5,7 +5,7 @@ package helmer_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -159,7 +159,7 @@ func TestUpdateRepo(t *testing.T) {
 func TestRemoveRequirementsLock(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "requirements.lock")
-	ioutil.WriteFile(path, []byte("test"), 0644)
+	os.WriteFile(path, []byte("test"), 0644)
 
 	helm, _ := createHelmWithCwdAndHelmVersion(t, dir, nil, "")
 
@@ -335,7 +335,7 @@ func TestSearchChartVersions(t *testing.T) {
 func TestFindChart(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, helm.ChartFileName)
-	ioutil.WriteFile(path, []byte("test"), 0644)
+	os.WriteFile(path, []byte("test"), 0644)
 	helm, _ := createHelmWithCwdAndHelmVersion(t, dir, nil, "")
 
 	chartFile, err := helm.FindChart()

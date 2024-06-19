@@ -2,15 +2,13 @@ package testhelpers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
-
+	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +16,7 @@ import (
 // AssertFileContains asserts that a given file exists and contains the given text
 func AssertFileContains(t *testing.T, fileName string, containsText string) {
 	if assert.FileExists(t, fileName) {
-		data, err := ioutil.ReadFile(fileName)
+		data, err := os.ReadFile(fileName)
 		assert.NoError(t, err, "Failed to read file %s", fileName)
 		if err == nil {
 			text := string(data)
@@ -30,7 +28,7 @@ func AssertFileContains(t *testing.T, fileName string, containsText string) {
 // AssertFileDoesNotContain asserts that a given file exists and does not contain the given text
 func AssertFileDoesNotContain(t *testing.T, fileName string, containsText string) {
 	if assert.FileExists(t, fileName) {
-		data, err := ioutil.ReadFile(fileName)
+		data, err := os.ReadFile(fileName)
 		assert.NoError(t, err, "Failed to read file %s", fileName)
 		if err == nil {
 			text := string(data)
@@ -100,7 +98,7 @@ func AssertLoadFileText(t *testing.T, fileName string) (string, error) {
 	if !assert.FileExists(t, fileName) {
 		return "", fmt.Errorf("File %s does not exist", fileName)
 	}
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	assert.NoError(t, err, "Failed loading data for file: %s", fileName)
 	if err != nil {
 		return "", err
@@ -128,7 +126,7 @@ func AssertDirContentsEqual(t *testing.T, expectedDir string, actualDir string) 
 	err := filepath.Walk(actualDir, func(path string, info os.FileInfo, err error) error {
 		relativePath, err := filepath.Rel(actualDir, path)
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.New(err)
 		}
 		actualFiles[relativePath] = path
 		return nil
@@ -137,7 +135,7 @@ func AssertDirContentsEqual(t *testing.T, expectedDir string, actualDir string) 
 	err = filepath.Walk(expectedDir, func(path string, info os.FileInfo, err error) error {
 		relativePath, err := filepath.Rel(expectedDir, path)
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.New(err)
 		}
 		expectedFiles[relativePath] = path
 		return nil

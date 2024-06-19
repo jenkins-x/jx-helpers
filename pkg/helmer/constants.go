@@ -59,7 +59,7 @@ const (
 	resourcesSeparator = "---"
 )
 
-//DefaultValuesTreeIgnores is the default set of ignored files for collapsing the values tree which are used if
+// DefaultValuesTreeIgnores is the default set of ignored files for collapsing the values tree which are used if
 // ignores is nil
 var DefaultValuesTreeIgnores = []string{
 	"templates/*",

@@ -5,7 +5,7 @@ package versionstream_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -109,7 +109,7 @@ func TestResolveDockerImage(t *testing.T) {
 		{dataDir, "susfu", "susfu", true, "failed to unmarshal YAML"},
 	}
 
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 	defer logrus.SetOutput(os.Stdin)
 
 	for _, testCase := range testCases {
