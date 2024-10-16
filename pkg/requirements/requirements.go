@@ -64,6 +64,63 @@ func GetRequirementsAndGit(g gitclient.Interface, gitURL string) (*jxcore.Requir
 func CloneClusterRepo(g gitclient.Interface, gitURL string) (string, error) {
 	// if we have a kubernetes secret with git auth mounted to the filesystem when running in cluster
 	// we need to turn it into a git credentials file see https://git-scm.com/docs/git-credential-store
+	gitURL, err := gitCredsFromCluster(gitURL)
+	if err != nil {
+		return "", err
+	}
+
+	// clone cluster repo to a temp dir and load the requirements
+	dir, err := gitclient.CloneToDir(g, gitURL, "")
+	if err != nil {
+		return "", fmt.Errorf("failed to clone cluster git repo %s: %w", gitURL, err)
+	}
+	return dir, nil
+}
+
+// PartialCloneClusterRepo clones the cluster repo to a temporary directory and returns the directory path
+// Attempts a sparse clone first, falling back to a partial clone without checkout patterns, then a default clone
+func PartialCloneClusterRepo(g gitclient.Interface, gitURL string, shallow bool, sparseCheckoutPatterns ...string) (string, error) {
+	gitURL, err := gitCredsFromCluster(gitURL)
+	if err != nil {
+		return "", err
+	}
+	// Attempt sparse clone first
+	dir, err := gitclient.SparseCloneToDir(g, gitURL, "", shallow, sparseCheckoutPatterns...)
+	if err != nil {
+		log.Logger().Warnf("failed sparse clone of cluster git repo %s: %v", gitURL, err)
+		log.Logger().Warnf("falling back to partial clone without checkout patterns")
+		// If sparse clone fails, fall back to partial clone
+		dir, err = gitclient.PartialCloneToDir(g, gitURL, "", shallow)
+		if err != nil {
+			log.Logger().Warnf("failed partial clone of cluster git repo %s: %v", gitURL, err)
+			log.Logger().Warnf("falling back to default clone, without checkout patterns")
+			dir, err = gitclient.CloneToDir(g, gitURL, "")
+			if err != nil {
+				return "", fmt.Errorf("failed to clone cluster git repo %s: %w", gitURL, err)
+			}
+		}
+		return dir, nil
+	}
+	return dir, nil
+}
+
+// AddUserPasswordToURLFromDir loads the username and password files from the given directory and adds them to the URL if they are found
+func AddUserPasswordToURLFromDir(gitURL, path string) (string, error) {
+	username, err := loadFile(filepath.Join(path, "username"))
+	if err != nil {
+		return "", fmt.Errorf("failed to load git username: %w", err)
+	}
+	password, err := loadFile(filepath.Join(path, "password"))
+	if err != nil {
+		return "", fmt.Errorf("failed to load git password: %w", err)
+	}
+	if username != "" && password != "" {
+		return stringhelpers.URLSetUserPassword(gitURL, username, password)
+	}
+	return gitURL, nil
+}
+
+func gitCredsFromCluster(gitURL string) (string, error) {
 	secretMountPath := os.Getenv(credentialhelper.GIT_SECRET_MOUNT_PATH)
 	if secretMountPath != "" {
 		err := credentialhelper.WriteGitCredentialFromSecretMount()
@@ -81,28 +138,6 @@ func CloneClusterRepo(g gitclient.Interface, gitURL string) (string, error) {
 		} else {
 			log.Logger().Debugf("no $GIT_SECRET_MOUNT_PATH environment variable set")
 		}
-	}
-
-	// clone cluster repo to a temp dir and load the requirements
-	dir, err := gitclient.CloneToDir(g, gitURL, "")
-	if err != nil {
-		return "", fmt.Errorf("failed to clone cluster git repo %s: %w", gitURL, err)
-	}
-	return dir, nil
-}
-
-// AddUserPasswordToURLFromDir loads the username and password files from the given directory and adds them to the URL if they are found
-func AddUserPasswordToURLFromDir(gitURL, path string) (string, error) {
-	username, err := loadFile(filepath.Join(path, "username"))
-	if err != nil {
-		return "", fmt.Errorf("failed to load git username: %w", err)
-	}
-	password, err := loadFile(filepath.Join(path, "password"))
-	if err != nil {
-		return "", fmt.Errorf("failed to load git password: %w", err)
-	}
-	if username != "" && password != "" {
-		return stringhelpers.URLSetUserPassword(gitURL, username, password)
 	}
 	return gitURL, nil
 }
