@@ -66,10 +66,12 @@ type StableVersion struct {
 	// Version the default version to use
 	Version string `json:"version,omitempty"`
 	// VersionUpperLimit represents the upper limit which indicates a version which is too new.
-
 	// e.g. for packages we could use: `{ version: "1.10.1", upperLimit: "1.14.0"}` which would mean these
 	// versions are all valid `["1.11.5", "1.13.1234"]` but these are invalid `["1.14.0", "1.14.1"]`
 	UpperLimit string `json:"upperLimit,omitempty"`
+	// Labels are labels to add to release. Typically used to add values.jenkins-x.io=no-jx-values
+	// to avoid problems with chart schema
+	Labels map[string]string `yaml:"labels,omitempty"`
 	// GitURL the URL to the source code
 	GitURL string `json:"gitUrl,omitempty"`
 	// Component is the component inside the git URL
