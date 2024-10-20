@@ -16,10 +16,10 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec
-	github.com/jenkins-x/go-scm v1.14.37
+	github.com/jenkins-x/go-scm v1.14.43
 	github.com/jenkins-x/jx-api/v4 v4.7.6
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.8
-	github.com/jenkins-x/jx-logging/v3 v3.0.16
+	github.com/jenkins-x/jx-logging/v3 v3.0.17
 	github.com/magiconair/properties v1.8.5
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.33.1
@@ -33,7 +33,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.15.2
 	k8s.io/api v0.30.2
-	k8s.io/apimachinery v0.30.2
+	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.2
 	sigs.k8s.io/kustomize/kyaml v0.14.3-0.20230601165947-6ce0bf390ce3
 	sigs.k8s.io/yaml v1.4.0
@@ -43,7 +43,7 @@ require (
 	code.gitea.io/sdk/gitea v0.14.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
-	github.com/bluekeyes/go-gitdiff v0.7.1 // indirect
+	github.com/bluekeyes/go-gitdiff v0.8.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect

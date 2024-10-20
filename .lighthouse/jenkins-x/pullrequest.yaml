@@ -20,7 +20,10 @@ spec:
           name: ""
           resources: {}
         - name: jx-variables
-          resources: {}
+          resources:
+            requests:
+              cpu: 1400m
+              memory: 600Mi
         - name: build-make-linux
           resources: {}
   podTemplate: {}
