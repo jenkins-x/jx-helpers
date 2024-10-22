@@ -356,16 +356,17 @@ func PartialCloneToDir(g Interface, gitURL, dir string, shallow bool) (string, e
 		return "", err
 	}
 
-	log.Logger().Debugf("shallow cloning %s to directory %s", termcolor.ColorInfo(gitURL), termcolor.ColorInfo(dir))
+	log.Logger().Debugf("initiating partial clone %s to directory %s", termcolor.ColorInfo(gitURL), termcolor.ColorInfo(dir))
 
 	parentDir := filepath.Dir(dir)
-	sparseCloneArgs := []string{"clone", "--filter=blob:none"}
+	partialCloneArgs := []string{"clone", "--filter=blob:none"}
 	if shallow {
-		sparseCloneArgs = append(sparseCloneArgs, "--depth=1")
+		log.Logger().Debugf("setting clone depth to 1")
+		partialCloneArgs = append(partialCloneArgs, "--depth=1")
 	}
-	_, err = g.Command(parentDir, append(sparseCloneArgs, gitURL, dir)...)
+	_, err = g.Command(parentDir, append(partialCloneArgs, gitURL, dir)...)
 	if err != nil {
-		return "", fmt.Errorf("failed to sparsely clone repository %s to directory: %s: %w", gitURL, dir, err)
+		return "", fmt.Errorf("failed to partially clone repository %s to directory: %s: %w", gitURL, dir, err)
 	}
 	return dir, nil
 }
