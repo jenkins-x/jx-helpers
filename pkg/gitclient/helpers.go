@@ -331,17 +331,9 @@ func NthTag(g Interface, dir string, n int) (string, string, error) {
 
 // CloneToDir clones the git repository to either the given directory or create a temporary
 func CloneToDir(g Interface, gitURL, dir string) (string, error) {
-	var err error
-	if dir != "" {
-		err = os.MkdirAll(dir, util.DefaultWritePermissions)
-		if err != nil {
-			return "", fmt.Errorf("failed to create directory %s: %w", dir, err)
-		}
-	} else {
-		dir, err = os.MkdirTemp("", "jx-git-")
-		if err != nil {
-			return "", fmt.Errorf("failed to create temporary directory: %w", err)
-		}
+	dir, err := createDir(dir)
+	if err != nil {
+		return "", err
 	}
 
 	log.Logger().Debugf("cloning %s to directory %s", termcolor.ColorInfo(gitURL), termcolor.ColorInfo(dir))
@@ -354,23 +346,40 @@ func CloneToDir(g Interface, gitURL, dir string) (string, error) {
 	return dir, nil
 }
 
+// PartialCloneToDir Partially clones the git repository to either the given directory or create a temporary one
+// Alternative to SparseCloneToDir when git provider does not support sparse-checkout
+// sparseCheckoutPatterns not supported
+// If shallow is true the clone is made with --depth=1
+func PartialCloneToDir(g Interface, gitURL, dir string, shallow bool) (string, error) {
+	dir, err := createDir(dir)
+	if err != nil {
+		return "", err
+	}
+
+	log.Logger().Debugf("initiating partial clone %s to directory %s", termcolor.ColorInfo(gitURL), termcolor.ColorInfo(dir))
+
+	parentDir := filepath.Dir(dir)
+	partialCloneArgs := []string{"clone", "--filter=blob:none"}
+	if shallow {
+		log.Logger().Debugf("setting clone depth to 1")
+		partialCloneArgs = append(partialCloneArgs, "--depth=1")
+	}
+	_, err = g.Command(parentDir, append(partialCloneArgs, gitURL, dir)...)
+	if err != nil {
+		return "", fmt.Errorf("failed to partially clone repository %s to directory: %s: %w", gitURL, dir, err)
+	}
+	return dir, nil
+}
+
 // SparseCloneToDir clones the git repository sparsely to either the given directory or create a temporary on.
 // SparseCheckoutPatterns are checked out interpreted as in .gitignore. If no sparseCheckoutPatterns are given the files
 // directly under the root of the repository are checked out.
 // NOTE: This functionality is experimental and also the behaviour may vary between different git servers.
 // If shallow is true the clone is made with --depth=1
 func SparseCloneToDir(g Interface, gitURL, dir string, shallow bool, sparseCheckoutPatterns ...string) (string, error) {
-	var err error
-	if dir != "" {
-		err = os.MkdirAll(dir, util.DefaultWritePermissions)
-		if err != nil {
-			return "", fmt.Errorf("failed to create directory %s: %w", dir, err)
-		}
-	} else {
-		dir, err = os.MkdirTemp("", "jx-git-")
-		if err != nil {
-			return "", fmt.Errorf("failed to create temporary directory: %w", err)
-		}
+	dir, err := createDir(dir)
+	if err != nil {
+		return "", err
 	}
 
 	log.Logger().Debugf("cloning %s to directory %s sparsely", termcolor.ColorInfo(gitURL), termcolor.ColorInfo(dir))
@@ -564,6 +573,24 @@ func CheckoutRemoteBranch(g Interface, dir string, branch string) error {
 		return nil
 	}
 	return Checkout(g, dir, branch)
+}
+
+// createDir creates input directory if it does not exist, or creates a temporary directory
+// createDir creates the input directory if it does not exist, or creates a temporary directory
+func createDir(dir string) (string, error) {
+	var err error
+	if dir != "" {
+		err = os.MkdirAll(dir, util.DefaultWritePermissions)
+		if err != nil {
+			return "", fmt.Errorf("failed to create directory %s: %w", dir, err)
+		}
+	} else {
+		dir, err = os.MkdirTemp("", "jx-git-")
+		if err != nil {
+			return "", fmt.Errorf("failed to create temporary directory: %w", err)
+		}
+	}
+	return dir, nil
 }
 
 // GetLatestCommitMessage returns the latest git commit message
