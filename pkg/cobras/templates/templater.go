@@ -44,7 +44,7 @@ func UseOptionsTemplates(cmd *cobra.Command) {
 type templater struct {
 	UsageTemplate          string
 	HelpTemplate           string
-	GetPluginCommandGroups func() (PluginCommandGroups, bool)
+	GetPluginCommandGroups func() PluginCommandGroups
 	RootCmd                *cobra.Command
 	CommandGroups
 	Filtered []string
@@ -154,7 +154,7 @@ func (t *templater) cmdGroupsString(c *cobra.Command) string {
 			}
 		}
 	}
-	pluginCommandGroups, _ := t.GetPluginCommandGroups()
+	pluginCommandGroups := t.GetPluginCommandGroups()
 	if c == t.RootCmd {
 		for _, cmdGroup := range pluginCommandGroups {
 			for _, cmd := range cmdGroup.Commands {
