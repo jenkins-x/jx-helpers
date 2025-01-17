@@ -14,7 +14,6 @@ import (
 	jxfake "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/fake"
 	typev1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/activities"
 	appsv1 "k8s.io/api/apps/v1"
 	k8s_v1 "k8s.io/api/core/v1"
@@ -81,7 +80,7 @@ func TestCreateOrUpdateActivities(t *testing.T) {
 
 	ingressConfig := &k8s_v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: kube.ConfigMapIngressConfig,
+			Name: "ingress-config",
 		},
 		Data: map[string]string{"key1": "value1", "domain": "test-domain", "config.yml": ""},
 	}
@@ -89,7 +88,7 @@ func TestCreateOrUpdateActivities(t *testing.T) {
 	mockKubeClient.CoreV1().ConfigMaps(nsObj.Namespace).Create(context.TODO(), ingressConfig, metav1.CreateOptions{})
 	mockTektonDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: kube.DeploymentTektonController,
+			Name: "tekton-pipelines-controller",
 		},
 	}
 	mockKubeClient.AppsV1().Deployments(nsObj.Namespace).Create(context.TODO(), mockTektonDeployment, metav1.CreateOptions{})

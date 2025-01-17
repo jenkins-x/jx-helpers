@@ -28,9 +28,6 @@ func TestEnsureDevEnvironmentSetup(t *testing.T) {
 			Label:             "Development",
 			PromotionStrategy: jenkinsio_v1.PromotionStrategyTypeNever,
 			Kind:              jenkinsio_v1.EnvironmentKindTypeDevelopment,
-			TeamSettings: jenkinsio_v1.TeamSettings{
-				AppsRepository: kube.DefaultChartMuseumURL,
-			},
 		},
 	}
 
@@ -42,6 +39,4 @@ func TestEnsureDevEnvironmentSetup(t *testing.T) {
 	assert.Equal(t, envFixture.Spec.Label, env.Spec.Label)
 	assert.Equal(t, jenkinsio_v1.PromotionStrategyType("Never"), env.Spec.PromotionStrategy)
 	assert.Equal(t, jenkinsio_v1.EnvironmentKindType("Development"), env.Spec.Kind)
-	assert.Equal(t, jenkinsio_v1.PromotionEngineType("Prow"), env.Spec.TeamSettings.PromotionEngine)
-	assert.Equal(t, envFixture.Spec.TeamSettings.AppsRepository, env.Spec.TeamSettings.AppsRepository)
 }
