@@ -7,7 +7,12 @@ import (
 
 // IsJobSucceeded returns true if the job completed and did not fail
 func IsJobSucceeded(job *batchv1.Job) bool {
-	return IsJobFinished(job) && job.Status.Conditions[0].Type == batchv1.JobComplete
+	for _, con := range job.Status.Conditions {
+		if con.Type == batchv1.JobComplete && con.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
 
 // IsJobFinished returns true if the job has completed
