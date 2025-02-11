@@ -4,40 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"sort"
+	"strconv"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	nv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	tools_watch "k8s.io/client-go/tools/watch"
 )
 
-const (
-	ExposeAnnotation             = "fabric8.io/expose"
-	ExposeURLAnnotation          = "fabric8.io/exposeUrl"
-	ExposeGeneratedByAnnotation  = "fabric8.io/generated-by"
-	ExposeIngressName            = "fabric8.io/ingress.name"
-	JenkinsXSkipTLSAnnotation    = "jenkins-x.io/skip.tls"
-	ExposeIngressAnnotation      = "fabric8.io/ingress.annotations"
-	CertManagerAnnotation        = "certmanager.k8s.io/issuer"
-	CertManagerClusterAnnotation = "certmanager.k8s.io/cluster-issuer"
-	ServiceAppLabel              = "app"
-)
+const ExposeURLAnnotation = "fabric8.io/exposeUrl"
 
 type ServiceURL struct {
 	Name string
@@ -381,57 +365,6 @@ func FindServiceURLs(client kubernetes.Interface, namespace string) ([]ServiceUR
 	return urls, nil
 }
 
-// WaitForExternalIP waits for the pods of a deployment to become ready
-func WaitForExternalIP(client kubernetes.Interface, name, namespace string, timeout time.Duration) error {
-	options := meta_v1.ListOptions{
-		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
-	}
-
-	w, err := client.CoreV1().Services(namespace).Watch(context.TODO(), options)
-	if err != nil {
-		return err
-	}
-	defer w.Stop()
-
-	condition := func(event watch.Event) (bool, error) {
-		svc := event.Object.(*v1.Service)
-		return HasExternalAddress(svc), nil
-	}
-
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	_, err = tools_watch.UntilWithoutRetry(ctx, w, condition)
-
-	if err == wait.ErrWaitTimeout {
-		return fmt.Errorf("service %s never became ready", name)
-	}
-	return nil
-}
-
-// WaitForService waits for a service to become ready
-func WaitForService(client kubernetes.Interface, name, namespace string, timeout time.Duration) error {
-	options := meta_v1.ListOptions{
-		FieldSelector: fields.OneTermEqualSelector("metadata.name", name).String(),
-	}
-	w, err := client.CoreV1().Services(namespace).Watch(context.TODO(), options)
-	if err != nil {
-		return err
-	}
-	defer w.Stop()
-
-	condition := func(event watch.Event) (bool, error) {
-		svc := event.Object.(*v1.Service)
-		return svc.GetName() == name, nil
-	}
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	_, err = tools_watch.UntilWithoutRetry(ctx, w, condition)
-
-	if err == wait.ErrWaitTimeout {
-		return fmt.Errorf("service %s never became ready", name)
-	}
-
-	return nil
-}
-
 func HasExternalAddress(svc *v1.Service) bool {
 	for _, v := range svc.Status.LoadBalancer.Ingress {
 		if v.IP != "" || v.Hostname != "" {
@@ -439,34 +372,6 @@ func HasExternalAddress(svc *v1.Service) bool {
 		}
 	}
 	return false
-}
-
-func CreateServiceLink(client kubernetes.Interface, currentNamespace, targetNamespace, serviceName, externalURL string) error {
-	annotations := make(map[string]string)
-	annotations[ExposeURLAnnotation] = externalURL
-
-	svc := v1.Service{
-		ObjectMeta: meta_v1.ObjectMeta{
-			Name:        serviceName,
-			Namespace:   currentNamespace,
-			Annotations: annotations,
-		},
-		Spec: v1.ServiceSpec{
-			Type:         v1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.svc.cluster.local", serviceName, targetNamespace),
-		},
-	}
-
-	_, err := client.CoreV1().Services(currentNamespace).Create(context.TODO(), &svc, meta_v1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func DeleteService(client *kubernetes.Clientset, namespace string, serviceName string) error {
-	return client.CoreV1().Services(namespace).Delete(context.TODO(), serviceName, meta_v1.DeleteOptions{})
 }
 
 func GetService(client kubernetes.Interface, currentNamespace, targetNamespace, serviceName string) error {
@@ -483,167 +388,6 @@ func GetService(client kubernetes.Interface, currentNamespace, targetNamespace, 
 	_, err := client.CoreV1().Services(currentNamespace).Create(context.TODO(), &svc, meta_v1.CreateOptions{})
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func IsServicePresent(c kubernetes.Interface, name, ns string) (bool, error) {
-	svc, err := c.CoreV1().Services(ns).Get(context.TODO(), name, meta_v1.GetOptions{})
-	if err != nil || svc == nil {
-		return false, err
-	}
-	return true, nil
-}
-
-// GetServiceAppName retrieves the application name from the service labels
-func GetServiceAppName(c kubernetes.Interface, name, ns string) (string, error) {
-	svc, err := c.CoreV1().Services(ns).Get(context.TODO(), name, meta_v1.GetOptions{})
-	if err != nil || svc == nil {
-		return "", fmt.Errorf("retrieving service %q: %w", name, err)
-	}
-	return ServiceAppName(svc), nil
-}
-
-// ServiceAppName retrives the application name from service labels. If no app lable exists,
-// it returns the service name
-func ServiceAppName(service *v1.Service) string {
-	if annotations := service.Annotations; annotations != nil {
-		ingName, ok := annotations[ExposeIngressName]
-		if ok {
-			return ingName
-		}
-	}
-	if labels := service.Labels; labels != nil {
-		app, ok := labels[ServiceAppLabel]
-		if ok {
-			return app
-		}
-	}
-	return service.GetName()
-}
-
-// AnnotateServicesWithCertManagerIssuer adds the cert-manager annotation to the services from the given namespace. If a list of
-// services is provided, it will apply the annotation only to that specific services.
-func AnnotateServicesWithCertManagerIssuer(c kubernetes.Interface, ns, issuer string, clusterIssuer bool, services ...string) ([]*v1.Service, error) {
-	result := make([]*v1.Service, 0)
-	svcList, err := GetServices(c, ns)
-	if err != nil {
-		return result, err
-	}
-
-	for _, s := range svcList {
-		// annotate only the services present in the list, if the list is empty annotate all services
-		if len(services) > 0 {
-			i := stringhelpers.StringArrayIndex(services, s.GetName())
-			if i < 0 {
-				continue
-			}
-		}
-		if s.Annotations[ExposeAnnotation] == "true" && s.Annotations[JenkinsXSkipTLSAnnotation] != "true" {
-			existingAnnotations, _ := s.Annotations[ExposeIngressAnnotation]
-			// if no existing `fabric8.io/ingress.annotations` initialise and add else update with ClusterIssuer
-			certManagerAnnotation := CertManagerAnnotation
-			if clusterIssuer == true {
-				certManagerAnnotation = CertManagerClusterAnnotation
-			}
-			if len(existingAnnotations) > 0 {
-				s.Annotations[ExposeIngressAnnotation] = existingAnnotations + "\n" + certManagerAnnotation + ": " + issuer
-			} else {
-				s.Annotations[ExposeIngressAnnotation] = certManagerAnnotation + ": " + issuer
-			}
-			s, err = c.CoreV1().Services(ns).Update(context.TODO(), s, meta_v1.UpdateOptions{})
-			if err != nil {
-				return result, fmt.Errorf("failed to annotate and update service %s in namespace %s: %v", s.Name, ns, err)
-			}
-			result = append(result, s)
-		}
-	}
-	return result, nil
-}
-
-// AnnotateServicesWithBasicAuth annotates the services with nginx baisc auth annotations
-func AnnotateServicesWithBasicAuth(client kubernetes.Interface, ns string, services ...string) error {
-	if len(services) == 0 {
-		return nil
-	}
-	svcList, err := GetServices(client, ns)
-	if err != nil {
-		return fmt.Errorf("retrieving the services from namespace %q: %w", ns, err)
-	}
-	for _, service := range svcList {
-		// Check if the service is in the white-list
-		idx := stringhelpers.StringArrayIndex(services, service.GetName())
-		if idx < 0 {
-			continue
-		}
-		if service.Annotations == nil {
-			service.Annotations = map[string]string{}
-		}
-		// Add the required basic authentication annotation for nginx-ingress controller
-		ingressAnnotations := service.Annotations[ExposeIngressAnnotation]
-		basicAuthAnnotations := fmt.Sprintf(
-			"nginx.ingress.kubernetes.io/auth-type: basic\nnginx.ingress.kubernetes.io/auth-secret: %s\nnginx.ingress.kubernetes.io/auth-realm: Authentication is required to access this service",
-			kube.SecretBasicAuth)
-		if ingressAnnotations != "" {
-			ingressAnnotations = ingressAnnotations + "\n" + basicAuthAnnotations
-		} else {
-			ingressAnnotations = basicAuthAnnotations
-		}
-		service.Annotations[ExposeIngressAnnotation] = ingressAnnotations
-		_, err = client.CoreV1().Services(ns).Update(context.TODO(), service, meta_v1.UpdateOptions{})
-		if err != nil {
-			return fmt.Errorf("updating the service %q in namesapce %q: %w", service.GetName(), ns, err)
-		}
-	}
-	return nil
-}
-
-func CleanServiceAnnotations(c kubernetes.Interface, ns string, services ...string) error {
-	svcList, err := GetServices(c, ns)
-	if err != nil {
-		return err
-	}
-	for _, s := range svcList {
-		// clear the annotations only for the services provided in the list if the list
-		// is not empty, otherwise clear the annotations of all services
-		if len(services) > 0 {
-			i := stringhelpers.StringArrayIndex(services, s.GetName())
-			if i < 0 {
-				continue
-			}
-		}
-		if s.Annotations[ExposeAnnotation] == "true" && s.Annotations[JenkinsXSkipTLSAnnotation] != "true" {
-			// if no existing `fabric8.io/ingress.annotations` initialise and add else update with ClusterIssuer
-			annotationsForIngress := s.Annotations[ExposeIngressAnnotation]
-			if len(annotationsForIngress) > 0 {
-
-				var newAnnotations []string
-				annotations := strings.Split(annotationsForIngress, "\n")
-				for _, element := range annotations {
-					annotation := strings.SplitN(element, ":", 2)
-					key, _ := annotation[0], strings.TrimSpace(annotation[1])
-					if key != CertManagerAnnotation && key != CertManagerClusterAnnotation {
-						newAnnotations = append(newAnnotations, element)
-					}
-				}
-				annotationsForIngress = ""
-				for _, v := range newAnnotations {
-					if len(annotationsForIngress) > 0 {
-						annotationsForIngress = annotationsForIngress + "\n" + v
-					} else {
-						annotationsForIngress = v
-					}
-				}
-				s.Annotations[ExposeIngressAnnotation] = annotationsForIngress
-
-			}
-			delete(s.Annotations, ExposeURLAnnotation)
-
-			_, err = c.CoreV1().Services(ns).Update(context.TODO(), s, meta_v1.UpdateOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to clean service %s annotations in namespace %s: %v", s.Name, ns, err)
-			}
-		}
 	}
 	return nil
 }

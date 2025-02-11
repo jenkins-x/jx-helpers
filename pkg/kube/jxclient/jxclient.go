@@ -74,7 +74,7 @@ func noKubernetesFakeJXClient() (versioned.Interface, error) {
 	ns := "jx"
 	gitURL := os.Getenv("JX_ENVIRONMENT_GIT_URL")
 	if gitURL == "" {
-		gitURL = kube.DefaultGitHubEnvironmentGitRepoURL
+		gitURL = "https://github.com/jx3-gitops-repositories/jx3-github.git"
 	}
 	devEnv := jxenv.CreateDefaultDevEnvironment(ns)
 	devEnv.Namespace = ns

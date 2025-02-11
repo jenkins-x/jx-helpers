@@ -344,15 +344,6 @@ func GetDevEnvironment(jxClient versioned.Interface, ns string) (*v1.Environment
 		ns, name, selector, len(envList.Items), envList.Items)
 }
 
-// GetPreviewEnvironmentReleaseName returns the (helm) release name for the given (preview) environment
-// or the empty string is the environment is not a preview environment, or has no release name associated with it
-func GetPreviewEnvironmentReleaseName(env *v1.Environment) string {
-	if !IsPreviewEnvironment(env) {
-		return ""
-	}
-	return env.Annotations[kube.AnnotationReleaseName]
-}
-
 // IsPermanentEnvironment indicates if an environment is permanent
 func IsPermanentEnvironment(env *v1.Environment) bool {
 	return env.Spec.Kind == v1.EnvironmentKindTypePermanent

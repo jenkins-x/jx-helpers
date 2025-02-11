@@ -9,7 +9,6 @@ import (
 	"github.com/AlecAivazis/survey/v2/core"
 	jenkinsio_v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/stretchr/testify/assert"
 	k8sv1 "k8s.io/api/core/v1"
@@ -118,46 +117,6 @@ func TestGetDevNamespace(t *testing.T) {
 	assert.NoError(t, err, "Should not error")
 	assert.Equal(t, testNS, ns)
 	assert.Equal(t, testEnv, env)
-}
-
-func TestGetPreviewEnvironmentReleaseName(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		env                 *jenkinsio_v1.Environment
-		expectedReleaseName string
-	}{
-		{
-			env:                 nil,
-			expectedReleaseName: "",
-		},
-		{
-			env:                 &jenkinsio_v1.Environment{},
-			expectedReleaseName: "",
-		},
-		{
-			env:                 jxenv.NewPreviewEnvironment("test"),
-			expectedReleaseName: "",
-		},
-		{
-			env: func() *jenkinsio_v1.Environment {
-				env := jxenv.NewPreviewEnvironment("test")
-				if env.Annotations == nil {
-					env.Annotations = map[string]string{}
-				}
-				env.Annotations[kube.AnnotationReleaseName] = "release-name"
-				return env
-			}(),
-			expectedReleaseName: "release-name",
-		},
-	}
-
-	for i, test := range tests {
-		releaseName := jxenv.GetPreviewEnvironmentReleaseName(test.env)
-		if releaseName != test.expectedReleaseName {
-			t.Errorf("[%d] Expected release name %s but got %s", i, test.expectedReleaseName, releaseName)
-		}
-	}
 }
 
 func TestGetRepositoryGitURL(t *testing.T) {

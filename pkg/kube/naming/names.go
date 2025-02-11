@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 // ToValidImageName converts the given string into a valid docker image name

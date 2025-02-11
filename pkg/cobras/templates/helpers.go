@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,37 +8,20 @@ import (
 	"strings"
 
 	jxCore "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/extensions"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-
 	"github.com/spf13/cobra"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-type Options struct {
-	ManagedPluginsEnabled bool
-	JXClient              versioned.Interface
-	Namespace             string
-}
-
 // GetPluginCommandGroups returns the plugin groups
-func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, localPlugins []jxCore.Plugin) (PluginCommandGroups, error) {
+func GetPluginCommandGroups(verifier extensions.PathVerifier, localPlugins []jxCore.Plugin) (PluginCommandGroups, error) {
 
 	otherCommands := PluginCommandGroup{
 		Message: "Other Commands",
 	}
 	groups := make(map[string]PluginCommandGroup, 0)
 
-	o.addPlugins(localPlugins, &otherCommands, groups)
-
-	err := o.addManagedPlugins(&otherCommands, groups)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add managed plugins: %w", err)
-	}
+	addPlugins(localPlugins, &otherCommands, groups)
 
 	pathCommands := PluginCommandGroup{
 		Message: "Locally Available Commands:",
@@ -96,27 +78,7 @@ func (o *Options) GetPluginCommandGroups(verifier extensions.PathVerifier, local
 	return pcgs, nil
 }
 
-func (o *Options) addManagedPlugins(otherCommands *PluginCommandGroup, groups map[string]PluginCommandGroup) error {
-	// Managed plugins
-	var err error
-	if o.ManagedPluginsEnabled {
-		o.JXClient, o.Namespace, err = jxclient.LazyCreateJXClientAndNamespace(o.JXClient, o.Namespace)
-		if err != nil {
-			return fmt.Errorf("failed to create jx client: %w", err)
-		}
-		pluginList, err := o.JXClient.JenkinsV1().Plugins(o.Namespace).List(context.TODO(), metav1.ListOptions{})
-		if err != nil && apierrors.IsNotFound(err) {
-			err = nil
-		}
-		if err != nil {
-			log.Logger().Debugf("failed to find Plugin CRDs in kubernetes namespace %s due to: %s", o.Namespace, err.Error())
-		}
-		o.addPlugins(pluginList.Items, otherCommands, groups)
-	}
-	return nil
-}
-
-func (o *Options) addPlugins(pluginSlice []jxCore.Plugin, otherCommands *PluginCommandGroup, groups map[string]PluginCommandGroup) {
+func addPlugins(pluginSlice []jxCore.Plugin, otherCommands *PluginCommandGroup, groups map[string]PluginCommandGroup) {
 	for _, plugin := range pluginSlice {
 		pluginCommand := &PluginCommand{
 			PluginSpec: plugin.Spec,
@@ -139,7 +101,7 @@ func (o *Options) addPlugins(pluginSlice []jxCore.Plugin, otherCommands *PluginC
 }
 
 // ActsAsRootCommand act as if the given set of plugins is a single root command
-func ActsAsRootCommand(cmd *cobra.Command, filters []string, getPluginCommandGroups func() (PluginCommandGroups, bool), groups ...CommandGroup) FlagExposer {
+func ActsAsRootCommand(cmd *cobra.Command, filters []string, getPluginCommandGroups func() PluginCommandGroups, groups ...CommandGroup) FlagExposer {
 	if cmd == nil {
 		panic("nil root command")
 	}
