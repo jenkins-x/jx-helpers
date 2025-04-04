@@ -3,8 +3,6 @@ package scmhelpers
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
@@ -74,8 +72,8 @@ func (r *CreateRepository) CreateRepository(scmClient *scm.Client) (*scm.Reposit
 	ctx := context.Background()
 	fullName := r.FullName()
 
-	repo, _, err := scmClient.Repositories.Find(ctx, fullName)
-	if IsScmNotFound(err) {
+	repo, res, err := scmClient.Repositories.Find(ctx, fullName)
+	if IsScmResponseNotFound(res) {
 		err = nil
 		repo = nil
 	}
@@ -121,15 +119,6 @@ func (r *CreateRepository) CreateRepository(scmClient *scm.Client) (*scm.Reposit
 
 func (r *CreateRepository) FullName() string {
 	return scm.Join(r.Owner, r.Repository)
-}
-
-func IsScmNotFound(err error) bool {
-	if err != nil {
-		// I think that we should instead rely on the http status (404)
-		// until jenkins-x go-scm is updated t return that in the error this works for github and gitlab
-		return strings.Contains(err.Error(), scm.ErrNotFound.Error())
-	}
-	return false
 }
 
 func IsScmResponseNotFound(res *scm.Response) bool {
