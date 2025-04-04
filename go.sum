@@ -116,8 +116,8 @@ github.com/iancoleman/orderedmap v0.3.0 h1:5cbR2grmZR/DiVt+VJopEhtVs9YGInGIxAoMJ
 github.com/iancoleman/orderedmap v0.3.0/go.mod h1:XuLcCUkdL5owUCQeF2Ue9uuw1EptkJDkXXS7VoV7XGE=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/jenkins-x/go-scm v1.14.53 h1:Utc9FbHzCuyXQ9F7gmXxNLUwG70Fp2niNS+m8+eGXcY=
-github.com/jenkins-x/go-scm v1.14.53/go.mod h1:1RPxLZndnvu31XhFZ+RTvXiHmMX70HkQ17bRupTQxGs=
+github.com/jenkins-x/go-scm v1.14.57 h1:h3lefbz1gPE8NKpTjdJ01gC6BCUVCcFytzfLnihvPgg=
+github.com/jenkins-x/go-scm v1.14.57/go.mod h1:1RPxLZndnvu31XhFZ+RTvXiHmMX70HkQ17bRupTQxGs=
 github.com/jenkins-x/jx-api/v4 v4.7.9 h1:Z9NQ0/SY1XYafa9i0fq8td1E+OtBc/U3zlx/Bj204RA=
 github.com/jenkins-x/jx-api/v4 v4.7.9/go.mod h1:OkFVnM/pXCtGBBhitGaU6TlB9qyP2w2EjmzaFglYmDA=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.8 h1:AzXuXCdv4DQf8wqR5c1UL0uXVu6KrAjdPtPb6wrG0Hs=

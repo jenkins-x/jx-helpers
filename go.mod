@@ -16,7 +16,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
-	github.com/jenkins-x/go-scm v1.14.53
+	github.com/jenkins-x/go-scm v1.14.57
 	github.com/jenkins-x/jx-api/v4 v4.7.9
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.8
 	github.com/jenkins-x/jx-logging/v3 v3.0.17
