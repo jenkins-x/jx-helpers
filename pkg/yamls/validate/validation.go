@@ -1,7 +1,7 @@
 package validate
 
 import (
-	schemagen "github.com/alecthomas/jsonschema"
+	schemagen "github.com/invopop/jsonschema"
 	"github.com/xeipuuv/gojsonschema"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
