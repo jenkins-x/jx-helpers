@@ -2,20 +2,17 @@ package helper
 
 import (
 	"fmt"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"net/url"
 	"os"
 	"strings"
-
-	"github.com/golang/glog"
-
-	"github.com/spf13/cobra"
 )
 
 const (
 	defaultErrorExitCode = 1
 )
 
-var fatalErrHandler = Fatal
+var fatalErrHandler = fatal
 
 // BehaviorOnFatal allows you to override the default behavior when a fatal
 // error occurs, which is to call os.Exit(code). You can pass 'panic' as a function
@@ -26,12 +23,12 @@ func BehaviorOnFatal(f func(string, int)) {
 
 // DefaultBehaviorOnFatal allows you to undo any previous override.  Useful in tests.
 func DefaultBehaviorOnFatal() {
-	fatalErrHandler = Fatal
+	fatalErrHandler = fatal
 }
 
-// Fatal prints the message (if provided) and then exits. If V(2) or greater,
-// glog.Logger().Fatal is invoked for extended information.
-func Fatal(msg string, code int) {
+// fatal prints the message (if provided) and then exits. If V(2) or greater,
+// glog.Logger().fatal is invoked for extended information.
+func fatal(msg string, code int) {
 	if len(msg) > 0 {
 		// add newline if needed
 		if !strings.HasSuffix(msg, "\n") {
@@ -65,30 +62,27 @@ func checkErr(err error, handleErr func(string, int)) {
 		handleErr("", defaultErrorExitCode)
 		return
 	default:
-		switch err := err.(type) {
-		default: // for any other error type
-			msg, ok := StandardErrorMessage(err)
-			if !ok {
-				msg = err.Error()
-				if !strings.HasPrefix(msg, "error: ") {
-					msg = fmt.Sprintf("error: %s", msg)
-				}
+		msg, ok := standardErrorMessage(err)
+		if !ok {
+			msg = err.Error()
+			if !strings.HasPrefix(msg, "error: ") {
+				msg = fmt.Sprintf("error: %s", msg)
 			}
-			handleErr(msg, defaultErrorExitCode)
 		}
+		handleErr(msg, defaultErrorExitCode)
 	}
 }
 
-// StandardErrorMessage translates common errors into a human readable message, or returns
+// standardErrorMessage translates common errors into a human readable message, or returns
 // false if the error is not one of the recognized types. It may also log extended
 // information to glog.
 //
 // This method is generic to the command in use and may be used by non-Kubectl
 // commands.
-func StandardErrorMessage(err error) (string, bool) {
+func standardErrorMessage(err error) (string, bool) {
 	switch t := err.(type) {
 	case *url.Error:
-		glog.V(4).Infof("Connection error: %s %s: %v", t.Op, t.URL, t.Err)
+		log.Logger().Infof("Connection error: %s %s: %v", t.Op, t.URL, t.Err)
 		switch {
 		case strings.Contains(t.Err.Error(), "connection refused"):
 			host := t.URL
@@ -100,10 +94,4 @@ func StandardErrorMessage(err error) (string, bool) {
 		return fmt.Sprintf("Unable to connect to the server: %v", t.Err), true
 	}
 	return "", false
-}
-
-// UsageError prints an error with how to run the help for the specified command.
-func UsageError(cmd *cobra.Command, format string, args ...interface{}) error {
-	msg := fmt.Sprintf(format, args...)
-	return fmt.Errorf("%s\nsee '%s -h' for help and examples.", msg, cmd.CommandPath())
 }
