@@ -37,7 +37,7 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 				}
 			}
 		}
-		_, err := gitter.Command(dir, "config", "--global", "--add", "user.name", userName)
+		_, err := gitter.Command(dir, "config", "--add", "user.name", userName)
 		if err != nil {
 			return userName, userEmail, fmt.Errorf("Failed to set the git username to %s: %w", userName, err)
 		}
@@ -50,7 +50,7 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 				userEmail = DefaultGitUserEmail
 			}
 		}
-		_, err := gitter.Command(dir, "config", "--global", "--add", "user.email", userEmail)
+		_, err := gitter.Command(dir, "config", "--add", "user.email", userEmail)
 		if err != nil {
 			return userName, userEmail, fmt.Errorf("Failed to set the git email to %s: %w", userEmail, err)
 		}
@@ -68,8 +68,8 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 		userEmail = gitUserEmail
 	} else {
 		// lets load the current values and if they are specified lets not modify them as they are probably correct
-		userName, _ = gitter.Command(dir, "config", "--global", "--get", "user.name")
-		userEmail, _ = gitter.Command(dir, "config", "--global", "--get", "user.email")
+		userName, _ = gitter.Command(dir, "config", "--get", "user.name")
+		userEmail, _ = gitter.Command(dir, "config", "--get", "user.email")
 
 		if userName != "" && userEmail != "" {
 			log.Logger().Infof("have git user name %s and email %s setup already so not going to modify them", userName, userEmail)
@@ -91,7 +91,7 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 			}
 		}
 	}
-	_, err := gitter.Command(dir, "config", "--global", "--add", "user.name", userName)
+	_, err := gitter.Command(dir, "config", "--add", "user.name", userName)
 	if err != nil {
 		return userName, userEmail, fmt.Errorf("Failed to set the git username to %s: %w", userName, err)
 	}
@@ -104,7 +104,7 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 			userEmail = DefaultGitUserEmail
 		}
 	}
-	_, err = gitter.Command(dir, "config", "--global", "--add", "user.email", userEmail)
+	_, err = gitter.Command(dir, "config", "--add", "user.email", userEmail)
 	if err != nil {
 		return userName, userEmail, fmt.Errorf("Failed to set the git email to %s: %w", userEmail, err)
 	}
