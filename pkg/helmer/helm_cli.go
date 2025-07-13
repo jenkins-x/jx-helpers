@@ -234,7 +234,7 @@ func (h *HelmCLI) BuildDependency() error {
 	if h.Debug {
 		log.Logger().Infof("Running %s dependency build in %s\n", h.Binary, termcolor.ColorInfo(h.CWD))
 		out, err := h.runHelmWithOutput("dependency", "build")
-		log.Logger().Infof(out)
+		log.Logger().Info(out)
 		return err
 	}
 	return h.runHelm("dependency", "build")

@@ -137,7 +137,7 @@ func (o *Options) logTapResults() error {
 		log.Logger().Infof("saved file %s", info(o.OutFile))
 		return nil
 	}
-	log.Logger().Infof(text)
+	log.Logger().Info(text)
 	return nil
 }
 
