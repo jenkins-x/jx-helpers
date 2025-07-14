@@ -63,7 +63,17 @@ func TestEnsurePluginInstalled(t *testing.T) {
 				},
 				{
 					URL:    fmt.Sprintf("http://%s:%d/jx-test", "localhost", port),
+					Goarch: "arm64",
+					Goos:   "Darwin",
+				},
+				{
+					URL:    fmt.Sprintf("http://%s:%d/jx-test", "localhost", port),
 					Goarch: "amd64",
+					Goos:   "Linux",
+				},
+				{
+					URL:    fmt.Sprintf("http://%s:%d/jx-test", "localhost", port),
+					Goarch: "arm64",
 					Goos:   "Linux",
 				},
 			},

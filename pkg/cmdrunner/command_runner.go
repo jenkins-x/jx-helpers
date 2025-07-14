@@ -19,7 +19,7 @@ func DefaultCommandRunner(c *Command) (string, error) {
 	}
 	result, err := c.RunWithoutRetry()
 	if result != "" {
-		log.Logger().Infof(termcolor.ColorStatus(result))
+		log.Logger().Info(termcolor.ColorStatus(result))
 	}
 	return result, err
 }
@@ -33,14 +33,14 @@ func QuietCommandRunner(c *Command) (string, error) {
 	}
 	result, err := c.RunWithoutRetry()
 	if result != "" {
-		log.Logger().Debugf(termcolor.ColorStatus(result))
+		log.Logger().Debug(termcolor.ColorStatus(result))
 	}
 	return result, err
 }
 
 // DryRunCommandRunner output the commands to be run
 func DryRunCommandRunner(c *Command) (string, error) {
-	log.Logger().Infof(CLI(c))
+	log.Logger().Info(CLI(c))
 	return "", nil
 }
 

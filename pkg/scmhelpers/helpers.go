@@ -2,6 +2,7 @@ package scmhelpers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -42,7 +43,7 @@ func NewScmClient(kind, gitServerURL, token string, ignoreMissingToken bool) (*s
 		if ignoreMissingToken {
 			return nil, token, nil
 		}
-		return nil, token, fmt.Errorf("failed to load git credentials: %w", err)
+		return nil, token, errors.New("failed to find git credentials")
 	}
 	username := serverCreds.Username
 	if username == "" {
