@@ -16,8 +16,8 @@ import (
 var info = termcolor.ColorInfo
 
 // EnsureUserAndEmailSetup returns the user name and email for the gitter
-// lazily setting them if they are blank either from the given values or if they are empty
-// using environment variables `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` or using default values
+// lazily setting them for git repository in dir if they are blank. The values used are either the given values,
+// if they are empty environment variables `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` or default values
 func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, gitUserEmail string) (string, string, error) {
 	userName, _ := gitter.Command(dir, "config", "--get", "user.name")
 	userEmail, _ := gitter.Command(dir, "config", "--get", "user.email")
@@ -58,8 +58,9 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 	return userName, userEmail, nil
 }
 
-// SetUserAndEmail sets the user and email if they have not been set
-// Uses environment variables `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL`
+// SetUserAndEmail sets the user and email globally if they have not been set for dir
+// The values used are either the given values, if they are empty environment variables `GIT_AUTHOR_NAME` and
+// `GIT_AUTHOR_EMAIL` or default values
 func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEmail string, assumeInCluster bool) (string, string, error) {
 	userName := ""
 	userEmail := ""
@@ -68,8 +69,8 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 		userEmail = gitUserEmail
 	} else {
 		// lets load the current values and if they are specified lets not modify them as they are probably correct
-		userName, _ = gitter.Command(dir, "config", "--get", "user.name")
-		userEmail, _ = gitter.Command(dir, "config", "--get", "user.email")
+		userName, _ = gitter.Command(dir, "config", "--global", "--get", "user.name")
+		userEmail, _ = gitter.Command(dir, "config", "--global", "--get", "user.email")
 
 		if userName != "" && userEmail != "" {
 			log.Logger().Infof("have git user name %s and email %s setup already so not going to modify them", userName, userEmail)
@@ -91,7 +92,7 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 			}
 		}
 	}
-	_, err := gitter.Command(dir, "config", "--add", "user.name", userName)
+	_, err := gitter.Command(dir, "config", "--global", "--add", "user.name", userName)
 	if err != nil {
 		return userName, userEmail, fmt.Errorf("Failed to set the git username to %s: %w", userName, err)
 	}
@@ -104,7 +105,7 @@ func SetUserAndEmail(gitter Interface, dir string, gitUserName string, gitUserEm
 			userEmail = DefaultGitUserEmail
 		}
 	}
-	_, err = gitter.Command(dir, "config", "--add", "user.email", userEmail)
+	_, err = gitter.Command(dir, "config", "--global", "--add", "user.email", userEmail)
 	if err != nil {
 		return userName, userEmail, fmt.Errorf("Failed to set the git email to %s: %w", userEmail, err)
 	}
