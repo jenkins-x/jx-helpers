@@ -184,6 +184,10 @@ func (h *HelmCLI) SearchCharts(filter string, allVersions bool) ([]ChartSummary,
 // IsRepoMissing checks if the repository with the given URL is missing from helm.
 // If the repo is found, the name of the repo will be returned
 func (h *HelmCLI) IsRepoMissing(repoURL string) (bool, string, error) {
+	// OCI repo should not be added, so it shouldn't be reported as missing
+	if strings.HasPrefix(repoURL, "oci://") {
+		return false, "", nil
+	}
 	repos, err := h.ListRepos()
 	if err != nil {
 		return true, "", fmt.Errorf("failed to list the repositories: %w", err)

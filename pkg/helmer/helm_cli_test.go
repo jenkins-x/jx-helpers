@@ -144,6 +144,12 @@ func TestIsRepoMissing(t *testing.T) {
 
 	assert.NoError(t, err, "search missing repos should not return an error")
 	assert.True(t, missing, "should not find url '%s'", url)
+
+	url = "oci://test/foo"
+	missing, _, err = helm.IsRepoMissing(url)
+
+	assert.NoError(t, err, "search missing repos should not return an error")
+	assert.False(t, missing, "OCI repo should not be added, so it shouldn't be reported as missing '%s'", url)
 }
 
 func TestUpdateRepo(t *testing.T) {
