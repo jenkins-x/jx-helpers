@@ -94,78 +94,114 @@ func getIstioVirtualService(dynamicClient dynamic.Interface, namespace, name str
 	return virtualService, err
 }
 
-// getUrlFromVirtualService finds url from virtual services istio
-func getUrlFromVirtualService(virtualService *unstructured.Unstructured) (string, error) {
+// getURLFromVirtualService finds url from virtual services istio
+func getURLFromVirtualService(virtualService *unstructured.Unstructured) (string, error) {
 	vs := virtualService.Object
 	if spec, ok := vs["spec"].(map[string]interface{}); ok {
-		if hosts, ok := spec["hosts"].([]interface{}); ok {
-			return "http://" + fmt.Sprintf("%v", hosts[0]), nil
+		if hosts, ok := spec["hosts"].([]interface{}); ok && len(hosts) > 0 {
+			if host := fmt.Sprintf("%v", hosts[0]); host != "" {
+				return "http://" + host, nil
+			}
 		}
 	}
-	return "", errors.New("No url found in the virtual service")
+	return "", errors.New("no URL found in the Istio virtual service")
 }
 
-// FindUrlFromVsIstio finds the host from istio virtual service
-func FindUrlFromVsIstio(dynamicClient dynamic.Interface, namespace, name string) (string, error) {
+// FindURLFromVSIstio finds the host from istio virtual service
+func FindURLFromVSIstio(dynamicClient dynamic.Interface, namespace, name string) (string, error) {
+	log.Logger().Debugf("finding url from VS Istio %s in namespace %s", name, namespace)
 	virtualService, err := getIstioVirtualService(dynamicClient, namespace, name)
 	if err != nil {
-		return "", nil
+		switch {
+		// istio is optional: missing resource, CRD or lack of RBAC should not log an error
+		case apierrors.IsNotFound(err), apierrors.IsForbidden(err), apierrors.IsUnauthorized(err):
+			log.Logger().Debugf("Istio VS %s not reachable in namespace %s", name, namespace)
+			return "", nil
+		default:
+			return "", fmt.Errorf("finding the Istio VS %s in namespace %s: %w", name, namespace, err)
+		}
 	}
-	log.Logger().Debugf("Attempting to find via istio virtual services")
-	return getUrlFromVirtualService(virtualService)
+	log.Logger().Debugf("attempting to find via istio virtual services")
+	return getURLFromVirtualService(virtualService)
+}
+
+
+// FindURLFromIngress finds the URL from the Ingress resource using the kubernetes client
+func FindURLFromIngress(client kubernetes.Interface, namespace string, name string) (string, error) {
+	log.Logger().Debugf("finding Ingress url for %s in namespace %s", name, namespace)
+	ingress, err := client.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+	if err != nil {
+		switch {
+		// ingress was not found but no other errors occurred. Log and return nil err
+		case apierrors.IsNotFound(err):
+			log.Logger().Debugf("Ingress %s not found in namespace %s", name, namespace)
+			return "", nil
+		default:
+			return "", fmt.Errorf("finding the ingress %s in namespace %s: %w", name, namespace, err)
+		}
+	}
+	return IngressURL(ingress), nil
+}
+
+// FindURLFromService finds the URL from the service resource using the kubernetes client
+func FindURLFromService(client kubernetes.Interface, namespace string, name string) (string, error) {
+	log.Logger().Debugf("finding service url for %s in namespace %s", name, namespace)
+	service, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+	if err != nil {
+		switch {
+		// service was not found but no other errors occurred. Log and return nil err
+		case apierrors.IsNotFound(err):
+			log.Logger().Debugf("service %s not found in namespace %s", name, namespace)
+			return "", nil
+		default:
+			return "", fmt.Errorf("finding the service %s in namespace %s: %w", name, namespace, err)
+		}
+	}
+	return GetServiceURL(service), nil
 }
 
 func FindServiceURLWithDynamicClient(client kubernetes.Interface, namespace string, name string, dynamicClient dynamic.Interface) (string, error) {
-	log.Logger().Debugf("Finding service url for %s in namespace %s", name, namespace)
-	svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
-	if err != nil && apierrors.IsNotFound(err) {
-		err = nil
-	}
+	url, err := FindURLFromService(client, namespace, name)
 	if err != nil {
-		return "", fmt.Errorf("finding the service %s in namespace %s: %w", name, namespace, err)
+		return "", err
 	}
-	answer := ""
-	if svc != nil {
-		answer = GetServiceURL(svc)
+	if url != "" {
+		log.Logger().Debugf("found the service url %s", url)
+		return url, nil
 	}
-	if answer != "" {
-		log.Logger().Debugf("Found service url %s", answer)
-		return answer, nil
-	}
+	log.Logger().Debugf("couldn't find url via service, attempting to look up via ingress")
 
-	log.Logger().Debugf("Couldn't find service url, attempting to look up via ingress")
-
-	// lets try find the service via Ingress
-	ing, err := client.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
-	if err != nil && apierrors.IsNotFound(err) {
-		err = nil
-	}
+	// let's try finding the service via Ingress
+	// hold onto genuine lookup failures and attempt further discoveries before surfacing them
+	url, err = FindURLFromIngress(client, namespace, name)
 	if err != nil {
-		log.Logger().Debugf("Unable to finding ingress for %s in namespace %s - err %s", name, namespace, err)
-		url, vs_err := FindUrlFromVsIstio(dynamicClient, namespace, name)
-		if url != "" && vs_err == nil {
-			return url, nil
-		}
-		if vs_err != nil {
-			log.Logger().Debugf("Unable to finding istio for %s in namespace %s - err %s", name, namespace, vs_err)
-		}
-		return "", fmt.Errorf("getting ingress for service %q in namespace %s: %w", name, namespace, err)
+		log.Logger().Debugf("unable to find url via ingress for %s in namespace %s - err %s", name, namespace, err)
 	}
-	url := ""
-
-	url = IngressURL(ing)
-
-	if url == "" {
-		log.Logger().Debugf("Unable to find service url via ingress for %s in namespace %s", name, namespace)
-		url, vs_err := FindUrlFromVsIstio(dynamicClient, namespace, name)
-		if url != "" && vs_err == nil {
-			return url, nil
-		}
-		if vs_err != nil {
-			log.Logger().Debugf("Unable to finding istio for %s in namespace %s - err %s", name, namespace, vs_err)
-		}
+	if url != "" {
+		log.Logger().Debugf("found ingress url %s", url)
+		return url, nil
 	}
-	return url, nil
+
+	log.Logger().Debugf("couldn't find url via ingress, attempting to look up via istio virtual services")
+
+	// let's try finding the service via Istio Virtual Services
+	url, vsErr := FindURLFromVSIstio(dynamicClient, namespace, name)
+	// log errors from Istio but don't propagate them as Istio is an optional dependency
+	if vsErr != nil {
+		log.Logger().Debugf("unable to find url via istio virtual service for %s in namespace %s - err %s", name, namespace, vsErr)
+	}
+	if url != "" {
+		log.Logger().Debugf("Found istio virtual service url %s", url)
+		return url, nil
+	}
+
+	// nothing found anywhere - if a lookup action errored, surface it here
+	if err != nil {
+		return "", err
+	}
+
+	log.Logger().Debugf("couldn't find service url, exiting")
+	return "", nil
 }
 
 func FindServiceURL(client kubernetes.Interface, namespace string, name string) (string, error) {
@@ -300,8 +336,11 @@ func FindService(client kubernetes.Interface, name string) (*v1.Service, error) 
 
 // GetServiceURL returns the
 func GetServiceURL(svc *v1.Service) string {
+	if svc == nil {
+		return ""
+	}
 	url := ""
-	if svc != nil && svc.Annotations != nil {
+	if svc.Annotations != nil {
 		url = svc.Annotations[ExposeURLAnnotation]
 	}
 	if url == "" {
