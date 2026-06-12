@@ -125,6 +125,151 @@ func FindURLFromVSIstio(dynamicClient dynamic.Interface, namespace, name string)
 	return getURLFromVirtualService(virtualService)
 }
 
+// getHTTPRoute gets the named HTTPRoute. The dynamic client must already be realized.
+func getHTTPRoute(dynamicClient dynamic.Interface, namespace, name string) (*unstructured.Unstructured, error) {
+	httpRouteGVR := schema.GroupVersionResource{
+		Group:    "gateway.networking.k8s.io",
+		Version:  "v1",
+		Resource: "httproutes",
+	}
+	return dynamicClient.Resource(httpRouteGVR).Namespace(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+}
+
+// getGateway gets the named Gateway. The dynamic client must already be realized.
+func getGateway(dynamicClient dynamic.Interface, namespace, name string) (*unstructured.Unstructured, error) {
+	gatewayGVR := schema.GroupVersionResource{
+		Group:    "gateway.networking.k8s.io",
+		Version:  "v1",
+		Resource: "gateways",
+	}
+	return dynamicClient.Resource(gatewayGVR).Namespace(namespace).Get(context.TODO(), name, meta_v1.GetOptions{})
+}
+
+// parseGatewayParentRef extracts the parent Gateway reference from the HTTPRoute spec.
+func parseGatewayParentRef(httpRouteNamespace string, spec map[string]interface{}) (namespace, name, sectionName string, err error) {
+	parentRefs, ok := spec["parentRefs"].([]interface{})
+	if !ok || len(parentRefs) == 0 {
+		return "", "", "", errors.New("missing spec.parentRefs in the HTTPRoute")
+	}
+	parentRef, ok := parentRefs[0].(map[string]interface{})
+	if !ok {
+		return "", "", "", errors.New("invalid spec.parentRefs[0] in the HTTPRoute")
+	}
+	name, _ = parentRef["name"].(string)
+	if name == "" {
+		return "", "", "", errors.New("missing spec.parentRefs[0].name in the HTTPRoute")
+	}
+	namespace = httpRouteNamespace
+	if ns, ok := parentRef["namespace"].(string); ok && ns != "" {
+		namespace = ns
+	}
+	sectionName, _ = parentRef["sectionName"].(string)
+	return namespace, name, sectionName, nil
+}
+
+// getGatewayListenerProtocol returns the protocol (HTTP/HTTPS) of the parent Gateway's listener.
+func getGatewayListenerProtocol(dynamicClient dynamic.Interface, namespace, name, sectionName string) (string, error) {
+	gateway, err := getGateway(dynamicClient, namespace, name)
+	if err != nil {
+		return "", err
+	}
+	return getListenerProtocol(gateway, sectionName)
+}
+
+// getListenerProtocol returns the protocol of the Gateway listener named by sectionName, or the first listener when empty.
+func getListenerProtocol(gateway *unstructured.Unstructured, sectionName string) (string, error) {
+	spec, ok := gateway.Object["spec"].(map[string]interface{})
+	if !ok {
+		return "", errors.New("no spec found in the Gateway")
+	}
+	listeners, ok := spec["listeners"].([]interface{})
+	if !ok || len(listeners) == 0 {
+		return "", errors.New("no listeners found in the Gateway")
+	}
+	for _, l := range listeners {
+		listener, ok := l.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		// when a sectionName is given, only the listener with the matching name is relevant
+		if sectionName != "" {
+			if name, _ := listener["name"].(string); name != sectionName {
+				continue
+			}
+		}
+		if protocol, ok := listener["protocol"].(string); ok && protocol != "" {
+			return protocol, nil
+		}
+		// no sectionName: only the first listener is considered
+		if sectionName == "" {
+			break
+		}
+	}
+	return "", errors.New("no matching listener protocol found in the Gateway")
+}
+
+// getURLFromHTTPRoute builds the URL from the HTTPRoute's hostname and parent Gateway scheme.
+func getURLFromHTTPRoute(dynamicClient dynamic.Interface, httpRoute *unstructured.Unstructured) (string, error) {
+	spec, ok := httpRoute.Object["spec"].(map[string]interface{})
+	if !ok {
+		return "", errors.New("missing spec in the HTTPRoute")
+	}
+	hostnames, ok := spec["hostnames"].([]interface{})
+	if !ok || len(hostnames) == 0 {
+		return "", errors.New("missing spec.hostnames in the HTTPRoute")
+	}
+	hostname, ok := hostnames[0].(string)
+	if !ok || hostname == "" {
+		return "", errors.New("invalid spec.hostnames[0] in the HTTPRoute")
+	}
+
+	// a malformed parentRef means the HTTPRoute is invalid - surface it
+	gatewayNamespace, gatewayName, sectionName, err := parseGatewayParentRef(httpRoute.GetNamespace(), spec)
+	if err != nil {
+		return "", err
+	}
+
+	// derive the scheme from the parent Gateway listener's protocol, defaulting to http
+	scheme := "http"
+	protocol, err := getGatewayListenerProtocol(dynamicClient, gatewayNamespace, gatewayName, sectionName)
+	if err != nil {
+		log.Logger().Debugf("unable to determine protocol from parent Gateway listener, defaulting to http: %s", err)
+	} else if strings.EqualFold(protocol, "HTTPS") {
+		scheme = "https"
+	}
+	return scheme + "://" + hostname, nil
+}
+
+// FindURLFromHTTPRoute finds the URL from the HTTPRoute resource, realizing a dynamic client if needed.
+func FindURLFromHTTPRoute(dynamicClient dynamic.Interface, namespace, name string) (string, error) {
+	dynamicClient, err := kube.LazyCreateDynamicClient(dynamicClient)
+	if err != nil {
+		return "", err
+	}
+	return findURLFromHTTPRouteRealized(dynamicClient, namespace, name)
+}
+
+// findURLFromHTTPRouteRealized finds the HTTPRoute URL using an already-realized dynamic client.
+func findURLFromHTTPRouteRealized(dynamicClient dynamic.Interface, namespace, name string) (string, error) {
+	log.Logger().Debugf("finding url from HTTP route %s in namespace %s", name, namespace)
+	httpRoute, err := getHTTPRoute(dynamicClient, namespace, name)
+	if err != nil {
+		switch {
+		// HTTPRoute is optional: missing resource, CRD or lack of RBAC should not surface an error
+		case apierrors.IsNotFound(err), apierrors.IsForbidden(err), apierrors.IsUnauthorized(err):
+			log.Logger().Debugf("HTTPRoute %s not reachable in namespace %s", name, namespace)
+			return "", nil
+		default:
+			return "", fmt.Errorf("finding the HTTP route %s in namespace %s: %w", name, namespace, err)
+		}
+	}
+	log.Logger().Debugf("attempting to find URL via HTTPRoute")
+	url, err := getURLFromHTTPRoute(dynamicClient, httpRoute)
+	if err != nil {
+		return "", fmt.Errorf("parsing HTTPRoute %s/%s: %w", namespace, name, err)
+	}
+	return url, nil
+}
 
 // FindURLFromIngress finds the URL from the Ingress resource using the kubernetes client
 func FindURLFromIngress(client kubernetes.Interface, namespace string, name string) (string, error) {
@@ -182,17 +327,37 @@ func FindServiceURLWithDynamicClient(client kubernetes.Interface, namespace stri
 		return url, nil
 	}
 
-	log.Logger().Debugf("couldn't find url via ingress, attempting to look up via istio virtual services")
+	log.Logger().Debugf("couldn't find url via ingress, attempting to look up via HTTPRoute")
 
-	// let's try finding the service via Istio Virtual Services
-	url, vsErr := FindURLFromVSIstio(dynamicClient, namespace, name)
-	// log errors from Istio but don't propagate them as Istio is an optional dependency
-	if vsErr != nil {
-		log.Logger().Debugf("unable to find url via istio virtual service for %s in namespace %s - err %s", name, namespace, vsErr)
-	}
-	if url != "" {
-		log.Logger().Debugf("Found istio virtual service url %s", url)
-		return url, nil
+	// realize the dynamic client once and share it across the HTTPRoute and Istio lookups. these
+	// are skipped entirely when a client can't be built, so the realized helpers never get a nil client.
+	dynamicClient, dcErr := kube.LazyCreateDynamicClient(dynamicClient)
+	if dcErr != nil {
+		log.Logger().Debugf("unable to create dynamic client for %s in namespace %s, skipping HTTPRoute and istio lookups - err %s", name, namespace, dcErr)
+	} else {
+		// let's try finding the URL via HTTPRoute
+		// use a dedicated error variable so an optional HTTPRoute failure doesn't clobber a genuine ingress error
+		url, hrErr := findURLFromHTTPRouteRealized(dynamicClient, namespace, name)
+		if hrErr != nil {
+			log.Logger().Debugf("unable to find url via HTTPRoute for %s in namespace %s - err %s", name, namespace, hrErr)
+		}
+		if url != "" {
+			log.Logger().Debugf("found HTTPRoute url %s", url)
+			return url, nil
+		}
+
+		log.Logger().Debugf("couldn't find url via HTTPRoute, attempting to look up via istio virtual services")
+
+		// let's try finding the service via Istio Virtual Services
+		url, vsErr := FindURLFromVSIstio(dynamicClient, namespace, name)
+		// log errors from Istio but don't propagate them as Istio is an optional dependency
+		if vsErr != nil {
+			log.Logger().Debugf("unable to find url via istio virtual service for %s in namespace %s - err %s", name, namespace, vsErr)
+		}
+		if url != "" {
+			log.Logger().Debugf("Found istio virtual service url %s", url)
+			return url, nil
+		}
 	}
 
 	// nothing found anywhere - if a lookup action errored, surface it here
