@@ -25,6 +25,15 @@ import (
 	clienttesting "k8s.io/client-go/testing"
 )
 
+// gatewayGVR is the real resource for a Gateway API Gateway. Tests insert Gateways
+// under this GVR explicitly because the fake dynamic client's kind->resource heuristic
+// mispluralises "Gateway" to "gatewaies".
+var gatewayGVR = schema.GroupVersionResource{
+	Group:    "gateway.networking.k8s.io",
+	Version:  "v1",
+	Resource: "gateways",
+}
+
 func TestMain(m *testing.M) {
 	// warm up jx-logging before parallel tests fan out to prevent a global init race
 	log.Logger()
@@ -500,6 +509,155 @@ func TestGetURLFromVirtualService(t *testing.T) {
 	}
 }
 
+func TestFindURLFromHTTPRoute(t *testing.T) {
+	t.Parallel()
+	const namespace = "jx"
+	const name = "myapp"
+
+	newHTTPRoute := func(hostname, gatewayName, sectionName string) *unstructured.Unstructured {
+		parentRef := map[string]interface{}{"name": gatewayName}
+		if sectionName != "" {
+			parentRef["sectionName"] = sectionName
+		}
+		u := &unstructured.Unstructured{}
+		u.SetUnstructuredContent(map[string]interface{}{
+			"apiVersion": "gateway.networking.k8s.io/v1",
+			"kind":       "HTTPRoute",
+			"metadata":   map[string]interface{}{"name": name, "namespace": namespace},
+			"spec": map[string]interface{}{
+				"parentRefs": []interface{}{parentRef},
+				"hostnames":  []interface{}{hostname},
+			},
+		})
+		return u
+	}
+
+	newGateway := func(gatewayName string, listeners ...map[string]interface{}) *unstructured.Unstructured {
+		ls := make([]interface{}, 0, len(listeners))
+		for _, l := range listeners {
+			ls = append(ls, l)
+		}
+		u := &unstructured.Unstructured{}
+		u.SetUnstructuredContent(map[string]interface{}{
+			"apiVersion": "gateway.networking.k8s.io/v1",
+			"kind":       "Gateway",
+			"metadata":   map[string]interface{}{"name": gatewayName, "namespace": namespace},
+			"spec":       map[string]interface{}{"listeners": ls},
+		})
+		return u
+	}
+
+	httpsListener := map[string]interface{}{"name": "https", "protocol": "HTTPS", "port": int64(443)}
+	httpListener := map[string]interface{}{"name": "http", "protocol": "HTTP", "port": int64(80)}
+
+	// newClient seeds a fake dynamic client. The HTTPRoute is added normally, but the Gateway
+	// must be inserted under its real "gateways" resource: the fake client's UnsafeGuessKindToResource
+	// heuristic mispluralises kind "Gateway" to "gatewaies", so a plain Add would not be GET-able.
+	newClient := func(httpRoute, gateway *unstructured.Unstructured) dynamic.Interface {
+		c := fakedyn.NewSimpleDynamicClient(runtime.NewScheme(), httpRoute)
+		if gateway != nil {
+			err := c.Tracker().Create(gatewayGVR, gateway, gateway.GetNamespace())
+			assert.NoError(t, err)
+		}
+		return c
+	}
+
+	// newRouteClient seeds a fake client holding a single HTTPRoute with the given (possibly malformed) spec.
+	newRouteClient := func(spec map[string]interface{}) dynamic.Interface {
+		u := &unstructured.Unstructured{}
+		u.SetUnstructuredContent(map[string]interface{}{
+			"apiVersion": "gateway.networking.k8s.io/v1",
+			"kind":       "HTTPRoute",
+			"metadata":   map[string]interface{}{"name": name, "namespace": namespace},
+			"spec":       spec,
+		})
+		return fakedyn.NewSimpleDynamicClient(runtime.NewScheme(), u)
+	}
+
+	// errClient returns a client whose GET on httproutes fails with the given error.
+	errClient := func(getErr error) dynamic.Interface {
+		c := fakedyn.NewSimpleDynamicClient(runtime.NewScheme())
+		c.PrependReactor("get", "httproutes", func(clienttesting.Action) (bool, runtime.Object, error) {
+			return true, nil, getErr
+		})
+		return c
+	}
+	groupResource := schema.GroupResource{Group: "gateway.networking.k8s.io", Resource: "httproutes"}
+
+	testCases := []struct {
+		name        string
+		client      dynamic.Interface
+		expectedURL string
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name:        "no HTTPRoute present is swallowed",
+			client:      fakedyn.NewSimpleDynamicClient(runtime.NewScheme()),
+			expectedURL: "",
+		},
+		{
+			name:        "pinned HTTPS listener -> https",
+			client:      newClient(newHTTPRoute("myapp.example.com", "gw", "https"), newGateway("gw", httpListener, httpsListener)),
+			expectedURL: "https://myapp.example.com",
+		},
+		{
+			name:        "first listener HTTP, no sectionName -> http",
+			client:      newClient(newHTTPRoute("myapp.example.com", "gw", ""), newGateway("gw", httpListener, httpsListener)),
+			expectedURL: "http://myapp.example.com",
+		},
+		{
+			name:        "parent Gateway absent -> best-effort http",
+			client:      newClient(newHTTPRoute("myapp.example.com", "missing-gw", "https"), nil),
+			expectedURL: "http://myapp.example.com",
+		},
+		{
+			// malformed content surfaces an error carrying the HTTPRoute identity, not best-effort http
+			name:        "no parentRefs -> error with identity",
+			client:      newRouteClient(map[string]interface{}{"hostnames": []interface{}{"myapp.example.com"}}),
+			expectErr:   true,
+			errContains: namespace + "/" + name,
+		},
+		{
+			name:      "no hostnames -> error",
+			client:    newRouteClient(map[string]interface{}{"parentRefs": []interface{}{map[string]interface{}{"name": "gw"}}}),
+			expectErr: true,
+		},
+		{
+			name:        "Forbidden is swallowed",
+			client:      errClient(apierrors.NewForbidden(groupResource, name, fmt.Errorf("no access"))),
+			expectedURL: "",
+		},
+		{
+			name:        "Unauthorized is swallowed",
+			client:      errClient(apierrors.NewUnauthorized("no auth")),
+			expectedURL: "",
+		},
+		{
+			name:      "internal error propagates",
+			client:    errClient(apierrors.NewInternalError(fmt.Errorf("boom"))),
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			url, err := services.FindURLFromHTTPRoute(tc.client, namespace, name)
+			if tc.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			if tc.errContains != "" {
+				assert.ErrorContains(t, err, tc.errContains)
+			}
+			assert.Equal(t, tc.expectedURL, url)
+		})
+	}
+}
+
 func TestFindURLFromService(t *testing.T) {
 	t.Parallel()
 	const namespace = "jx"
@@ -581,6 +739,42 @@ func TestFindServiceURLWithDynamicClient(t *testing.T) {
 		"spec":       map[string]interface{}{"hosts": []interface{}{"myapp.example.com"}},
 	})
 
+	httpRoute := &unstructured.Unstructured{}
+	httpRoute.SetUnstructuredContent(map[string]interface{}{
+		"apiVersion": "gateway.networking.k8s.io/v1",
+		"kind":       "HTTPRoute",
+		"metadata":   map[string]interface{}{"name": name, "namespace": namespace},
+		"spec": map[string]interface{}{
+			"parentRefs": []interface{}{map[string]interface{}{"name": "gw", "sectionName": "https"}},
+			"hostnames":  []interface{}{"route.example.com"},
+		},
+	})
+	gateway := &unstructured.Unstructured{}
+	gateway.SetUnstructuredContent(map[string]interface{}{
+		"apiVersion": "gateway.networking.k8s.io/v1",
+		"kind":       "Gateway",
+		"metadata":   map[string]interface{}{"name": "gw", "namespace": namespace},
+		"spec": map[string]interface{}{
+			"listeners": []interface{}{map[string]interface{}{"name": "https", "protocol": "HTTPS", "port": int64(443)}},
+		},
+	})
+	// HTTPRoute is added normally; the Gateway must be inserted under its real "gateways" resource
+	httpRouteClient := fakedyn.NewSimpleDynamicClient(runtime.NewScheme(), httpRoute)
+	if err := httpRouteClient.Tracker().Create(gatewayGVR, gateway, namespace); err != nil {
+		t.Fatal(err)
+	}
+
+	// a malformed HTTPRoute (valid hostname, but no parentRefs) makes FindURLFromHTTPRoute return
+	// an error; the orchestrator should swallow it - like Istio - and keep falling through
+	malformedRoute := &unstructured.Unstructured{}
+	malformedRoute.SetUnstructuredContent(map[string]interface{}{
+		"apiVersion": "gateway.networking.k8s.io/v1",
+		"kind":       "HTTPRoute",
+		"metadata":   map[string]interface{}{"name": name, "namespace": namespace},
+		"spec":       map[string]interface{}{"hostnames": []interface{}{"route.example.com"}},
+	})
+	malformedRouteClient := fakedyn.NewSimpleDynamicClient(runtime.NewScheme(), malformedRoute)
+
 	// clientset whose service GET fails with a non-NotFound error
 	errClient := fake.NewSimpleClientset()
 	errClient.PrependReactor("get", "services", func(clienttesting.Action) (bool, runtime.Object, error) {
@@ -623,10 +817,23 @@ func TestFindServiceURLWithDynamicClient(t *testing.T) {
 			expectedURL:   "http://ing.example.com",
 		},
 		{
+			name:          "falls through to HTTPRoute",
+			client:        fake.NewSimpleClientset(),
+			dynamicClient: httpRouteClient,
+			expectedURL:   "https://route.example.com",
+		},
+		{
 			name:          "falls through to istio",
 			client:        fake.NewSimpleClientset(),
 			dynamicClient: fakedyn.NewSimpleDynamicClient(runtime.NewScheme(), vsWithHost),
 			expectedURL:   "http://myapp.example.com",
+		},
+		{
+			// malformed HTTPRoute error is swallowed (no expectErr) and the chain falls through
+			name:          "malformed HTTPRoute is swallowed",
+			client:        fake.NewSimpleClientset(),
+			dynamicClient: malformedRouteClient,
+			expectedURL:   "",
 		},
 		{
 			name:          "nothing found",
