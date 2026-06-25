@@ -154,21 +154,21 @@ func GetCurrentPod(kubeClient kubernetes.Interface, ns string) (*v1.Pod, error) 
 
 // WaitForPod waits for a pod filtered by `optionsModifier` that match `condition`
 func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier func(options *metav1.ListOptions), timeout time.Duration, condition PodPredicate) (*v1.Pod, error) {
-
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	lw := &cache.ListWatch{
-		ListFunc: func(o metav1.ListOptions) (runtime.Object, error) {
+		ListWithContextFunc: func(ctx context.Context, o metav1.ListOptions) (runtime.Object, error) {
 			optionsModifier(&o)
-			return client.CoreV1().Pods(namespace).List(context.TODO(), o)
+			return client.CoreV1().Pods(namespace).List(ctx, o)
 		},
-		WatchFunc: func(o metav1.ListOptions) (watch.Interface, error) {
+		WatchFuncWithContext: func(ctx context.Context, o metav1.ListOptions) (watch.Interface, error) {
 			optionsModifier(&o)
-			return client.CoreV1().Pods(namespace).Watch(context.TODO(), o)
+			return client.CoreV1().Pods(namespace).Watch(ctx, o)
 		},
 	}
 
-	watch, err := tools_watch.UntilWithSync(ctx, lw, &v1.Pod{}, func(store cache.Store) (bool, error) { return false, nil }, func(event watch.Event) (bool, error) {
+	watch, err := tools_watch.UntilWithSync(ctx, cache.ToListWatcherWithWatchListSemantics(lw, client), &v1.Pod{}, func(store cache.Store) (bool, error) { return false, nil }, func(event watch.Event) (bool, error) {
 		pod := event.Object.(*v1.Pod)
 		if pod == nil {
 			return false, errors.New("watched object is not a Pod")
