@@ -3,7 +3,6 @@ package pods
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -168,17 +167,23 @@ func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier f
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	watch, err := tools_watch.UntilWithSync(ctx, cache.ToListWatcherWithWatchListSemantics(lw, client), &v1.Pod{}, func(store cache.Store) (bool, error) { return false, nil }, func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
-		if pod == nil {
-			return false, errors.New("watched object is not a Pod")
+	checkPod := func(event watch.Event) (bool, error) {
+		if event.Type == watch.Error {
+			return false, apierrors.FromObject(event.Object)
+		}
+		pod, ok := event.Object.(*v1.Pod)
+		if !ok {
+			return false, fmt.Errorf("watched object is not a Pod: %T", event.Object)
 		}
 		return condition(pod), nil
-	})
+	}
+
+	listWatcher := cache.ToListWatcherWithWatchListSemantics(lw, client)
+	result, err := tools_watch.UntilWithSync(ctx, listWatcher, &v1.Pod{}, func(_ cache.Store) (bool, error) { return false, nil }, checkPod)
 	if err != nil {
 		return nil, err
 	}
-	return watch.Object.(*v1.Pod), nil
+	return result.Object.(*v1.Pod), nil
 }
 
 // ListOptionsString returns a string summary of the list options
