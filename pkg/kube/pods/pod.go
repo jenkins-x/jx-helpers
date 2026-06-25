@@ -154,9 +154,6 @@ func GetCurrentPod(kubeClient kubernetes.Interface, ns string) (*v1.Pod, error) 
 
 // WaitForPod waits for a pod filtered by `optionsModifier` that match `condition`
 func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier func(options *metav1.ListOptions), timeout time.Duration, condition PodPredicate) (*v1.Pod, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
 	lw := &cache.ListWatch{
 		ListWithContextFunc: func(ctx context.Context, o metav1.ListOptions) (runtime.Object, error) {
 			optionsModifier(&o)
@@ -167,6 +164,9 @@ func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier f
 			return client.CoreV1().Pods(namespace).Watch(ctx, o)
 		},
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	watch, err := tools_watch.UntilWithSync(ctx, cache.ToListWatcherWithWatchListSemantics(lw, client), &v1.Pod{}, func(store cache.Store) (bool, error) { return false, nil }, func(event watch.Event) (bool, error) {
 		pod := event.Object.(*v1.Pod)
