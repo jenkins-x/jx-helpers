@@ -20,8 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	clientfeatures "k8s.io/client-go/features"
-	clientfeaturestesting "k8s.io/client-go/features/testing"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	clienttesting "k8s.io/client-go/testing"
@@ -340,7 +338,7 @@ func TestIsPodReadyFailures(t *testing.T) {
 }
 
 func TestWaitForPodSelectorToBeReady(t *testing.T) {
-	clientfeaturestesting.SetFeatureDuringTest(t, clientfeatures.WatchListClient, false)
+	t.Parallel()
 
 	testers := []func(client kubernetes.Interface){
 		func(client kubernetes.Interface) {

@@ -3,7 +3,6 @@ package pods
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -154,31 +153,37 @@ func GetCurrentPod(kubeClient kubernetes.Interface, ns string) (*v1.Pod, error) 
 
 // WaitForPod waits for a pod filtered by `optionsModifier` that match `condition`
 func WaitForPod(client kubernetes.Interface, namespace string, optionsModifier func(options *metav1.ListOptions), timeout time.Duration, condition PodPredicate) (*v1.Pod, error) {
-
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
-
 	lw := &cache.ListWatch{
-		ListFunc: func(o metav1.ListOptions) (runtime.Object, error) {
+		ListWithContextFunc: func(ctx context.Context, o metav1.ListOptions) (runtime.Object, error) {
 			optionsModifier(&o)
-			return client.CoreV1().Pods(namespace).List(context.TODO(), o)
+			return client.CoreV1().Pods(namespace).List(ctx, o)
 		},
-		WatchFunc: func(o metav1.ListOptions) (watch.Interface, error) {
+		WatchFuncWithContext: func(ctx context.Context, o metav1.ListOptions) (watch.Interface, error) {
 			optionsModifier(&o)
-			return client.CoreV1().Pods(namespace).Watch(context.TODO(), o)
+			return client.CoreV1().Pods(namespace).Watch(ctx, o)
 		},
 	}
 
-	watch, err := tools_watch.UntilWithSync(ctx, lw, &v1.Pod{}, func(store cache.Store) (bool, error) { return false, nil }, func(event watch.Event) (bool, error) {
-		pod := event.Object.(*v1.Pod)
-		if pod == nil {
-			return false, errors.New("watched object is not a Pod")
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	checkPod := func(event watch.Event) (bool, error) {
+		if event.Type == watch.Error {
+			return false, apierrors.FromObject(event.Object)
+		}
+		pod, ok := event.Object.(*v1.Pod)
+		if !ok {
+			return false, fmt.Errorf("watched object is not a Pod: %T", event.Object)
 		}
 		return condition(pod), nil
-	})
+	}
+
+	listWatcher := cache.ToListWatcherWithWatchListSemantics(lw, client)
+	result, err := tools_watch.UntilWithSync(ctx, listWatcher, &v1.Pod{}, func(_ cache.Store) (bool, error) { return false, nil }, checkPod)
 	if err != nil {
 		return nil, err
 	}
-	return watch.Object.(*v1.Pod), nil
+	return result.Object.(*v1.Pod), nil
 }
 
 // ListOptionsString returns a string summary of the list options
