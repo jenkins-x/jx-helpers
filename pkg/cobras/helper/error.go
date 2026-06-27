@@ -2,10 +2,11 @@ package helper
 
 import (
 	"fmt"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 )
 
 const (

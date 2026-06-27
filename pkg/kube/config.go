@@ -3,9 +3,10 @@ package kube
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-	"os"
 )
 
 const (
