@@ -71,7 +71,7 @@ type StableVersion struct {
 	UpperLimit string `json:"upperLimit,omitempty"`
 	// Labels are labels to add to release. Typically used to add values.jenkins-x.io=no-jx-values
 	// to avoid problems with chart schema
-	Labels map[string]string `yaml:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 	// GitURL the URL to the source code
 	GitURL string `json:"gitUrl,omitempty"`
 	// Component is the component inside the git URL
