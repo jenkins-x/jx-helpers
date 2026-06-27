@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	// DefaultNamespace the standard namespace for Jenkins X
+	// DefaultNamespace the standard namespace for JayeX
 	DefaultNamespace = "jx"
 
 	// PodNamespaceFile the file path and name for pod namespace

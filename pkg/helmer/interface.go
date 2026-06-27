@@ -1,6 +1,6 @@
 package helmer
 
-// Helmer defines common helm actions used within Jenkins X
+// Helmer defines common helm actions used within JayeX
 type Helmer interface {
 	SetCWD(dir string)
 	HelmBinary() string

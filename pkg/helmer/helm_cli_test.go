@@ -32,9 +32,9 @@ jenkins-x       https://storage.googleapis.com/chartmuseum.jenkins-x.io
 	`
 const searchVersionOutput = `
 NAME                            		CHART VERSION	APP VERSION		DESCRIPTION
-jenkins-x/jenkins-x-platform        	0.0.1481						Jenkins X
-jenkins-x/jenkins-x-platform        	0.0.1480						Jenkins X
-jenkins-x/jenkins-x-platform        	0.0.1479 						Jenkins X
+jenkins-x/jenkins-x-platform        	0.0.1481						JayeX
+jenkins-x/jenkins-x-platform        	0.0.1480						JayeX
+jenkins-x/jenkins-x-platform        	0.0.1479 						JayeX
 `
 const listReleasesOutput = `
 NAME                            REVISION        UPDATED                         STATUS          CHART                           NAMESPACE
