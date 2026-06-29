@@ -3,13 +3,14 @@ package kube
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-	"os"
 )
 
 const (
-	// DefaultNamespace the standard namespace for Jenkins X
+	// DefaultNamespace the standard namespace for JayeX
 	DefaultNamespace = "jx"
 
 	// PodNamespaceFile the file path and name for pod namespace

@@ -71,7 +71,7 @@ type StableVersion struct {
 	UpperLimit string `json:"upperLimit,omitempty"`
 	// Labels are labels to add to release. Typically used to add values.jenkins-x.io=no-jx-values
 	// to avoid problems with chart schema
-	Labels map[string]string `yaml:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 	// GitURL the URL to the source code
 	GitURL string `json:"gitUrl,omitempty"`
 	// Component is the component inside the git URL
@@ -96,7 +96,7 @@ func (data *StableVersion) VerifyPackage(name string, currentVersion string, wor
 	}
 	version := ConvertToVersion(data.Version)
 	if version == "" && warnOnMissing {
-		log.Logger().Warnf("could not find a stable package version for %s from %s\nFor background see: https://jenkins-x.io/about/concepts/version-stream/", name, workDir)
+		log.Logger().Warnf("could not find a stable package version for %s from %s\nFor background see: https://jayex.io/v3/about/concepts/version-stream/", name, workDir)
 		//log.Logger().Infof("Please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k package -n %s", name)))
 		return nil
 	}
@@ -237,7 +237,7 @@ func LoadStableVersionNumber(wrkDir string, kind VersionKind, name string, warnO
 			return version, err
 		}
 		if warnOnMissing {
-			log.Logger().Warnf("could not find a stable version from %s of %s from %s\nFor background see: https://jenkins-x.io/about/concepts/version-stream/", string(kind), name, wrkDir)
+			log.Logger().Warnf("could not find a stable version from %s of %s from %s\nFor background see: https://jayex.io/about/concepts/version-stream/", string(kind), name, wrkDir)
 			//log.Logger().Infof("Please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k %s -n %s", string(kind), name)))
 		}
 	}
@@ -295,7 +295,7 @@ func ResolveDockerImage(versionsDir, image string) (string, error) {
 	}
 	if info.Version == "" {
 		log.Logger().Warnf("could not find a stable version for Docker image: %s in %s", image, versionsDir)
-		log.Logger().Warn("for background see: https://jenkins-x.io/about/concepts/version-stream/")
+		log.Logger().Warn("for background see: https://jayex.io/about/concepts/version-stream/")
 		//log.Logger().Infof("please lock this version down via the command: %s", termcolor.ColorInfo(fmt.Sprintf("jx step create pr versions -k docker -n %s -v 1.2.3", image)))
 		return image, nil
 	}

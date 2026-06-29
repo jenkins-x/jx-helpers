@@ -28,9 +28,9 @@ func EnsureUserAndEmailSetup(gitter Interface, dir string, gitUserName string, g
 		if userName == "" {
 			userName = os.Getenv("GIT_AUTHOR_NAME")
 			if userName == "" {
-				user, err := user.Current()
-				if err == nil && user != nil {
-					userName = user.Username
+				currentUser, err := user.Current()
+				if err == nil && currentUser != nil {
+					userName = currentUser.Username
 				}
 				if userName == "" {
 					userName = DefaultGitUserName

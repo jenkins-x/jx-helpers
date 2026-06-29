@@ -12,9 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Options default options for Jenkins X Pipelines
+// Options default options for JayeX Pipelines
 //
-// see: https://jenkins-x.io/v3/develop/pipelines/reference/#parameters-and-environment-variables
+// see: https://jayex.io/v3/develop/pipelines/reference/#parameters-and-environment-variables
 type Options struct {
 	// AppName the name of the app
 	AppName string `env:"APP_NAME"`

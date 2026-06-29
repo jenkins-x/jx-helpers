@@ -15,7 +15,7 @@ func SeeAlsoText(commands ...string) string {
 	sb.WriteString("\nSee Also:\n\n")
 
 	for _, command := range commands {
-		u := "https://jenkins-x.io/v3/develop/reference/" + strings.Replace(command, " ", "/", -1)
+		u := "https://jayex.io/v3/develop/reference/" + strings.Replace(command, " ", "/", -1)
 		sb.WriteString(fmt.Sprintf("* %s : [%s](%s/)\n", command, u, u))
 	}
 	sb.WriteString("\n")

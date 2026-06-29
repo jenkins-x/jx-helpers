@@ -28,6 +28,6 @@ const (
 	// AnnotationHost used to indicate the host if using NodePort Ingress resources on premise without a LoadBalancer
 	AnnotationHost = "jenkins.io/host"
 
-	// SecretBasicAuth the name for the Jenkins X basic auth secret
+	// SecretBasicAuth the name for the JayeX basic auth secret
 	SecretBasicAuth = "jx-basic-auth" // #nosec
 )

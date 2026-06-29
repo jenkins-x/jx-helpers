@@ -56,7 +56,7 @@ func (o *PullRequestOptions) Validate() error {
 	return nil
 }
 
-// FindPullRequestFromEnvironment returns the PullRequest number by looking for common Jenkins X environment variables
+// FindPullRequestFromEnvironment returns the PullRequest number by looking for common JayeX environment variables
 func FindPullRequestFromEnvironment() (int, error) {
 	envVar := "PULL_NUMBER"
 	prName := os.Getenv(envVar)

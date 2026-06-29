@@ -2,8 +2,9 @@ package gitconfig
 
 import (
 	"fmt"
-	gitcfg "github.com/go-git/go-git/v5/config"
 	"os"
+
+	gitcfg "github.com/go-git/go-git/v5/config"
 )
 
 // DiscoverUpstreamGitURL discovers the upstream git URL from the given git configuration
