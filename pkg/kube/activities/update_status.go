@@ -11,13 +11,13 @@ import (
 func UpdateStatus(activity *v1.PipelineActivity, containersTerminated bool, onCompleteCallback func(activity *v1.PipelineActivity)) {
 	spec := &activity.Spec
 	var biggestFinishedAt metav1.Time
-	var stageSteps []v1.CoreActivityStep
+	var steps []v1.CoreActivityStep
 	for i := range spec.Steps {
 		step := &spec.Steps[i]
 		stage := step.Stage
 		if stage != nil {
 			stage.Status = UpdateStepsStatus(stage.Status, stage.Steps)
-			stageSteps = append(stageSteps, stage.CoreActivityStep)
+			steps = append(steps, stage.CoreActivityStep)
 
 			if stage.StartedTimestamp != nil && spec.StartedTimestamp == nil {
 				spec.StartedTimestamp = stage.StartedTimestamp
@@ -31,8 +31,16 @@ func UpdateStatus(activity *v1.PipelineActivity, containersTerminated bool, onCo
 				}
 			}
 		}
+		promote := step.Promote
+		if promote != nil {
+			steps = append(steps, promote.CoreActivityStep)
+		}
+		preview := step.Preview
+		if preview != nil {
+			steps = append(steps, preview.CoreActivityStep)
+		}
 	}
-	spec.Status = UpdateStepsStatus(spec.Status, stageSteps)
+	spec.Status = UpdateStepsStatus(spec.Status, steps)
 
 	// lets make sure we have a completed time
 	if spec.Status.IsTerminated() {
